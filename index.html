@@ -439,7 +439,8 @@ async function loadHealth(){
     // Source health grid
     const grid=document.getElementById('health-grid');
     const sourceKeys=['wikipedia','wikivoyage','foursquare','openweathermap','newsapi','google_news',
-      'gdacs','ticketmaster','eventbrite','predicthq','geoapify','social_proxy'];
+      'gdacs','reddit','ticketmaster','eventbrite','predicthq','tripadvisor','yelp','geoapify',
+      'social_apify','social_reddit_proxy'];
     let okCount=0;
     grid.innerHTML=sourceKeys.map(k=>{
       const h=checks[k]||{};
