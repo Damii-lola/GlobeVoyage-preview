@@ -336,7 +336,7 @@ async function loadHealth() {
     } catch(e) { setCard('globe-card','fail','Globe endpoint error',''); }
 
     // Source health grid
-    const sourceKeys = ['wikipedia','wikivoyage','foursquare','openweathermap','newsapi',
+    const sourceKeys = ['wikipedia','wikivoyage','openweathermap','newsapi',
       'google_news','gdacs','ticketmaster','eventbrite','predicthq','geoapify','social_proxy'];
     let okCount = 0;
     const grid = document.getElementById('health-grid');
