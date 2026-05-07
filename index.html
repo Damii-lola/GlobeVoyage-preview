@@ -624,7 +624,13 @@ async function triggerPipeline() {
 
 // ── Init ──────────────────────────────────────────────────────────
 loadHealth();
-setInterval(loadHealth, 30000);
+setInterval(loadHealth, 30000); // refresh health dashboard every 30s
+
+// ── Keepalive ping every 5s so Render never sleeps ──────────────
+const API_BASE = 'https://globevoyage-admin.onrender.com';
+setInterval(() => {
+  fetch(API_BASE + '/', { method: 'GET', cache: 'no-store' }).catch(() => {});
+}, 5000);
 </script>
 </body>
 </html>
