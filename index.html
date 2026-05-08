@@ -295,6 +295,20 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- PIPELINE PAGE -->
 <div class="page" id="page-pipeline">
+
+  <!-- Geo Stats -->
+  <div class="section-title">GEO HIERARCHY STATUS</div>
+  <div class="stat-row" style="margin-bottom:12px">
+    <div class="stat-card"><div class="stat-val" id="g-states">—</div><div class="stat-lbl">States Loaded</div><div class="stat-sub">Provinces / Territories</div></div>
+    <div class="stat-card"><div class="stat-val" id="g-areas">—</div><div class="stat-lbl">Areas Loaded</div><div class="stat-sub">Districts / Municipalities</div></div>
+    <div class="stat-card"><div class="stat-val" id="g-countries">—</div><div class="stat-lbl">Countries Done</div><div class="stat-sub" id="g-coverage">of 195</div></div>
+    <div class="stat-card"><div class="stat-val" id="g-status">—</div><div class="stat-lbl">Geo Pipeline</div><div class="stat-sub" id="g-status-sub">Status</div></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:28px">
+    <button class="run-btn" onclick="triggerGeoPipeline()" style="border-color:var(--accent2);color:var(--accent2)">▶ RUN GEO PIPELINE</button>
+    <button class="run-btn" onclick="loadGeoStats()" style="font-size:11px">↻ REFRESH GEO STATS</button>
+  </div>
+
   <div class="pipeline-bar">
     <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">PIPELINE COVERAGE</div>
     <div class="progress-track"><div class="progress-fill" id="pipe-fill" style="width:0%"></div></div>
@@ -338,7 +352,7 @@ function showPage(id, btn) {
   document.getElementById('page-'+id).classList.add('active');
   if(btn) btn.classList.add('active');
   if(id==='intel' && allIntel.length===0) loadIntel();
-  if(id==='pipeline') loadPipelineStatus();
+  if(id==='pipeline') { loadPipelineStatus(); loadGeoStats(); }
 }
 
 function toast(msg) {
@@ -727,11 +741,41 @@ async function triggerPipeline() {
   fetch(`${API}/api/pipeline/run-all`, {method:'POST'}).catch(()=>{});
 }
 
+// ── Geo Stats ─────────────────────────────────────────────────────
+async function loadGeoStats() {
+  try {
+    const r = await fetch(API + '/api/geo/stats');
+    const d = await r.json();
+    document.getElementById('g-states').textContent   = (d.total_states||0).toLocaleString();
+    document.getElementById('g-areas').textContent    = (d.total_areas||0).toLocaleString();
+    document.getElementById('g-countries').textContent= d.countries_loaded||0;
+    document.getElementById('g-coverage').textContent = `of 195 (${d.coverage_pct||0}%)`;
+    document.getElementById('g-status').textContent   = d.geo_pipeline_running ? '🔄' : '✅';
+    document.getElementById('g-status-sub').textContent = d.geo_pipeline_running
+      ? 'Running...' : `${d.coverage_pct||0}% complete`;
+  } catch(e) {
+    document.getElementById('g-status').textContent = '✗';
+    document.getElementById('g-status-sub').textContent = 'Error loading';
+  }
+}
+
+async function triggerGeoPipeline() {
+  if(!confirm('Start geo pipeline for all 195 countries? This loads states and areas from GeoNames. Make sure GEONAMES_USERNAME is set in Render env vars.')) return;
+  toast('▶ Geo pipeline started...');
+  try {
+    await fetch(API + '/api/geo/pipeline/start', { method: 'POST' });
+    toast('✓ Geo pipeline running — check stats in a few minutes');
+    setTimeout(loadGeoStats, 5000);
+  } catch(e) { toast('✗ Failed: ' + e.message); }
+}
+
 // ── Init ──────────────────────────────────────────────────────────
 loadHealth();
 loadStatus();
+loadGeoStats();
 setInterval(loadHealth, 30000);
-setInterval(loadStatus, 5000); // status panel updates every 5s — ping count ticks live
+setInterval(loadStatus, 5000);
+setInterval(loadGeoStats, 15000); // refresh geo stats every 15s
 
 // Keepalive ping every 5s so Render never sleeps
 setInterval(() => {
