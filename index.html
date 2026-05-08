@@ -37,6 +37,19 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .section-title{font-size:10px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
+/* ── Live Status Panel ── */
+.status-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.status-block{display:flex;flex-direction:column;gap:4px}
+.status-label{font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace}
+.status-value{font-size:13px;color:var(--text);font-weight:600;display:flex;align-items:center;gap:6px}
+.status-sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
+.ping-dot{display:inline-block;width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ping-dot.ok{background:var(--green);box-shadow:0 0 6px rgba(0,230,118,.5);animation:pulse 2s ease infinite}
+.ping-dot.warn{background:var(--amber);box-shadow:0 0 6px rgba(255,171,0,.5)}
+.ping-dot.loading{background:var(--text3)}
+.next-run-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.next-run-chip{font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:5px;background:rgba(42,127,255,.08);color:var(--accent);border:1px solid rgba(42,127,255,.15)}
+
 .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px}
 .stat-val{font-size:28px;font-weight:800;color:#fff;line-height:1}
@@ -154,7 +167,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(60px);opacity:0;transition:all .3s;font-family:'Space Mono',monospace}
 .toast.show{transform:translateY(0);opacity:1}
 
-@media(max-width:768px){main{padding:16px}.stat-row{grid-template-columns:1fr 1fr}header{padding:0 16px}}
+@media(max-width:768px){main{padding:16px}.stat-row{grid-template-columns:1fr 1fr}header{padding:0 16px}.status-panel{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -182,11 +195,42 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- SYSTEM PAGE -->
 <div class="page active" id="page-health">
+
+  <!-- Live Server Status -->
+  <div class="section-title">LIVE SERVER STATUS</div>
+  <div class="status-panel" id="status-panel">
+    <div class="status-block">
+      <div class="status-label">Keepalive Ping</div>
+      <div class="status-value" id="st-ping">
+        <span class="ping-dot loading" id="st-ping-dot"></span>
+        <span id="st-ping-text">Loading...</span>
+      </div>
+      <div class="status-sub" id="st-ping-count">— pings sent</div>
+    </div>
+    <div class="status-block">
+      <div class="status-label">Server Uptime</div>
+      <div class="status-value" id="st-uptime">—</div>
+      <div class="status-sub" id="st-boot">Booted at —</div>
+    </div>
+    <div class="status-block">
+      <div class="status-label">Pipeline Status</div>
+      <div class="status-value" id="st-pipeline">—</div>
+      <div class="status-sub" id="st-last-run">Last run: —</div>
+    </div>
+    <div class="status-block">
+      <div class="status-label">Next Scheduled Runs</div>
+      <div class="next-run-row" id="st-next-runs">
+        <span class="next-run-chip">Loading...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
   <div class="stat-row">
     <div class="stat-card"><div class="stat-val" id="s-countries">195</div><div class="stat-lbl">Countries</div><div class="stat-sub">195 total in pipeline</div></div>
     <div class="stat-card"><div class="stat-val" id="s-processed">—</div><div class="stat-lbl">Processed</div><div class="stat-sub" id="s-coverage">Checking...</div></div>
     <div class="stat-card"><div class="stat-val" id="s-fresh">—</div><div class="stat-lbl">Fresh (&lt;6h)</div><div class="stat-sub">Up to date</div></div>
-    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 12 sources</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 27 sources</div></div>
   </div>
 
   <div class="section-title">SYSTEM CONNECTIONS</div>
@@ -303,6 +347,47 @@ function toast(msg) {
   setTimeout(()=>t.classList.remove('show'),2800);
 }
 
+// ── Live Status ───────────────────────────────────────────────────
+async function loadStatus() {
+  try {
+    const r = await fetch(API+'/api/status');
+    const d = await r.json();
+
+    // Keepalive
+    const ping = d.keepalive;
+    const dot  = document.getElementById('st-ping-dot');
+    const txt  = document.getElementById('st-ping-text');
+    dot.className = 'ping-dot ' + (ping.healthy ? 'ok' : 'warn');
+    txt.textContent = ping.healthy ? `Healthy — pinging every ${ping.ping_interval}` : ping.status;
+    document.getElementById('st-ping-count').textContent =
+      `${ping.ping_count.toLocaleString()} pings sent · last ${ping.ping_age_ms !== null ? Math.round(ping.ping_age_ms/1000)+'s ago' : '—'}`;
+
+    // Uptime
+    document.getElementById('st-uptime').textContent = d.server.uptime_display;
+    document.getElementById('st-boot').textContent =
+      'Booted: ' + new Date(d.server.booted_at).toLocaleString();
+
+    // Pipeline
+    const pipe = d.pipeline;
+    document.getElementById('st-pipeline').textContent =
+      pipe.running ? `🔄 Running — ${pipe.countries_processed_last_run}/195` : '✅ Idle';
+    document.getElementById('st-last-run').textContent =
+      pipe.last_run_at
+        ? 'Last: ' + new Date(pipe.last_run_at).toLocaleString()
+        : 'Not yet run this session';
+
+    // Next runs
+    document.getElementById('st-next-runs').innerHTML =
+      (pipe.next_runs||[]).map(r =>
+        `<span class="next-run-chip" title="${new Date(r.timestamp).toLocaleString()}">${r.time_utc} · in ${r.runs_in}</span>`
+      ).join('');
+
+  } catch(e) {
+    document.getElementById('st-ping-text').textContent = 'Could not reach server';
+    document.getElementById('st-ping-dot').className = 'ping-dot warn';
+  }
+}
+
 // ── Health ────────────────────────────────────────────────────────
 async function loadHealth() {
   const t = Date.now();
@@ -335,10 +420,15 @@ async function loadHealth() {
       setCard('globe-card', gr.ok?'ok':'fail', gr.ok?'Globe HTML serving OK':`HTTP ${gr.status}`, '');
     } catch(e) { setCard('globe-card','fail','Globe endpoint error',''); }
 
-    // Source health grid
-    const sourceKeys = ['wikipedia','wikivoyage','openweathermap','newsapi',
-    'google_news','gdacs','ticketmaster','eventbrite','predicthq','geoapify','social_proxy',
-    'unsplash','openaq','aviationstack','numbeo','rest_countries','airbnb','booking','tripadvisor','skyscanner','currency','google_places','travel_advisor','hotels_com','youtube','waqi'];
+    // All source connections
+    const sourceKeys = [
+      'wikipedia','wikivoyage','openweathermap','newsapi',
+      'google_news','gdacs','ticketmaster','eventbrite','predicthq',
+      'geoapify','social_proxy','unsplash','openaq','aviationstack',
+      'numbeo','rest_countries','airbnb','booking','tripadvisor',
+      'skyscanner','currency','google_places','travel_advisor',
+      'hotels_com','youtube','waqi'
+    ];
     let okCount = 0;
     const grid = document.getElementById('health-grid');
     grid.innerHTML = sourceKeys.map(k => {
@@ -481,6 +571,21 @@ async function openCountry(iso) {
         </div>
       </div>`:''}
 
+      ${d.cost_of_living?`<div class="modal-section">
+        <div class="modal-section-title">COST OF LIVING</div>
+        <div class="modal-grid">
+          <div class="modal-box"><div class="modal-box-title">CHEAP MEAL</div><div class="modal-box-val">$${d.cost_of_living.meal_cheap||'—'}</div></div>
+          <div class="modal-box"><div class="modal-box-title">1-BED RENT/MO</div><div class="modal-box-val">$${d.cost_of_living.one_bed_city_rent||'—'}</div></div>
+          <div class="modal-box"><div class="modal-box-title">AVG SALARY/MO</div><div class="modal-box-val">$${d.cost_of_living.avg_salary||'—'}</div></div>
+          <div class="modal-box"><div class="modal-box-title">TRANSPORT PASS</div><div class="modal-box-val">$${d.cost_of_living.monthly_transport||'—'}</div></div>
+        </div>
+      </div>`:''}
+
+      ${d.air_quality?`<div class="modal-section">
+        <div class="modal-section-title">AIR QUALITY</div>
+        <div class="modal-box"><div class="modal-box-title">AQI · ${d.air_quality.aqi_label||''}</div><div class="modal-box-val" style="font-size:22px;font-weight:800;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'} <span style="font-size:12px;color:var(--text2)">PM2.5: ${d.air_quality.pm25||'—'} µg/m³</span></div></div>
+      </div>`:''}
+
       ${d.ai_safety_summary?`<div class="modal-section">
         <div class="modal-section-title">SAFETY</div>
         <div style="background:rgba(255,171,0,.06);border:1px solid rgba(255,171,0,.15);border-radius:10px;padding:14px;font-size:12px;color:#e0c070">${d.ai_safety_summary}</div>
@@ -569,7 +674,7 @@ async function loadPipelineStatus() {
       fetch(API+'/api/pipeline/status'),
       fetch(API+'/api/countries')
     ]);
-    const d = await statusR.json();
+    const d  = await statusR.json();
     const cd = await countriesR.json();
 
     const pct = Math.round((d.countries_processed||0)/195*100);
@@ -624,12 +729,13 @@ async function triggerPipeline() {
 
 // ── Init ──────────────────────────────────────────────────────────
 loadHealth();
-setInterval(loadHealth, 30000); // refresh health dashboard every 30s
+loadStatus();
+setInterval(loadHealth, 30000);
+setInterval(loadStatus, 5000); // status panel updates every 5s — ping count ticks live
 
-// ── Keepalive ping every 5s so Render never sleeps ──────────────
-const API_BASE = 'https://globevoyage-admin.onrender.com';
+// Keepalive ping every 5s so Render never sleeps
 setInterval(() => {
-  fetch(API_BASE + '/', { method: 'GET', cache: 'no-store' }).catch(() => {});
+  fetch(API + '/', { method: 'GET', cache: 'no-store' }).catch(() => {});
 }, 5000);
 </script>
 </body>
