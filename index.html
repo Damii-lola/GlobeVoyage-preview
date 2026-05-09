@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="GlobeVoyage — Explore the world in real time. Spin the globe, tap any country, and get live travel intelligence on every destination.">
+<meta property="og:title" content="GlobeVoyage — Real-Time Travel Intelligence">
+<meta property="og:description" content="Spin the globe. Tap a country. Get live intel on every destination on Earth.">
+<meta property="og:image" content="https://globevoyage-admin.onrender.com/texture/earth-day">
+<title>GlobeVoyage — Explore the World</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:     #05080f;
+    --accent: #2a7fff;
+    --gold:   #c9a96e;
+    --text:   #c8dcf5;
+    --text2:  #5a7a9a;
+    --green:  #00e676;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html, body {
+    width:100%; min-height:100vh;
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Syne',sans-serif;
+    overflow-x:hidden;
+  }
+
+  /* ── Stars background ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(42,127,255,0.06) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 20%, rgba(201,169,110,0.04) 0%, transparent 50%);
+    pointer-events:none;
+  }
+
+  /* ── Layout ── */
+  .page {
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding:40px 24px;
+    text-align:center;
+  }
+
+  /* ── Globe icon ── */
+  .globe-icon {
+    width:90px; height:90px;
+    border-radius:50%;
+    background:conic-gradient(var(--accent), #00e5ff, var(--gold), var(--accent));
+    animation:spin 10s linear infinite;
+    margin:0 auto 32px;
+    box-shadow:0 0 60px rgba(42,127,255,0.3), 0 0 120px rgba(42,127,255,0.1);
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+
+  /* ── Badge ── */
+  .badge {
+    display:inline-flex; align-items:center; gap:7px;
+    background:rgba(0,230,118,0.08);
+    border:1px solid rgba(0,230,118,0.2);
+    border-radius:20px;
+    padding:5px 14px;
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    color:var(--green);
+    letter-spacing:2px;
+    margin-bottom:24px;
+  }
+  .badge-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--green);
+    animation:pulse 2s ease infinite;
+    box-shadow:0 0 6px rgba(0,230,118,0.6);
+  }
+  @keyframes pulse {
+    0%,100%{opacity:1;} 50%{opacity:0.5;}
+  }
+
+  /* ── Headline ── */
+  h1 {
+    font-size:clamp(36px, 8vw, 72px);
+    font-weight:800;
+    line-height:1.05;
+    margin-bottom:8px;
+    background:linear-gradient(135deg, #fff 0%, var(--gold) 50%, #fff 100%);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .tagline {
+    font-size:clamp(16px, 3vw, 22px);
+    color:var(--text2);
+    font-weight:400;
+    margin-bottom:40px;
+    max-width:500px;
+    line-height:1.5;
+  }
+
+  /* ── Feature pills ── */
+  .features {
+    display:flex; flex-wrap:wrap; justify-content:center;
+    gap:10px; margin-bottom:48px; max-width:600px;
+  }
+  .feature {
+    background:rgba(255,255,255,0.04);
+    border:1px solid rgba(255,255,255,0.07);
+    border-radius:30px;
+    padding:8px 18px;
+    font-size:13px;
+    color:var(--text2);
+  }
+
+  /* ── CTA Button ── */
+  .cta-btn {
+    display:inline-flex; align-items:center; gap:12px;
+    background:linear-gradient(135deg, var(--accent), #1040cc);
+    color:#fff;
+    text-decoration:none;
+    padding:18px 40px;
+    border-radius:16px;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:0.5px;
+    box-shadow:0 8px 32px rgba(42,114,255,0.4), 0 0 0 1px rgba(42,114,255,0.3);
+    transition:transform 0.15s, box-shadow 0.15s;
+    margin-bottom:16px;
+  }
+  .cta-btn:active, .cta-btn:hover {
+    transform:translateY(-2px);
+    box-shadow:0 12px 40px rgba(42,114,255,0.5);
+  }
+  .cta-icon { font-size:22px; }
+
+  .cta-sub {
+    font-size:12px;
+    color:var(--text2);
+    letter-spacing:1px;
+    font-family:'Space Mono',monospace;
+    margin-bottom:64px;
+  }
+
+  /* ── Stats row ── */
+  .stats {
+    display:flex; gap:40px; justify-content:center;
+    flex-wrap:wrap; margin-bottom:64px;
+  }
+  .stat { text-align:center; }
+  .stat-n {
+    font-size:32px; font-weight:800; color:#fff;
+    font-family:'Space Mono',monospace;
+  }
+  .stat-l {
+    font-size:10px; letter-spacing:2px;
+    color:var(--text2); text-transform:uppercase;
+    margin-top:4px;
+  }
+
+  /* ── Screenshot mockup ── */
+  .mockup-wrap {
+    position:relative; margin-bottom:64px;
+    width:100%; max-width:320px;
+  }
+  .mockup {
+    width:100%;
+    background:linear-gradient(180deg, #0e1a2e 0%, #060a12 100%);
+    border-radius:36px;
+    border:2px solid rgba(255,255,255,0.08);
+    overflow:hidden;
+    box-shadow:0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.04);
+    padding:24px 16px;
+    aspect-ratio:9/19;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+  }
+  .mockup-globe {
+    width:220px; height:220px; border-radius:50%;
+    background:conic-gradient(#1a3a6e, #0d2647, #1a4a2e, #0a1f3d, #1a3a6e);
+    box-shadow:
+      inset -30px -20px 60px rgba(0,0,0,0.5),
+      inset 20px 15px 40px rgba(42,127,255,0.15),
+      0 0 60px rgba(42,127,255,0.2);
+    margin-bottom:16px;
+    animation:spin 20s linear infinite;
+  }
+  .mockup-label {
+    font-family:'Space Mono',monospace;
+    font-size:9px; letter-spacing:3px;
+    color:rgba(201,169,110,0.6); text-transform:uppercase;
+  }
+
+  /* ── How it works ── */
+  .how-section {
+    width:100%; max-width:600px; margin-bottom:64px;
+  }
+  .how-title {
+    font-size:11px; letter-spacing:4px; color:var(--text2);
+    text-transform:uppercase; font-family:'Space Mono',monospace;
+    margin-bottom:24px;
+  }
+  .steps { display:flex; flex-direction:column; gap:16px; }
+  .step {
+    display:flex; align-items:flex-start; gap:16px;
+    background:rgba(255,255,255,0.02);
+    border:1px solid rgba(255,255,255,0.05);
+    border-radius:14px; padding:16px;
+    text-align:left;
+  }
+  .step-num {
+    width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,var(--accent),#1040cc);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Space Mono',monospace; font-size:13px;
+    font-weight:700; color:#fff;
+  }
+  .step-title { font-size:14px; font-weight:600; color:#fff; margin-bottom:3px; }
+  .step-desc  { font-size:12px; color:var(--text2); line-height:1.5; }
+
+  /* ── Footer ── */
+  footer {
+    border-top:1px solid rgba(255,255,255,0.05);
+    padding:24px;
+    width:100%; text-align:center;
+    font-family:'Space Mono',monospace;
+    font-size:10px; color:var(--text2);
+    letter-spacing:1px;
+  }
+
+  @media(max-width:480px) {
+    .stats { gap:24px; }
+    .cta-btn { padding:16px 28px; font-size:15px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- Live badge -->
+  <div class="badge">
+    <span class="badge-dot"></span>
+    LIVE ON 195 COUNTRIES
+  </div>
+
+  <!-- Globe icon -->
+  <div class="globe-icon"></div>
+
+  <!-- Headline -->
+  <h1>GlobeVoyage</h1>
+  <p class="tagline">Spin the globe. Tap a country.<br>Get live travel intelligence — right now.</p>
+
+  <!-- Features -->
+  <div class="features">
+    <span class="feature">🌍 Interactive 3D Globe</span>
+    <span class="feature">📡 Live Travel Intel</span>
+    <span class="feature">🗺️ Country → State → Area</span>
+    <span class="feature">🌤️ Real-Time Weather</span>
+    <span class="feature">✈️ Flight Info</span>
+    <span class="feature">💰 Cost of Living</span>
+    <span class="feature">🏨 Hotel Prices</span>
+    <span class="feature">🤖 AI Briefings</span>
+  </div>
+
+  <!-- CTA -->
+  <a class="cta-btn" href="https://play.google.com/store/apps/details?id=com.globevoyage" target="_blank" rel="noopener">
+    <span class="cta-icon">▶</span>
+    Download on Google Play
+  </a>
+  <p class="cta-sub">FREE · ANDROID · COMING SOON ON IOS</p>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-n">195</div>
+      <div class="stat-l">Countries</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">26+</div>
+      <div class="stat-l">Live Sources</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">3×</div>
+      <div class="stat-l">Daily Updates</div>
+    </div>
+    <div class="stat">
+      <div class="stat-n">AI</div>
+      <div class="stat-l">Powered</div>
+    </div>
+  </div>
+
+  <!-- Phone mockup -->
+  <div class="mockup-wrap">
+    <div class="mockup">
+      <div class="mockup-globe"></div>
+      <div class="mockup-label">Drag · Pinch · Tap Country</div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <div class="how-section">
+    <div class="how-title">How It Works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div>
+          <div class="step-title">Spin the Globe</div>
+          <div class="step-desc">Open the app to a hyper-realistic 3D Earth. Drag to spin, pinch to zoom, double-tap to reset.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div>
+          <div class="step-title">Tap Any Country</div>
+          <div class="step-desc">Tap a country to see its states and provinces. Drill down further into districts and areas.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div>
+          <div class="step-title">Get Live Intelligence</div>
+          <div class="step-desc">Real-time weather, air quality, cost of living, flight info, hotel prices, AI safety briefings — updated 3× daily.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Final CTA -->
+  <a class="cta-btn" href="https://play.google.com/store/apps/details?id=com.globevoyage" target="_blank" rel="noopener">
+    <span class="cta-icon">▶</span>
+    Get GlobeVoyage Free
+  </a>
+  <p class="cta-sub">NO ADS · NO SUBSCRIPTION FOR BASIC ACCESS</p>
+
+</div>
+
+<footer>
+  © 2026 GlobeVoyage &nbsp;·&nbsp; Built with real-time intelligence
+</footer>
+
+</body>
+</html>
