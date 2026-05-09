@@ -299,6 +299,15 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   <!-- Geo Stats -->
   <div class="section-title">GEO HIERARCHY STATUS</div>
 
+  <!-- Setup instructions -->
+  <div style="background:rgba(42,127,255,.05);border:1px solid rgba(42,127,255,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8">
+    <div style="color:var(--accent);font-weight:700;margin-bottom:6px;letter-spacing:1px">SETUP REQUIRED BEFORE RUNNING</div>
+    <div>1. Register free at <a href="https://www.geonames.org/login" target="_blank" style="color:var(--accent2)">geonames.org/login</a></div>
+    <div>2. Enable webservice at <a href="https://www.geonames.org/manageaccount" target="_blank" style="color:var(--accent2)">geonames.org/manageaccount</a> → click <strong style="color:#fff">"Enable Free Webservice"</strong></div>
+    <div>3. Add <strong style="color:#fff">GEONAMES_USERNAME</strong> to Render → Environment → Environment Variables</div>
+    <div>4. Click <strong style="color:var(--amber)">🔑 TEST GEONAMES AUTH</strong> to verify, then <strong style="color:var(--accent2)">▶ RUN GEO PIPELINE</strong></div>
+  </div>
+
   <!-- Auth test banner -->
   <div id="geo-test-banner" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;border:1px solid"></div>
 
@@ -771,13 +780,16 @@ let geoPolling = null;
 
 async function loadGeoStats() {
   try {
-    // Get both stats and live pipeline status in parallel
-    const [statsR, liveR] = await Promise.all([
-      fetch(API + '/api/geo/stats'),
-      fetch(API + '/api/geo/pipeline/status'),
-    ]);
-    const stats = await statsR.json();
-    const live  = await liveR.json();
+    // Fetch stats and live status separately so one failure doesn't break both
+    let stats = {}, live = {};
+    try {
+      const r = await fetch(API + '/api/geo/stats');
+      if(r.ok) stats = await r.json();
+    } catch(e) { console.warn('geo/stats failed:', e.message); }
+    try {
+      const r = await fetch(API + '/api/geo/pipeline/status');
+      if(r.ok) live = await r.json();
+    } catch(e) { console.warn('geo/pipeline/status failed:', e.message); }
 
     // Update stat cards
     document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
