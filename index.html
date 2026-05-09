@@ -298,15 +298,40 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
   <!-- Geo Stats -->
   <div class="section-title">GEO HIERARCHY STATUS</div>
+
+  <!-- Auth test banner -->
+  <div id="geo-test-banner" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;border:1px solid"></div>
+
   <div class="stat-row" style="margin-bottom:12px">
     <div class="stat-card"><div class="stat-val" id="g-states">—</div><div class="stat-lbl">States Loaded</div><div class="stat-sub">Provinces / Territories</div></div>
     <div class="stat-card"><div class="stat-val" id="g-areas">—</div><div class="stat-lbl">Areas Loaded</div><div class="stat-sub">Districts / Municipalities</div></div>
     <div class="stat-card"><div class="stat-val" id="g-countries">—</div><div class="stat-lbl">Countries Done</div><div class="stat-sub" id="g-coverage">of 195</div></div>
-    <div class="stat-card"><div class="stat-val" id="g-status">—</div><div class="stat-lbl">Geo Pipeline</div><div class="stat-sub" id="g-status-sub">Status</div></div>
+    <div class="stat-card">
+      <div class="stat-val" id="g-pct">0%</div>
+      <div class="stat-lbl">Coverage</div>
+      <div class="stat-sub" id="g-status-sub">Not started</div>
+    </div>
   </div>
-  <div style="display:flex;gap:8px;margin-bottom:28px">
+
+  <!-- Live progress bar (only shown while running) -->
+  <div id="geo-progress-wrap" style="display:none;margin-bottom:14px">
+    <div class="pipeline-bar" style="margin-bottom:0">
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">GEO PROGRESS</div>
+      <div class="progress-track"><div class="progress-fill" id="geo-fill" style="width:0%;background:linear-gradient(90deg,var(--accent2),var(--green))"></div></div>
+      <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text)" id="geo-pct-label">0%</div>
+    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px;padding-left:4px">
+      Current: <span id="geo-current-country" style="color:var(--accent2)">—</span>
+    </div>
+  </div>
+
+  <div id="geo-error-box" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--red)"></div>
+
+  <div style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap">
+    <button class="run-btn" onclick="testGeoNames()" style="border-color:var(--amber);color:var(--amber)">🔑 TEST GEONAMES AUTH</button>
     <button class="run-btn" onclick="triggerGeoPipeline()" style="border-color:var(--accent2);color:var(--accent2)">▶ RUN GEO PIPELINE</button>
-    <button class="run-btn" onclick="loadGeoStats()" style="font-size:11px">↻ REFRESH GEO STATS</button>
+    <button class="run-btn" onclick="triggerGeoPipeline(true)" style="border-color:var(--red);color:var(--red);font-size:10px">↺ FORCE RE-RUN ALL</button>
+    <button class="run-btn" onclick="loadGeoStats()" style="font-size:11px">↻ REFRESH</button>
   </div>
 
   <div class="pipeline-bar">
@@ -741,31 +766,106 @@ async function triggerPipeline() {
   fetch(`${API}/api/pipeline/run-all`, {method:'POST'}).catch(()=>{});
 }
 
-// ── Geo Stats ─────────────────────────────────────────────────────
+// ── Geo Stats + Live Progress ─────────────────────────────────────
+let geoPolling = null;
+
 async function loadGeoStats() {
   try {
-    const r = await fetch(API + '/api/geo/stats');
-    const d = await r.json();
-    document.getElementById('g-states').textContent   = (d.total_states||0).toLocaleString();
-    document.getElementById('g-areas').textContent    = (d.total_areas||0).toLocaleString();
-    document.getElementById('g-countries').textContent= d.countries_loaded||0;
-    document.getElementById('g-coverage').textContent = `of 195 (${d.coverage_pct||0}%)`;
-    document.getElementById('g-status').textContent   = d.geo_pipeline_running ? '🔄' : '✅';
-    document.getElementById('g-status-sub').textContent = d.geo_pipeline_running
-      ? 'Running...' : `${d.coverage_pct||0}% complete`;
+    // Get both stats and live pipeline status in parallel
+    const [statsR, liveR] = await Promise.all([
+      fetch(API + '/api/geo/stats'),
+      fetch(API + '/api/geo/pipeline/status'),
+    ]);
+    const stats = await statsR.json();
+    const live  = await liveR.json();
+
+    // Update stat cards
+    document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
+    document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
+    document.getElementById('g-countries').textContent = stats.countries_loaded||0;
+    document.getElementById('g-coverage').textContent  = `of 195 (${stats.coverage_pct||0}%)`;
+    document.getElementById('g-pct').textContent       = (live.progress_pct||stats.coverage_pct||0) + '%';
+
+    // Live progress bar
+    const wrap = document.getElementById('geo-progress-wrap');
+    if(live.running) {
+      wrap.style.display = 'block';
+      document.getElementById('geo-fill').style.width        = (live.progress_pct||0) + '%';
+      document.getElementById('geo-pct-label').textContent   = (live.progress_pct||0) + '%';
+      document.getElementById('geo-current-country').textContent = live.current_country||'—';
+      document.getElementById('g-status-sub').textContent    = `Running — ${live.countries_done}/${live.countries_total}`;
+      // Keep polling while running
+      if(!geoPolling) geoPolling = setInterval(loadGeoStats, 3000);
+    } else {
+      wrap.style.display = 'none';
+      if(geoPolling) { clearInterval(geoPolling); geoPolling = null; }
+      document.getElementById('g-status-sub').textContent = live.completed_at
+        ? `Complete — ${(live.total_states||0).toLocaleString()} states`
+        : live.last_error ? 'Error — see below' : 'Not yet run';
+    }
+
+    // Error box
+    const errBox = document.getElementById('geo-error-box');
+    if(live.last_error) {
+      errBox.style.display = 'block';
+      errBox.textContent   = '⚠ ' + live.last_error;
+    } else {
+      errBox.style.display = 'none';
+    }
+
   } catch(e) {
-    document.getElementById('g-status').textContent = '✗';
     document.getElementById('g-status-sub').textContent = 'Error loading';
   }
 }
 
-async function triggerGeoPipeline() {
-  if(!confirm('Start geo pipeline for all 195 countries? This loads states and areas from GeoNames. Make sure GEONAMES_USERNAME is set in Render env vars.')) return;
-  toast('▶ Geo pipeline started...');
+async function testGeoNames() {
+  const banner = document.getElementById('geo-test-banner');
+  banner.style.display = 'block';
+  banner.style.background = 'rgba(42,127,255,.06)';
+  banner.style.borderColor = 'rgba(42,127,255,.2)';
+  banner.style.color = 'var(--accent)';
+  banner.textContent = '🔑 Testing GeoNames auth...';
   try {
-    await fetch(API + '/api/geo/pipeline/start', { method: 'POST' });
-    toast('✓ Geo pipeline running — check stats in a few minutes');
-    setTimeout(loadGeoStats, 5000);
+    const r = await fetch(API + '/api/geo/test');
+    const d = await r.json();
+    if(d.ok) {
+      banner.style.background  = 'rgba(0,230,118,.06)';
+      banner.style.borderColor = 'rgba(0,230,118,.2)';
+      banner.style.color       = 'var(--green)';
+      banner.textContent = `✅ GeoNames auth OK — username: ${d.username} — Nigeria geonameId: ${d.geoname_id} — Ready to run!`;
+    } else {
+      banner.style.background  = 'rgba(255,61,87,.06)';
+      banner.style.borderColor = 'rgba(255,61,87,.2)';
+      banner.style.color       = 'var(--red)';
+      banner.textContent = `❌ ${d.error}${d.fix ? ' — FIX: ' + d.fix : ''}`;
+    }
+  } catch(e) {
+    banner.style.color = 'var(--red)';
+    banner.textContent = '❌ Could not reach server: ' + e.message;
+  }
+}
+
+async function triggerGeoPipeline(forceAll=false) {
+  const msg = forceAll
+    ? 'Force re-run geo pipeline for ALL 195 countries? This will overwrite existing data.'
+    : 'Start geo pipeline? This loads states and areas for all 195 countries from GeoNames.\n\nMake sure:\n1. GEONAMES_USERNAME is set in Render env vars\n2. Webservice is enabled at geonames.org/manageaccount';
+  if(!confirm(msg)) return;
+  toast('▶ Geo pipeline starting...');
+  try {
+    const url = API + '/api/geo/pipeline/start' + (forceAll ? '?force=true' : '');
+    const r   = await fetch(url, { method: 'POST' });
+    const d   = await r.json();
+    if(d.error) {
+      toast('✗ ' + d.error);
+      document.getElementById('geo-error-box').style.display = 'block';
+      document.getElementById('geo-error-box').textContent   = '⚠ ' + d.error + (d.fix ? ' — ' + d.fix : '');
+    } else {
+      toast('✓ ' + d.message);
+      // Start polling immediately
+      if(geoPolling) clearInterval(geoPolling);
+      geoPolling = setInterval(loadGeoStats, 3000);
+      setTimeout(loadGeoStats, 1000);
+    }
   } catch(e) { toast('✗ Failed: ' + e.message); }
 }
 
