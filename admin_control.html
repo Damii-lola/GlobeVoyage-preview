@@ -27,9 +27,12 @@ header{position:sticky;top:0;z-index:100;background:rgba(5,8,15,0.95);border-bot
 nav{display:flex;gap:4px}
 .nav-btn{padding:7px 16px;border:1px solid transparent;border-radius:8px;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;letter-spacing:1px;cursor:pointer;transition:all .2s}
 .nav-btn.active,.nav-btn:hover{background:var(--bg3);border-color:var(--border2);color:var(--text)}
+.header-right{display:flex;align-items:center;gap:10px}
 .header-status{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)}
 .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s ease infinite}
 @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,230,118,.4)}50%{opacity:.7;box-shadow:0 0 0 6px rgba(0,230,118,0)}}
+.logout-btn{padding:5px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all .2s}
+.logout-btn:hover{border-color:var(--red);color:var(--red)}
 
 main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .page{display:none}.page.active{display:block}
@@ -37,7 +40,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .section-title{font-size:10px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* ── Live Status Panel ── */
+/* Status panel */
 .status-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .status-block{display:flex;flex-direction:column;gap:4px}
 .status-label{font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace}
@@ -156,7 +159,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .trend-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
 .trend-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:2px}
 .trend-why{font-size:11px;color:var(--text2)}
-.trend-warn{font-size:10px;color:var(--amber);margin-top:4px;font-family:'Space Mono',monospace}
 
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 
@@ -171,7 +173,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 </style>
 </head>
 <body>
-  
+
 <header>
   <div class="logo-mark">
     <div class="logo-icon"></div>
@@ -185,9 +187,12 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     <button class="nav-btn" onclick="showPage('intel',this)">INTELLIGENCE</button>
     <button class="nav-btn" onclick="showPage('pipeline',this)">PIPELINE</button>
   </nav>
-  <div class="header-status">
-    <div class="pulse" id="live-dot"></div>
-    <span id="live-text">CONNECTING...</span>
+  <div class="header-right">
+    <div class="header-status">
+      <div class="pulse" id="live-dot"></div>
+      <span id="live-text">CONNECTING...</span>
+    </div>
+    <button class="logout-btn" id="logout-btn" onclick="logout()">LOGOUT</button>
   </div>
 </header>
 
@@ -198,10 +203,10 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
   <!-- Live Server Status -->
   <div class="section-title">LIVE SERVER STATUS</div>
-  <div class="status-panel" id="status-panel">
+  <div class="status-panel">
     <div class="status-block">
       <div class="status-label">Keepalive Ping</div>
-      <div class="status-value" id="st-ping">
+      <div class="status-value">
         <span class="ping-dot loading" id="st-ping-dot"></span>
         <span id="st-ping-text">Loading...</span>
       </div>
@@ -230,7 +235,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     <div class="stat-card"><div class="stat-val" id="s-countries">195</div><div class="stat-lbl">Countries</div><div class="stat-sub">195 total in pipeline</div></div>
     <div class="stat-card"><div class="stat-val" id="s-processed">—</div><div class="stat-lbl">Processed</div><div class="stat-sub" id="s-coverage">Checking...</div></div>
     <div class="stat-card"><div class="stat-val" id="s-fresh">—</div><div class="stat-lbl">Fresh (&lt;6h)</div><div class="stat-sub">Up to date</div></div>
-    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 27 sources</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 26 sources</div></div>
   </div>
 
   <div class="section-title">SYSTEM CONNECTIONS</div>
@@ -277,7 +282,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <div class="page" id="page-intel">
   <div class="intel-controls">
     <input class="intel-search" id="intel-search" placeholder="Search countries..." oninput="filterIntel()">
-    <div class="cont-filter" id="cont-filter">
+    <div class="cont-filter">
       <button class="cf-btn active" onclick="setCont('',this)">All</button>
       <button class="cf-btn" onclick="setCont('Africa',this)">Africa</button>
       <button class="cf-btn" onclick="setCont('Asia',this)">Asia</button>
@@ -296,33 +301,24 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <!-- PIPELINE PAGE -->
 <div class="page" id="page-pipeline">
 
-  <!-- Geo Stats -->
+  <!-- Geo Hierarchy Status -->
   <div class="section-title">GEO HIERARCHY STATUS</div>
-
-  <!-- Setup instructions -->
-  <div style="background:rgba(42,127,255,.05);border:1px solid rgba(42,127,255,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8">
-    <div style="color:var(--accent);font-weight:700;margin-bottom:6px;letter-spacing:1px">SETUP REQUIRED BEFORE RUNNING</div>
-    <div>1. Register free at <a href="https://www.geonames.org/login" target="_blank" style="color:var(--accent2)">geonames.org/login</a></div>
-    <div>2. Enable webservice at <a href="https://www.geonames.org/manageaccount" target="_blank" style="color:var(--accent2)">geonames.org/manageaccount</a> → click <strong style="color:#fff">"Enable Free Webservice"</strong></div>
-    <div>3. Add <strong style="color:#fff">GEONAMES_USERNAME</strong> to Render → Environment → Environment Variables</div>
-    <div>4. Click <strong style="color:var(--amber)">🔑 TEST GEONAMES AUTH</strong> to verify, then <strong style="color:var(--accent2)">▶ RUN GEO PIPELINE</strong></div>
+  <div style="background:rgba(0,230,118,.04);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8">
+    <div style="color:var(--green);font-weight:700;margin-bottom:6px;letter-spacing:1px">✅ NO API KEY NEEDED — POWERED BY OPENSTREETMAP</div>
+    <div>Uses <strong style="color:#fff">OpenStreetMap Nominatim</strong> — free, no registration required.</div>
+    <div style="margin-top:6px">1. Click <strong style="color:var(--amber)">🔑 TEST CONNECTION</strong> to verify · 2. Click <strong style="color:var(--accent2)">▶ RUN GEO PIPELINE</strong> to load all states and areas</div>
+    <div style="margin-top:4px;color:var(--text3)">Rate limit: 1 req/sec — full run ~2 hours for 195 countries</div>
   </div>
 
-  <!-- Auth test banner -->
   <div id="geo-test-banner" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;border:1px solid"></div>
 
   <div class="stat-row" style="margin-bottom:12px">
     <div class="stat-card"><div class="stat-val" id="g-states">—</div><div class="stat-lbl">States Loaded</div><div class="stat-sub">Provinces / Territories</div></div>
     <div class="stat-card"><div class="stat-val" id="g-areas">—</div><div class="stat-lbl">Areas Loaded</div><div class="stat-sub">Districts / Municipalities</div></div>
     <div class="stat-card"><div class="stat-val" id="g-countries">—</div><div class="stat-lbl">Countries Done</div><div class="stat-sub" id="g-coverage">of 195</div></div>
-    <div class="stat-card">
-      <div class="stat-val" id="g-pct">0%</div>
-      <div class="stat-lbl">Coverage</div>
-      <div class="stat-sub" id="g-status-sub">Not started</div>
-    </div>
+    <div class="stat-card"><div class="stat-val" id="g-pct">0%</div><div class="stat-lbl">Coverage</div><div class="stat-sub" id="g-status-sub">Not started</div></div>
   </div>
 
-  <!-- Live progress bar (only shown while running) -->
   <div id="geo-progress-wrap" style="display:none;margin-bottom:14px">
     <div class="pipeline-bar" style="margin-bottom:0">
       <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">GEO PROGRESS</div>
@@ -337,12 +333,13 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   <div id="geo-error-box" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--red)"></div>
 
   <div style="display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap">
-    <button class="run-btn" onclick="testGeoNames()" style="border-color:var(--amber);color:var(--amber)">🔑 TEST GEONAMES AUTH</button>
+    <button class="run-btn" onclick="testGeoNames()" style="border-color:var(--amber);color:var(--amber)">🔑 TEST CONNECTION</button>
     <button class="run-btn" onclick="triggerGeoPipeline()" style="border-color:var(--accent2);color:var(--accent2)">▶ RUN GEO PIPELINE</button>
     <button class="run-btn" onclick="triggerGeoPipeline(true)" style="border-color:var(--red);color:var(--red);font-size:10px">↺ FORCE RE-RUN ALL</button>
     <button class="run-btn" onclick="loadGeoStats()" style="font-size:11px">↻ REFRESH</button>
   </div>
 
+  <!-- Pipeline coverage -->
   <div class="pipeline-bar">
     <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">PIPELINE COVERAGE</div>
     <div class="progress-track"><div class="progress-fill" id="pipe-fill" style="width:0%"></div></div>
@@ -368,7 +365,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- Country detail modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-  <div class="modal" id="modal">
+  <div class="modal">
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div id="modal-content"></div>
   </div>
@@ -377,54 +374,31 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <div class="toast" id="toast"></div>
 
 <script>
-
-// ── Auth guard — must be FIRST script in body ─────────────────────
+// ── Auth guard — FIRST thing that runs ───────────────────────────
 (function() {
   var auth = sessionStorage.getItem('gv_auth');
-  var user = sessionStorage.getItem('gv_user');
   if (!auth) {
-    // No session — redirect to login immediately
     window.location.replace('login');
-    throw new Error('Redirecting to login');
+    throw new Error('Not authenticated');
   }
-
-  // Inject the auth header into all fetch calls to the API
-  // Override window.fetch so all API calls include credentials
-  var originalFetch = window.fetch;
-  window.fetch = function(url, opts) {
-    opts = opts || {};
-    opts.headers = opts.headers || {};
-    // Only add auth header for Render backend calls, not external
-    if (typeof url === 'string' && url.includes('onrender.com')) {
-      opts.headers['Authorization'] = 'Basic ' + auth;
-    }
-    return originalFetch(url, opts);
-  };
-
-  // Show logged-in user in header
-  document.addEventListener('DOMContentLoaded', function() {
-    var liveText = document.getElementById('live-text');
-    if (liveText && user) {
-      // Add logout button to header
-      var header = document.querySelector('header');
-      if (header) {
-        var logoutBtn = document.createElement('button');
-        logoutBtn.textContent = user.toUpperCase() + '  ✕';
-        logoutBtn.style.cssText = 'background:none;border:1px solid #1a2540;border-radius:6px;color:#3a5a7a;font-size:10px;letter-spacing:1px;padding:5px 10px;cursor:pointer;font-family:"Space Mono",monospace;';
-        logoutBtn.onclick = function() {
-          sessionStorage.removeItem('gv_auth');
-          sessionStorage.removeItem('gv_user');
-          window.location.replace('login');
-        };
-        var statusDiv = header.querySelector('.header-status');
-        if (statusDiv) statusDiv.appendChild(logoutBtn);
-      }
-    }
-  });
+  // Show logged-in username in logout button
+  var user = sessionStorage.getItem('gv_user') || 'Admin';
+  var btn = document.getElementById('logout-btn');
+  if(btn) btn.textContent = user.toUpperCase() + '  ✕ LOGOUT';
 })();
 
 const API = 'https://globevoyage-admin.onrender.com';
 let allIntel = [], activeCont = '', activeSearch = '';
+
+function getAuthHeaders() {
+  return { 'Authorization': 'Basic ' + (sessionStorage.getItem('gv_auth')||'') };
+}
+
+function logout() {
+  sessionStorage.removeItem('gv_auth');
+  sessionStorage.removeItem('gv_user');
+  window.location.replace('login');
+}
 
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
@@ -444,38 +418,23 @@ function toast(msg) {
 // ── Live Status ───────────────────────────────────────────────────
 async function loadStatus() {
   try {
-    const r = await fetch(API+'/api/status');
+    const r = await fetch(API+'/api/status', { headers: getAuthHeaders() });
     const d = await r.json();
-
-    // Keepalive
     const ping = d.keepalive;
     const dot  = document.getElementById('st-ping-dot');
     const txt  = document.getElementById('st-ping-text');
     dot.className = 'ping-dot ' + (ping.healthy ? 'ok' : 'warn');
-    txt.textContent = ping.healthy ? `Healthy — pinging every ${ping.ping_interval}` : ping.status;
+    txt.textContent = ping.healthy ? `Healthy — every ${ping.ping_interval}` : (ping.status||'Checking...');
     document.getElementById('st-ping-count').textContent =
-      `${ping.ping_count.toLocaleString()} pings sent · last ${ping.ping_age_ms !== null ? Math.round(ping.ping_age_ms/1000)+'s ago' : '—'}`;
-
-    // Uptime
+      `${(ping.ping_count||0).toLocaleString()} pings sent · last ${ping.ping_age_ms !== null ? Math.round(ping.ping_age_ms/1000)+'s ago' : '—'}`;
     document.getElementById('st-uptime').textContent = d.server.uptime_display;
-    document.getElementById('st-boot').textContent =
-      'Booted: ' + new Date(d.server.booted_at).toLocaleString();
-
-    // Pipeline
+    document.getElementById('st-boot').textContent = 'Booted: ' + new Date(d.server.booted_at).toLocaleString();
     const pipe = d.pipeline;
-    document.getElementById('st-pipeline').textContent =
-      pipe.running ? `🔄 Running — ${pipe.countries_processed_last_run}/195` : '✅ Idle';
-    document.getElementById('st-last-run').textContent =
-      pipe.last_run_at
-        ? 'Last: ' + new Date(pipe.last_run_at).toLocaleString()
-        : 'Not yet run this session';
-
-    // Next runs
-    document.getElementById('st-next-runs').innerHTML =
-      (pipe.next_runs||[]).map(r =>
-        `<span class="next-run-chip" title="${new Date(r.timestamp).toLocaleString()}">${r.time_utc} · in ${r.runs_in}</span>`
-      ).join('');
-
+    document.getElementById('st-pipeline').textContent = pipe.running ? `🔄 Running — ${pipe.countries_processed_last_run}/195` : '✅ Idle';
+    document.getElementById('st-last-run').textContent = pipe.last_run_at ? 'Last: ' + new Date(pipe.last_run_at).toLocaleString() : 'Not yet run this session';
+    document.getElementById('st-next-runs').innerHTML = (pipe.next_runs||[]).map(r =>
+      `<span class="next-run-chip" title="${new Date(r.timestamp).toLocaleString()}">${r.time_utc} · in ${r.runs_in}</span>`
+    ).join('');
   } catch(e) {
     document.getElementById('st-ping-text').textContent = 'Could not reach server';
     document.getElementById('st-ping-dot').className = 'ping-dot warn';
@@ -486,7 +445,7 @@ async function loadStatus() {
 async function loadHealth() {
   const t = Date.now();
   try {
-    const r = await fetch(API+'/');
+    const r = await fetch(API+'/', { headers: getAuthHeaders() });
     const ms = Date.now()-t;
     setCard('backend-card','ok',`Responding in ${ms}ms`,ms+'ms');
     document.getElementById('live-dot').style.background='var(--green)';
@@ -496,42 +455,31 @@ async function loadHealth() {
     document.getElementById('live-dot').style.background='var(--red)';
     document.getElementById('live-text').textContent='BACKEND DOWN';
   }
-
   try {
-    const r = await fetch(API+'/api/health');
+    const r = await fetch(API+'/api/health', { headers: getAuthHeaders() });
     const d = await r.json();
     const checks = d.checks||{};
-
-    const sb = checks.supabase;
-    setCard('supabase-card', sb?.ok?'ok':'fail', sb?.detail||'Unknown', '');
-
-    const mi = checks.mistral;
-    setCard('mistral-card', mi?.ok?'ok':'fail', mi?.detail||'Unknown', '');
-
-    // Globe check
+    setCard('supabase-card', checks.supabase?.ok?'ok':'fail', checks.supabase?.detail||'Unknown','');
+    setCard('mistral-card',  checks.mistral?.ok?'ok':'fail',  checks.mistral?.detail||'Unknown','');
     try {
       const gr = await fetch(API+'/globe', {method:'HEAD'});
-      setCard('globe-card', gr.ok?'ok':'fail', gr.ok?'Globe HTML serving OK':`HTTP ${gr.status}`, '');
+      setCard('globe-card', gr.ok?'ok':'fail', gr.ok?'Globe HTML serving OK':`HTTP ${gr.status}`,'');
     } catch(e) { setCard('globe-card','fail','Globe endpoint error',''); }
 
-    // All source connections
     const sourceKeys = [
-      'wikipedia','wikivoyage','openweathermap','newsapi',
-      'google_news','gdacs','ticketmaster','eventbrite','predicthq',
-      'geoapify','social_proxy','unsplash','openaq','aviationstack',
-      'numbeo','rest_countries','airbnb','booking','tripadvisor',
-      'skyscanner','currency','google_places','travel_advisor',
-      'hotels_com','youtube','waqi'
+      'wikipedia','wikivoyage','openweathermap','newsapi','google_news','gdacs',
+      'ticketmaster','eventbrite','predicthq','geoapify','social_proxy',
+      'unsplash','openaq','aviationstack','numbeo','rest_countries','airbnb',
+      'booking','tripadvisor','skyscanner','currency','google_places',
+      'travel_advisor','hotels_com','youtube','waqi'
     ];
     let okCount = 0;
-    const grid = document.getElementById('health-grid');
-    grid.innerHTML = sourceKeys.map(k => {
+    document.getElementById('health-grid').innerHTML = sourceKeys.map(k => {
       const h = checks[k]||{};
-      const ok = h.ok;
-      if(ok===true) okCount++;
-      const dotClass = ok===true?'ok':ok===false?'fail':'unknown';
+      if(h.ok===true) okCount++;
+      const dot = h.ok===true?'ok':h.ok===false?'fail':'unknown';
       return `<div class="health-card">
-        <div class="health-dot ${dotClass}"></div>
+        <div class="health-dot ${dot}"></div>
         <div class="health-info">
           <div class="health-name">${h.label||k}</div>
           <div class="health-detail" title="${h.detail||''}">${h.detail||'Not yet tested'}</div>
@@ -541,22 +489,13 @@ async function loadHealth() {
     }).join('');
     document.getElementById('s-sources').textContent = okCount;
     document.getElementById('s-sources-sub').textContent = `of ${sourceKeys.length} sources`;
-
-    // API keys
-    const keysEl = document.getElementById('keys-grid');
-    keysEl.innerHTML = (checks.env_keys?.keys||[]).map(k =>
-      `<div class="key-pill ${k.configured?'yes':'no'}">
-        <div class="dot"></div>
-        <span class="key-name">${k.label}</span>
-      </div>`
+    document.getElementById('keys-grid').innerHTML = (checks.env_keys?.keys||[]).map(k =>
+      `<div class="key-pill ${k.configured?'yes':'no'}"><div class="dot"></div><span class="key-name">${k.label}</span></div>`
     ).join('');
-
-    // Pipeline stats
     const pp = checks.pipeline;
     document.getElementById('s-processed').textContent = pp?.processed||'—';
     document.getElementById('s-coverage').textContent = (pp?.processed?Math.round(pp.processed/195*100):0)+'% coverage';
     document.getElementById('s-fresh').textContent = pp?.fresh||'0';
-
   } catch(e) { console.error('Health error:', e); }
 }
 
@@ -569,16 +508,14 @@ function setCard(id, status, detail, ms) {
 
 // ── Intelligence ──────────────────────────────────────────────────
 async function loadIntel() {
-  document.getElementById('intel-grid').innerHTML =
-    '<div style="color:var(--text3);font-family:\'Space Mono\',monospace;font-size:11px;padding:20px">Loading... <span class="spinner"></span></div>';
+  document.getElementById('intel-grid').innerHTML = '<div style="color:var(--text3);font-family:\'Space Mono\',monospace;font-size:11px;padding:20px">Loading... <span class="spinner"></span></div>';
   try {
-    const r = await fetch(API+'/api/intel');
+    const r = await fetch(API+'/api/intel', { headers: getAuthHeaders() });
     const d = await r.json();
     allIntel = d.countries||[];
     renderIntel();
   } catch(e) {
-    document.getElementById('intel-grid').innerHTML =
-      `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px;padding:20px">Failed: ${e.message}</div>`;
+    document.getElementById('intel-grid').innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px;padding:20px">Failed: ${e.message}</div>`;
   }
 }
 
@@ -588,6 +525,7 @@ function setCont(c, btn) {
   if(btn) btn.classList.add('active');
   renderIntel();
 }
+
 function filterIntel() {
   activeSearch = document.getElementById('intel-search').value.toLowerCase();
   renderIntel();
@@ -603,29 +541,26 @@ function freshLabel(lu) {
 
 function renderIntel() {
   const filtered = allIntel.filter(c => {
-    const cm = !activeCont || c.continent===activeCont;
-    const sm = !activeSearch || c.country_name.toLowerCase().includes(activeSearch);
-    return cm && sm;
+    return (!activeCont || c.continent===activeCont) &&
+           (!activeSearch || c.country_name.toLowerCase().includes(activeSearch));
   });
   document.getElementById('intel-count').textContent = `${filtered.length} countries`;
-  const grid = document.getElementById('intel-grid');
-  if(!filtered.length) { grid.innerHTML='<div style="color:var(--text3);padding:20px;font-family:\'Space Mono\',monospace;font-size:11px">No countries found.</div>'; return; }
-  grid.innerHTML = filtered.map(c => {
+  if(!filtered.length) {
+    document.getElementById('intel-grid').innerHTML = '<div style="color:var(--text3);padding:20px;font-family:\'Space Mono\',monospace;font-size:11px">No countries found.</div>';
+    return;
+  }
+  document.getElementById('intel-grid').innerHTML = filtered.map(c => {
     const f = freshLabel(c.last_updated);
     const temp = c.weather_now ? `${c.weather_now.temp}°C` : null;
     const months = (c.ai_best_months||[]).slice(0,3).join(', ');
-    const hasAI = !!c.ai_briefing;
     return `<div class="intel-card" onclick="openCountry('${c.iso}')">
       <div class="intel-card-header">
-        <div>
-          <div class="intel-card-name">${c.country_name}</div>
-          <div class="intel-card-cont">${c.continent}</div>
-        </div>
+        <div><div class="intel-card-name">${c.country_name}</div><div class="intel-card-cont">${c.continent}</div></div>
         <span class="freshness ${f.cls}">${f.label}</span>
       </div>
       <div class="intel-briefing">${c.ai_briefing||'<em style="color:var(--text3)">Pipeline pending...</em>'}</div>
       <div class="intel-card-footer">
-        ${hasAI?'<span class="intel-tag">AI ✓</span>':''}
+        ${c.ai_briefing?'<span class="intel-tag">AI ✓</span>':''}
         ${months?`<span class="intel-tag">Best: ${months}</span>`:''}
         ${temp?`<span class="weather-chip">🌡 ${temp}</span>`:''}
       </div>
@@ -634,125 +569,63 @@ function renderIntel() {
 }
 
 async function openCountry(iso) {
-  const overlay = document.getElementById('modal-overlay');
-  const content = document.getElementById('modal-content');
-  content.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-family:\'Space Mono\',monospace">Loading <span class="spinner"></span></div>';
-  overlay.classList.add('open');
+  document.getElementById('modal-overlay').classList.add('open');
+  document.getElementById('modal-content').innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3);font-family:\'Space Mono\',monospace">Loading <span class="spinner"></span></div>';
   try {
-    const r = await fetch(`${API}/api/intel/${iso}`);
+    const r = await fetch(`${API}/api/intel/${iso}`, { headers: getAuthHeaders() });
     const d = await r.json();
     const f = freshLabel(d.last_updated);
-    content.innerHTML = `
+    document.getElementById('modal-content').innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-        <div>
-          <div class="modal-title">${d.country_name}</div>
-          <div class="modal-sub">${d.continent||''} · ${d.iso} · <span class="freshness ${f.cls}">${f.label}</span></div>
-        </div>
+        <div><div class="modal-title">${d.country_name}</div>
+        <div class="modal-sub">${d.continent||''} · ${d.iso} · <span class="freshness ${f.cls}">${f.label}</span></div></div>
         <button class="run-btn" onclick="runCountry('${iso}','${d.country_name}')" style="font-size:11px;padding:6px 12px">↻ REFRESH</button>
       </div>
-
-      ${d.ai_briefing?`<div class="modal-section">
-        <div class="modal-section-title">AI BRIEFING</div>
+      ${d.ai_briefing?`<div class="modal-section"><div class="modal-section-title">AI BRIEFING</div>
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.7">${d.ai_briefing}</div>
-        ${d.ai_vibe?`<div style="margin-top:8px;font-size:11px;color:var(--accent2);font-style:italic">"${d.ai_vibe}"</div>`:''}
-      </div>`:''}
-
-      ${d.weather_now?`<div class="modal-section">
-        <div class="modal-section-title">WEATHER NOW</div>
+        ${d.ai_vibe?`<div style="margin-top:8px;font-size:11px;color:var(--accent2);font-style:italic">"${d.ai_vibe}"</div>`:''}</div>`:''}
+      ${d.weather_now?`<div class="modal-section"><div class="modal-section-title">WEATHER NOW</div>
         <div class="modal-grid">
-          <div class="modal-box"><div class="modal-box-title">CONDITIONS</div><div class="modal-box-val">${d.weather_now.temp}°C, feels ${d.weather_now.feels_like}°C — ${d.weather_now.condition}</div></div>
+          <div class="modal-box"><div class="modal-box-title">CONDITIONS</div><div class="modal-box-val">${d.weather_now.temp}°C — ${d.weather_now.condition}</div></div>
           <div class="modal-box"><div class="modal-box-title">WIND & HUMIDITY</div><div class="modal-box-val">${d.weather_now.wind} km/h · ${d.weather_now.humidity}% humidity</div></div>
-        </div>
-      </div>`:''}
-
-      ${d.cost_of_living?`<div class="modal-section">
-        <div class="modal-section-title">COST OF LIVING</div>
+        </div></div>`:''}
+      ${d.cost_of_living?`<div class="modal-section"><div class="modal-section-title">COST OF LIVING</div>
         <div class="modal-grid">
           <div class="modal-box"><div class="modal-box-title">CHEAP MEAL</div><div class="modal-box-val">$${d.cost_of_living.meal_cheap||'—'}</div></div>
           <div class="modal-box"><div class="modal-box-title">1-BED RENT/MO</div><div class="modal-box-val">$${d.cost_of_living.one_bed_city_rent||'—'}</div></div>
-          <div class="modal-box"><div class="modal-box-title">AVG SALARY/MO</div><div class="modal-box-val">$${d.cost_of_living.avg_salary||'—'}</div></div>
-          <div class="modal-box"><div class="modal-box-title">TRANSPORT PASS</div><div class="modal-box-val">$${d.cost_of_living.monthly_transport||'—'}</div></div>
-        </div>
-      </div>`:''}
-
-      ${d.air_quality?`<div class="modal-section">
-        <div class="modal-section-title">AIR QUALITY</div>
-        <div class="modal-box"><div class="modal-box-title">AQI · ${d.air_quality.aqi_label||''}</div><div class="modal-box-val" style="font-size:22px;font-weight:800;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'} <span style="font-size:12px;color:var(--text2)">PM2.5: ${d.air_quality.pm25||'—'} µg/m³</span></div></div>
-      </div>`:''}
-
-      ${d.ai_safety_summary?`<div class="modal-section">
-        <div class="modal-section-title">SAFETY</div>
-        <div style="background:rgba(255,171,0,.06);border:1px solid rgba(255,171,0,.15);border-radius:10px;padding:14px;font-size:12px;color:#e0c070">${d.ai_safety_summary}</div>
-        ${d.ai_avoid_if?`<div style="margin-top:8px;font-size:11px;color:var(--text2)"><strong>Avoid if:</strong> ${d.ai_avoid_if}</div>`:''}
-      </div>`:''}
-
-      ${(d.ai_recommendations||[]).length?`<div class="modal-section">
-        <div class="modal-section-title">AI RECOMMENDATIONS</div>
+        </div></div>`:''}
+      ${d.air_quality?`<div class="modal-section"><div class="modal-section-title">AIR QUALITY</div>
+        <div class="modal-box"><div class="modal-box-title">AQI · ${d.air_quality.aqi_label||''}</div>
+        <div class="modal-box-val" style="font-size:22px;font-weight:800;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'}</div></div></div>`:''}
+      ${d.ai_safety_summary?`<div class="modal-section"><div class="modal-section-title">SAFETY</div>
+        <div style="background:rgba(255,171,0,.06);border:1px solid rgba(255,171,0,.15);border-radius:10px;padding:14px;font-size:12px;color:#e0c070">${d.ai_safety_summary}</div></div>`:''}
+      ${(d.ai_recommendations||[]).length?`<div class="modal-section"><div class="modal-section-title">AI RECOMMENDATIONS</div>
         <div class="recs-list">${(d.ai_recommendations||[]).map((r,i)=>`
-          <div class="rec-item">
-            <div class="rec-num">0${i+1}</div>
-            <div style="flex:1">
-              <div class="rec-title">${r.title}</div>
-              <div class="rec-why">${r.why}</div>
-              <div class="rec-meta">
-                <span class="rec-tag type">${r.type||''}</span>
-                <span class="rec-tag risk-${r.risk||'none'}">${r.risk||'low'} risk</span>
-                ${r.when?`<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${r.when}</span>`:''}
-              </div>
-            </div>
-            <div style="font-size:20px;font-weight:700;color:var(--border2)">${r.rating||'—'}/5</div>
-          </div>`).join('')}</div>
-      </div>`:''}
-
-      ${(d.ai_trending_now||[]).length?`<div class="modal-section">
-        <div class="modal-section-title">TRENDING NOW</div>
-        <div class="trend-list">${(d.ai_trending_now||[]).map(t=>`
-          <div class="trend-item">
-            <div class="trend-name">${t.name}</div>
-            <div class="trend-why">${t.why_trending||''}</div>
-            ${t.best_time?`<div style="font-size:10px;color:var(--accent2);margin-top:3px;font-family:'Space Mono',monospace">Best: ${t.best_time}</div>`:''}
-            ${t.warning?`<div class="trend-warn">⚠ ${t.warning}</div>`:''}
-          </div>`).join('')}</div>
-      </div>`:''}
-
-      ${(d.ai_calendar||[]).length?`<div class="modal-section">
-        <div class="modal-section-title">CALENDAR ALERTS</div>
-        <div class="cal-row">${(d.ai_calendar||[]).map(c=>`<div class="cal-item ${c.color}" title="${c.reason}">${c.date} — ${c.label}</div>`).join('')}</div>
-      </div>`:''}
-
-      ${(d.events||[]).length?`<div class="modal-section">
-        <div class="modal-section-title">UPCOMING EVENTS</div>
+          <div class="rec-item"><div class="rec-num">0${i+1}</div>
+            <div style="flex:1"><div class="rec-title">${r.title}</div><div class="rec-why">${r.why}</div>
+              <div class="rec-meta"><span class="rec-tag type">${r.type||''}</span><span class="rec-tag risk-${r.risk||'none'}">${r.risk||'low'} risk</span></div>
+            </div><div style="font-size:20px;font-weight:700;color:var(--border2)">${r.rating||'—'}/5</div>
+          </div>`).join('')}</div></div>`:''}
+      ${(d.events||[]).length?`<div class="modal-section"><div class="modal-section-title">UPCOMING EVENTS</div>
         <div class="events-list">${(d.events||[]).slice(0,6).map(e=>`
           <div class="event-item">
-            <div><div class="event-name">${e.name}</div><div class="event-meta">${e.venue||''} ${e.city?'· '+e.city:''} · ${e.source||''}</div></div>
+            <div><div class="event-name">${e.name}</div><div class="event-meta">${e.venue||''} ${e.city?'· '+e.city:''}</div></div>
             <div class="event-date">${e.date||'TBC'}</div>
-          </div>`).join('')}
-        </div>
-      </div>`:''}
-
-      ${(d.news_headlines||[]).length?`<div class="modal-section">
-        <div class="modal-section-title">NEWS HEADLINES</div>
+          </div>`).join('')}</div></div>`:''}
+      ${(d.news_headlines||[]).length?`<div class="modal-section"><div class="modal-section-title">NEWS HEADLINES</div>
         ${(d.news_headlines||[]).slice(0,5).map(n=>`
           <div style="border-bottom:1px solid var(--border);padding:8px 0;display:flex;gap:10px;align-items:flex-start">
             <span class="badge ${n.risk_level==='high'?'error':n.risk_level==='medium'?'partial':'success'}">${n.risk_level}</span>
-            <div>
-              <a href="${n.url}" target="_blank" style="font-size:12px;color:var(--text);text-decoration:none;line-height:1.5">${n.title}</a>
+            <div><a href="${n.url}" target="_blank" style="font-size:12px;color:var(--text);text-decoration:none">${n.title}</a>
               <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${n.source||''}</div>
-            </div>
-          </div>`).join('')}
-      </div>`:''}
-
-      ${d.ai_hidden_gem?`<div class="modal-section">
-        <div class="modal-section-title">HIDDEN GEM</div>
-        <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;font-size:12px;color:var(--accent2)">${d.ai_hidden_gem}</div>
-      </div>`:''}
-
+            </div></div>`).join('')}</div>`:''}
+      ${d.ai_hidden_gem?`<div class="modal-section"><div class="modal-section-title">HIDDEN GEM</div>
+        <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;font-size:12px;color:var(--accent2)">${d.ai_hidden_gem}</div></div>`:''}
       <div style="text-align:right;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-top:16px">
         Last updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}
-      </div>
-    `;
+      </div>`;
   } catch(e) {
-    content.innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
+    document.getElementById('modal-content').innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
   }
 }
 
@@ -765,22 +638,18 @@ function closeModal(e) {
 async function loadPipelineStatus() {
   try {
     const [statusR, countriesR] = await Promise.all([
-      fetch(API+'/api/pipeline/status'),
-      fetch(API+'/api/countries')
+      fetch(API+'/api/pipeline/status', { headers: getAuthHeaders() }),
+      fetch(API+'/api/countries',       { headers: getAuthHeaders() }),
     ]);
     const d  = await statusR.json();
     const cd = await countriesR.json();
-
     const pct = Math.round((d.countries_processed||0)/195*100);
     document.getElementById('pipe-fill').style.width = pct+'%';
     document.getElementById('pipe-pct').textContent = pct+'%';
-
     const allC = cd.all||[];
     const freshnessMap = {};
     (d.country_freshness||[]).forEach(c=>{ freshnessMap[c.iso]=c; });
-
-    const body = document.getElementById('freshness-body');
-    body.innerHTML = allC.map(c => {
+    document.getElementById('freshness-body').innerHTML = allC.map(c => {
       const fi = freshnessMap[c.iso];
       const f  = freshLabel(fi?.last_updated);
       return `<tr>
@@ -792,9 +661,7 @@ async function loadPipelineStatus() {
         <td><button class="run-btn" onclick="runCountry('${c.iso}','${c.name}')" style="padding:4px 10px;font-size:10px">RUN</button></td>
       </tr>`;
     }).join('');
-
-    const runsBody = document.getElementById('runs-body');
-    runsBody.innerHTML = (d.recent_runs||[]).slice(0,30).map(r =>
+    document.getElementById('runs-body').innerHTML = (d.recent_runs||[]).slice(0,30).map(r =>
       `<tr>
         <td style="font-weight:600;color:#fff">${r.iso}</td>
         <td><span class="badge ${r.status}">${r.status.toUpperCase()}</span></td>
@@ -809,7 +676,7 @@ async function loadPipelineStatus() {
 async function runCountry(iso, name) {
   toast(`▶ Pipeline starting for ${name}...`);
   try {
-    await fetch(`${API}/api/pipeline/run/${iso}`, {method:'POST'});
+    await fetch(`${API}/api/pipeline/run/${iso}`, { method:'POST', headers: getAuthHeaders() });
     toast(`✓ Pipeline started for ${name}`);
     setTimeout(loadPipelineStatus, 3000);
   } catch(e) { toast(`✗ Failed: ${e.message}`); }
@@ -818,41 +685,29 @@ async function runCountry(iso, name) {
 async function triggerPipeline() {
   if(!confirm('Run full pipeline for all 195 countries? This takes several hours.')) return;
   toast('▶ Full pipeline started...');
-  fetch(`${API}/api/pipeline/run-all`, {method:'POST'}).catch(()=>{});
+  fetch(`${API}/api/pipeline/run-all`, { method:'POST', headers: getAuthHeaders() }).catch(()=>{});
 }
 
-// ── Geo Stats + Live Progress ─────────────────────────────────────
+// ── Geo Stats ─────────────────────────────────────────────────────
 let geoPolling = null;
 
 async function loadGeoStats() {
   try {
-    // Fetch stats and live status separately so one failure doesn't break both
     let stats = {}, live = {};
-    try {
-      const r = await fetch(API + '/api/geo/stats');
-      if(r.ok) stats = await r.json();
-    } catch(e) { console.warn('geo/stats failed:', e.message); }
-    try {
-      const r = await fetch(API + '/api/geo/pipeline/status');
-      if(r.ok) live = await r.json();
-    } catch(e) { console.warn('geo/pipeline/status failed:', e.message); }
-
-    // Update stat cards
+    try { const r = await fetch(API+'/api/geo/stats',             { headers: getAuthHeaders() }); if(r.ok) stats = await r.json(); } catch(e){}
+    try { const r = await fetch(API+'/api/geo/pipeline/status',   { headers: getAuthHeaders() }); if(r.ok) live  = await r.json(); } catch(e){}
     document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
     document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
     document.getElementById('g-countries').textContent = stats.countries_loaded||0;
     document.getElementById('g-coverage').textContent  = `of 195 (${stats.coverage_pct||0}%)`;
-    document.getElementById('g-pct').textContent       = (live.progress_pct||stats.coverage_pct||0) + '%';
-
-    // Live progress bar
+    document.getElementById('g-pct').textContent       = (live.progress_pct||stats.coverage_pct||0)+'%';
     const wrap = document.getElementById('geo-progress-wrap');
     if(live.running) {
       wrap.style.display = 'block';
-      document.getElementById('geo-fill').style.width        = (live.progress_pct||0) + '%';
-      document.getElementById('geo-pct-label').textContent   = (live.progress_pct||0) + '%';
+      document.getElementById('geo-fill').style.width = (live.progress_pct||0)+'%';
+      document.getElementById('geo-pct-label').textContent = (live.progress_pct||0)+'%';
       document.getElementById('geo-current-country').textContent = live.current_country||'—';
-      document.getElementById('g-status-sub').textContent    = `Running — ${live.countries_done}/${live.countries_total}`;
-      // Keep polling while running
+      document.getElementById('g-status-sub').textContent = `Running — ${live.countries_done}/${live.countries_total}`;
       if(!geoPolling) geoPolling = setInterval(loadGeoStats, 3000);
     } else {
       wrap.style.display = 'none';
@@ -861,83 +716,60 @@ async function loadGeoStats() {
         ? `Complete — ${(live.total_states||0).toLocaleString()} states`
         : live.last_error ? 'Error — see below' : 'Not yet run';
     }
-
-    // Error box
     const errBox = document.getElementById('geo-error-box');
-    if(live.last_error) {
-      errBox.style.display = 'block';
-      errBox.textContent   = '⚠ ' + live.last_error;
-    } else {
-      errBox.style.display = 'none';
-    }
-
-  } catch(e) {
-    document.getElementById('g-status-sub').textContent = 'Error loading';
-  }
+    if(live.last_error) { errBox.style.display='block'; errBox.textContent='⚠ '+live.last_error; }
+    else errBox.style.display='none';
+  } catch(e) { document.getElementById('g-status-sub').textContent = 'Error loading'; }
 }
 
 async function testGeoNames() {
   const banner = document.getElementById('geo-test-banner');
-  banner.style.display = 'block';
-  banner.style.background = 'rgba(42,127,255,.06)';
-  banner.style.borderColor = 'rgba(42,127,255,.2)';
-  banner.style.color = 'var(--accent)';
-  banner.textContent = '🔑 Testing GeoNames auth...';
+  banner.style.display='block';
+  banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(42,127,255,.2);background:rgba(42,127,255,.06);color:var(--accent)';
+  banner.textContent='🔑 Testing connection...';
   try {
-    const r = await fetch(API + '/api/geo/test');
+    const r = await fetch(API+'/api/geo/test', { headers: getAuthHeaders() });
     const d = await r.json();
     if(d.ok) {
-      banner.style.background  = 'rgba(0,230,118,.06)';
-      banner.style.borderColor = 'rgba(0,230,118,.2)';
-      banner.style.color       = 'var(--green)';
-      banner.textContent = `✅ GeoNames auth OK — username: ${d.username} — Nigeria geonameId: ${d.geoname_id} — Ready to run!`;
+      banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(0,230,118,.2);background:rgba(0,230,118,.06);color:var(--green)';
+      banner.textContent=`✅ ${d.message} — ${d.response_ms}ms`;
     } else {
-      banner.style.background  = 'rgba(255,61,87,.06)';
-      banner.style.borderColor = 'rgba(255,61,87,.2)';
-      banner.style.color       = 'var(--red)';
-      banner.textContent = `❌ ${d.error}${d.fix ? ' — FIX: ' + d.fix : ''}`;
+      banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(255,61,87,.2);background:rgba(255,61,87,.06);color:var(--red)';
+      banner.textContent=`❌ ${d.error}${d.fix?' — FIX: '+d.fix:''}`;
     }
-  } catch(e) {
-    banner.style.color = 'var(--red)';
-    banner.textContent = '❌ Could not reach server: ' + e.message;
-  }
+  } catch(e) { banner.textContent='❌ '+e.message; }
 }
 
 async function triggerGeoPipeline(forceAll=false) {
-  const msg = forceAll
-    ? 'Force re-run geo pipeline for ALL 195 countries? This will overwrite existing data.'
-    : 'Start geo pipeline? This loads states and areas for all 195 countries from GeoNames.\n\nMake sure:\n1. GEONAMES_USERNAME is set in Render env vars\n2. Webservice is enabled at geonames.org/manageaccount';
+  const msg = forceAll ? 'Force re-run geo pipeline for ALL 195 countries?' : 'Start geo pipeline? Loads states and areas for all 195 countries from OpenStreetMap.';
   if(!confirm(msg)) return;
   toast('▶ Geo pipeline starting...');
   try {
-    const url = API + '/api/geo/pipeline/start' + (forceAll ? '?force=true' : '');
-    const r   = await fetch(url, { method: 'POST' });
+    const url = API+'/api/geo/pipeline/start'+(forceAll?'?force=true':'');
+    const r   = await fetch(url, { method:'POST', headers: getAuthHeaders() });
     const d   = await r.json();
     if(d.error) {
-      toast('✗ ' + d.error);
-      document.getElementById('geo-error-box').style.display = 'block';
-      document.getElementById('geo-error-box').textContent   = '⚠ ' + d.error + (d.fix ? ' — ' + d.fix : '');
+      toast('✗ '+d.error);
+      const eb = document.getElementById('geo-error-box');
+      eb.style.display='block'; eb.textContent='⚠ '+d.error;
     } else {
-      toast('✓ ' + d.message);
-      // Start polling immediately
+      toast('✓ '+d.message);
       if(geoPolling) clearInterval(geoPolling);
       geoPolling = setInterval(loadGeoStats, 3000);
       setTimeout(loadGeoStats, 1000);
     }
-  } catch(e) { toast('✗ Failed: ' + e.message); }
+  } catch(e) { toast('✗ '+e.message); }
 }
 
 // ── Init ──────────────────────────────────────────────────────────
 loadHealth();
 loadStatus();
-loadGeoStats();
 setInterval(loadHealth, 30000);
 setInterval(loadStatus, 5000);
-setInterval(loadGeoStats, 15000); // refresh geo stats every 15s
 
-// Keepalive ping every 5s so Render never sleeps
+// Keepalive ping every 5s
 setInterval(() => {
-  fetch(API + '/', { method: 'GET', cache: 'no-store' }).catch(() => {});
+  fetch(API+'/', { method:'GET', cache:'no-store', headers: getAuthHeaders() }).catch(()=>{});
 }, 5000);
 </script>
 </body>
