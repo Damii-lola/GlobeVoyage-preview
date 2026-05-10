@@ -171,7 +171,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 </style>
 </head>
 <body>
-
+  
 <header>
   <div class="logo-mark">
     <div class="logo-icon"></div>
@@ -377,6 +377,52 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <div class="toast" id="toast"></div>
 
 <script>
+
+// ── Auth guard — must be FIRST script in body ─────────────────────
+(function() {
+  var auth = sessionStorage.getItem('gv_auth');
+  var user = sessionStorage.getItem('gv_user');
+  if (!auth) {
+    // No session — redirect to login immediately
+    window.location.replace('login');
+    throw new Error('Redirecting to login');
+  }
+
+  // Inject the auth header into all fetch calls to the API
+  // Override window.fetch so all API calls include credentials
+  var originalFetch = window.fetch;
+  window.fetch = function(url, opts) {
+    opts = opts || {};
+    opts.headers = opts.headers || {};
+    // Only add auth header for Render backend calls, not external
+    if (typeof url === 'string' && url.includes('onrender.com')) {
+      opts.headers['Authorization'] = 'Basic ' + auth;
+    }
+    return originalFetch(url, opts);
+  };
+
+  // Show logged-in user in header
+  document.addEventListener('DOMContentLoaded', function() {
+    var liveText = document.getElementById('live-text');
+    if (liveText && user) {
+      // Add logout button to header
+      var header = document.querySelector('header');
+      if (header) {
+        var logoutBtn = document.createElement('button');
+        logoutBtn.textContent = user.toUpperCase() + '  ✕';
+        logoutBtn.style.cssText = 'background:none;border:1px solid #1a2540;border-radius:6px;color:#3a5a7a;font-size:10px;letter-spacing:1px;padding:5px 10px;cursor:pointer;font-family:"Space Mono",monospace;';
+        logoutBtn.onclick = function() {
+          sessionStorage.removeItem('gv_auth');
+          sessionStorage.removeItem('gv_user');
+          window.location.replace('login');
+        };
+        var statusDiv = header.querySelector('.header-status');
+        if (statusDiv) statusDiv.appendChild(logoutBtn);
+      }
+    }
+  });
+})();
+
 const API = 'https://globevoyage-admin.onrender.com';
 let allIntel = [], activeCont = '', activeSearch = '';
 
