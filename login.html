@@ -1,3 +1,6 @@
+In GlobeVoyage-preview
+login.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -147,9 +150,10 @@ async function login() {
   const btn = document.getElementById('btn');
   const err = document.getElementById('err');
 
-  if(!usr || !pwd) {
+  if (!usr || !pwd) {
     err.textContent = 'Please enter both username and password';
-    err.classList.add('show'); return;
+    err.classList.add('show');
+    return;
   }
 
   btn.disabled = true;
@@ -157,28 +161,30 @@ async function login() {
   err.classList.remove('show');
 
   try {
-    // Verify credentials by hitting the protected Render endpoint
     const b64 = btoa(usr + ':' + pwd);
-    const res = await fetch(ADMIN_URL, {
-      method: 'HEAD',
-      headers: { 'Authorization': 'Basic ' + b64 },
+    const res = await fetch('https://globevoyage-admin.onrender.com/api/auth/verify', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + b64,
+        'Content-Type': 'application/json',
+      },
     });
 
-    if(res.ok) {
-      // Store auth token in sessionStorage (cleared when tab closes)
+    const data = await res.json();
+
+    if (res.ok && data.ok) {
       sessionStorage.setItem('gv_auth', b64);
-      sessionStorage.setItem('gv_user', usr);
-      // Redirect to admin panel
+      sessionStorage.setItem('gv_user', data.user || usr);
       window.location.href = 'admin_control';
     } else {
-      err.textContent = 'Incorrect username or password';
+      err.textContent = data.error || 'Incorrect username or password';
       err.classList.add('show');
       btn.disabled = false;
       btn.textContent = 'Enter Mission Control';
       document.getElementById('pwd').value = '';
       document.getElementById('pwd').focus();
     }
-  } catch(e) {
+  } catch (e) {
     err.textContent = 'Could not reach server — check connection';
     err.classList.add('show');
     btn.disabled = false;
