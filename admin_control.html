@@ -462,11 +462,16 @@ async function loadHealth() {
     } catch(e) { setCard('globe-card','fail','Globe endpoint error',''); }
 
     const sourceKeys = [
+      // Core data sources
       'wikipedia','wikivoyage','openweathermap','newsapi','google_news','gdacs',
       'ticketmaster','eventbrite','predicthq','geoapify','social_proxy',
       'unsplash','openaq','aviationstack','numbeo','rest_countries','airbnb',
       'booking','tripadvisor','skyscanner','currency','google_places',
-      'travel_advisor','hotels_com','youtube','waqi'
+      'travel_advisor','hotels_com','youtube','waqi',
+      // National news channels
+      'news_bbc','news_aljazeera','news_foxnews','news_nhk','news_dw','news_abc_au',
+      'news_cna','news_trt','news_rt','news_france24','news_xinhua','news_ndtv',
+      'news_channels_tv','news_news24','news_cbc','news_abc_br','news_rnz',
     ];
     let okCount = 0;
     document.getElementById('health-grid').innerHTML = sourceKeys.map(k => {
