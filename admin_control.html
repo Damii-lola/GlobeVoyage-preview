@@ -691,11 +691,17 @@ async function loadGeoStats() {
     let stats = {}, live = {};
     try { const r = await fetch(API+'/api/geo/stats',           { headers: getAuthHeaders() }); if(r.ok) stats = await r.json(); } catch(e){}
     try { const r = await fetch(API+'/api/geo/pipeline/status', { headers: getAuthHeaders() }); if(r.ok) live  = await r.json(); } catch(e){}
+
     document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
     document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
     document.getElementById('g-countries').textContent = stats.countries_loaded||0;
     document.getElementById('g-coverage').textContent  = `of 195 (${stats.coverage_pct||0}%)`;
-    document.getElementById('g-pct').textContent       = (live.progress_pct||stats.coverage_pct||0)+'%';
+
+    // Fix: use stats.coverage_pct (actual geo data coverage) NOT live.progress_pct
+    // live.progress_pct is just how far the pipeline run got, not how much data exists
+    const actualCoveragePct = stats.coverage_pct || 0;
+    document.getElementById('g-pct').textContent = actualCoveragePct + '%';
+
     const wrap = document.getElementById('geo-progress-wrap');
     if(live.running) {
       wrap.style.display = 'block';
@@ -708,8 +714,10 @@ async function loadGeoStats() {
       wrap.style.display = 'none';
       if(geoPolling) { clearInterval(geoPolling); geoPolling = null; }
       document.getElementById('g-status-sub').textContent = live.completed_at
-        ? `Complete — ${(live.total_states||0).toLocaleString()} states`
-        : live.last_error ? 'Error — see below' : 'Not yet run';
+        ? `Complete — ${(stats.total_states||0).toLocaleString()} states, ${(stats.total_areas||0).toLocaleString()} cities`
+        : live.last_error ? 'Error — see below'
+        : stats.countries_loaded > 0 ? `${stats.countries_loaded} countries loaded`
+        : 'Not yet run';
     }
     const errBox = document.getElementById('geo-error-box');
     if(live.last_error) { errBox.style.display='block'; errBox.textContent='⚠ '+live.last_error; }
