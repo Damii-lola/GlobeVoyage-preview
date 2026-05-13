@@ -40,7 +40,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .section-title{font-size:10px;letter-spacing:4px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace;margin-bottom:20px;display:flex;align-items:center;gap:10px}
 .section-title::after{content:'';flex:1;height:1px;background:var(--border)}
 
-/* Status panel */
 .status-panel{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .status-block{display:flex;flex-direction:column;gap:4px}
 .status-label{font-size:9px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;font-family:'Space Mono',monospace}
@@ -201,7 +200,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <!-- SYSTEM PAGE -->
 <div class="page active" id="page-health">
 
-  <!-- Live Server Status -->
   <div class="section-title">LIVE SERVER STATUS</div>
   <div class="status-panel">
     <div class="status-block">
@@ -230,7 +228,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     </div>
   </div>
 
-  <!-- Stats -->
   <div class="stat-row">
     <div class="stat-card"><div class="stat-val" id="s-countries">195</div><div class="stat-lbl">Countries</div><div class="stat-sub">195 total in pipeline</div></div>
     <div class="stat-card"><div class="stat-val" id="s-processed">—</div><div class="stat-lbl">Processed</div><div class="stat-sub" id="s-coverage">Checking...</div></div>
@@ -303,18 +300,20 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
   <!-- Geo Hierarchy Status -->
   <div class="section-title">GEO HIERARCHY STATUS</div>
+
+  <!-- ✅ Updated banner — CountriesNow, no key needed -->
   <div style="background:rgba(0,230,118,.04);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8">
-    <div style="color:var(--green);font-weight:700;margin-bottom:6px;letter-spacing:1px">✅ NO API KEY NEEDED — POWERED BY OPENSTREETMAP</div>
-    <div>Uses <strong style="color:#fff">OpenStreetMap Nominatim</strong> — free, no registration required.</div>
-    <div style="margin-top:6px">1. Click <strong style="color:var(--amber)">🔑 TEST CONNECTION</strong> to verify · 2. Click <strong style="color:var(--accent2)">▶ RUN GEO PIPELINE</strong> to load all states and areas</div>
-    <div style="margin-top:4px;color:var(--text3)">Rate limit: 1 req/sec — full run ~2 hours for 195 countries</div>
+    <div style="color:var(--green);font-weight:700;margin-bottom:6px;letter-spacing:1px">✅ NO API KEY NEEDED — POWERED BY COUNTRIESNOW</div>
+    <div>Uses <strong style="color:#fff">countriesnow.space</strong> — completely free, no signup, no rate limits.</div>
+    <div style="margin-top:6px">1. Click <strong style="color:var(--amber)">🔑 TEST CONNECTION</strong> to verify · 2. Click <strong style="color:var(--accent2)">▶ RUN GEO PIPELINE</strong> to load all states and cities</div>
+    <div style="margin-top:4px;color:var(--text3)">Covers all 195 countries · States/Provinces → Cities · Runs in ~10 minutes</div>
   </div>
 
   <div id="geo-test-banner" style="display:none;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;border:1px solid"></div>
 
   <div class="stat-row" style="margin-bottom:12px">
     <div class="stat-card"><div class="stat-val" id="g-states">—</div><div class="stat-lbl">States Loaded</div><div class="stat-sub">Provinces / Territories</div></div>
-    <div class="stat-card"><div class="stat-val" id="g-areas">—</div><div class="stat-lbl">Areas Loaded</div><div class="stat-sub">Districts / Municipalities</div></div>
+    <div class="stat-card"><div class="stat-val" id="g-areas">—</div><div class="stat-lbl">Cities Loaded</div><div class="stat-sub">Districts / Municipalities</div></div>
     <div class="stat-card"><div class="stat-val" id="g-countries">—</div><div class="stat-lbl">Countries Done</div><div class="stat-sub" id="g-coverage">of 195</div></div>
     <div class="stat-card"><div class="stat-val" id="g-pct">0%</div><div class="stat-lbl">Coverage</div><div class="stat-sub" id="g-status-sub">Not started</div></div>
   </div>
@@ -374,14 +373,10 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 <div class="toast" id="toast"></div>
 
 <script>
-// ── Auth guard — FIRST thing that runs ───────────────────────────
+// ── Auth guard ────────────────────────────────────────────────────
 (function() {
   var auth = sessionStorage.getItem('gv_auth');
-  if (!auth) {
-    window.location.replace('login');
-    throw new Error('Not authenticated');
-  }
-  // Show logged-in username in logout button
+  if (!auth) { window.location.replace('login'); throw new Error('Not authenticated'); }
   var user = sessionStorage.getItem('gv_user') || 'Admin';
   var btn = document.getElementById('logout-btn');
   if(btn) btn.textContent = user.toUpperCase() + '  ✕ LOGOUT';
@@ -694,8 +689,8 @@ let geoPolling = null;
 async function loadGeoStats() {
   try {
     let stats = {}, live = {};
-    try { const r = await fetch(API+'/api/geo/stats',             { headers: getAuthHeaders() }); if(r.ok) stats = await r.json(); } catch(e){}
-    try { const r = await fetch(API+'/api/geo/pipeline/status',   { headers: getAuthHeaders() }); if(r.ok) live  = await r.json(); } catch(e){}
+    try { const r = await fetch(API+'/api/geo/stats',           { headers: getAuthHeaders() }); if(r.ok) stats = await r.json(); } catch(e){}
+    try { const r = await fetch(API+'/api/geo/pipeline/status', { headers: getAuthHeaders() }); if(r.ok) live  = await r.json(); } catch(e){}
     document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
     document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
     document.getElementById('g-countries').textContent = stats.countries_loaded||0;
@@ -724,24 +719,25 @@ async function loadGeoStats() {
 
 async function testGeoNames() {
   const banner = document.getElementById('geo-test-banner');
-  banner.style.display='block';
   banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(42,127,255,.2);background:rgba(42,127,255,.06);color:var(--accent)';
-  banner.textContent='🔑 Testing connection...';
+  banner.textContent='🔑 Testing CountriesNow connection...';
   try {
     const r = await fetch(API+'/api/geo/test', { headers: getAuthHeaders() });
     const d = await r.json();
     if(d.ok) {
       banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(0,230,118,.2);background:rgba(0,230,118,.06);color:var(--green)';
-      banner.textContent=`✅ ${d.message} — ${d.response_ms}ms`;
+      banner.textContent=`✅ ${d.message} — ${d.response_ms}ms · ${d.test_result}`;
     } else {
       banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(255,61,87,.2);background:rgba(255,61,87,.06);color:var(--red)';
-      banner.textContent=`❌ ${d.error}${d.fix?' — FIX: '+d.fix:''}`;
+      banner.textContent=`❌ ${d.error}${d.fix?' — '+d.fix:''}`;
     }
   } catch(e) { banner.textContent='❌ '+e.message; }
 }
 
 async function triggerGeoPipeline(forceAll=false) {
-  const msg = forceAll ? 'Force re-run geo pipeline for ALL 195 countries?' : 'Start geo pipeline? Loads states and areas for all 195 countries from OpenStreetMap.';
+  const msg = forceAll
+    ? 'Force re-run geo pipeline for ALL 195 countries?'
+    : 'Start geo pipeline? Loads states and cities for all 195 countries from CountriesNow (free, ~10 min).';
   if(!confirm(msg)) return;
   toast('▶ Geo pipeline starting...');
   try {
@@ -767,7 +763,6 @@ loadStatus();
 setInterval(loadHealth, 30000);
 setInterval(loadStatus, 5000);
 
-// Keepalive ping every 5s
 setInterval(() => {
   fetch(API+'/', { method:'GET', cache:'no-store', headers: getAuthHeaders() }).catch(()=>{});
 }, 5000);
