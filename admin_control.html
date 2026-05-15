@@ -185,6 +185,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     <button class="nav-btn active" onclick="showPage('health',this)">SYSTEM</button>
     <button class="nav-btn" onclick="showPage('intel',this)">INTELLIGENCE</button>
     <button class="nav-btn" onclick="showPage('pipeline',this)">PIPELINE</button>
+    <button class="nav-btn" onclick="showPage('report',this)">INTEL REPORT</button>
   </nav>
   <div class="header-right">
     <div class="header-status">
@@ -360,6 +361,34 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   </table>
 </div>
 
+<!-- INTEL REPORT PAGE -->
+<div class="page" id="page-report">
+
+  <!-- Country Selector -->
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">
+    <div style="position:relative;flex:1;min-width:200px">
+      <input id="report-search" placeholder="Search country..." autocomplete="off"
+        style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none"
+        oninput="filterReportCountries()" onfocus="showReportDropdown()" />
+      <div id="report-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto"></div>
+    </div>
+    <button onclick="loadReport()" style="padding:12px 24px;border:1px solid var(--accent);border-radius:10px;background:linear-gradient(135deg,var(--accent),#1040cc);color:#fff;font-family:'Syne',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">
+      ▶ LOAD REPORT
+    </button>
+    <button onclick="refreshReport()" style="padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer">
+      ↻ REFRESH
+    </button>
+  </div>
+
+  <!-- Report Content -->
+  <div id="report-content">
+    <div style="text-align:center;padding:80px 20px;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px">
+      SELECT A COUNTRY ABOVE TO VIEW ITS FULL INTEL REPORT
+    </div>
+  </div>
+
+</div>
+
 </main>
 
 <!-- Country detail modal -->
@@ -402,6 +431,7 @@ function showPage(id, btn) {
   if(btn) btn.classList.add('active');
   if(id==='intel' && allIntel.length===0) loadIntel();
   if(id==='pipeline') { loadPipelineStatus(); loadGeoStats(); }
+  if(id==='report') initReportPage();
 }
 
 function toast(msg) {
@@ -794,6 +824,415 @@ async function triggerGeoPipeline(forceAll=false) {
       setTimeout(loadGeoStats, 1000);
     }
   } catch(e) { toast('✗ '+e.message); }
+}
+
+// ── Intel Report ─────────────────────────────────────────────────
+let reportCountries = [];
+let reportISO       = null;
+let reportData      = null;
+
+async function initReportPage() {
+  if(reportCountries.length) return;
+  try {
+    const r = await fetch(API+'/api/countries', { headers: getAuthHeaders() });
+    const d = await r.json();
+    reportCountries = d.all || [];
+  } catch(e) {}
+}
+
+function filterReportCountries() {
+  const q = document.getElementById('report-search').value.toLowerCase();
+  const dd = document.getElementById('report-dropdown');
+  if(!q) { dd.style.display='none'; return; }
+  const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q)).slice(0,8);
+  if(!matches.length) { dd.style.display='none'; return; }
+  dd.style.display='block';
+  dd.innerHTML = matches.map(c =>
+    `<div onclick="selectReportCountry('${c.iso}','${c.name}')"
+      style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text);border-bottom:1px solid var(--border)"
+      onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
+    >${c.name} <span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${c.iso}</span></div>`
+  ).join('');
+}
+
+function showReportDropdown() {
+  filterReportCountries();
+}
+
+function selectReportCountry(iso, name) {
+  reportISO = iso;
+  document.getElementById('report-search').value = name;
+  document.getElementById('report-dropdown').style.display = 'none';
+}
+
+async function loadReport() {
+  if(!reportISO) {
+    // try to get from input
+    const q = document.getElementById('report-search').value.trim().toLowerCase();
+    const match = reportCountries.find(c => c.name.toLowerCase() === q || c.iso.toLowerCase() === q);
+    if(match) reportISO = match.iso;
+    else { alert('Please select a country first'); return; }
+  }
+  document.getElementById('report-content').innerHTML =
+    `<div style="text-align:center;padding:60px;color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
+      Loading intel report for ${reportISO}... <span class="spinner"></span>
+    </div>`;
+  try {
+    const r = await fetch(`${API}/api/intel/${reportISO}`, { headers: getAuthHeaders() });
+    reportData = await r.json();
+    renderReport(reportData);
+  } catch(e) {
+    document.getElementById('report-content').innerHTML =
+      `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">Error: ${e.message}</div>`;
+  }
+}
+
+function refreshReport() { if(reportISO) loadReport(); }
+
+// Close dropdown on outside click
+document.addEventListener('click', e => {
+  if(!e.target.closest('#report-search') && !e.target.closest('#report-dropdown')) {
+    const dd = document.getElementById('report-dropdown');
+    if(dd) dd.style.display='none';
+  }
+});
+
+function renderReport(d) {
+  if(!d || d.error) {
+    document.getElementById('report-content').innerHTML =
+      `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">${d?.error||'No data'}</div>`;
+    return;
+  }
+
+  const f     = freshLabel(d.last_updated);
+  const meta  = d.country_meta || {};
+  const veri  = d.verification || {};
+  const safeColor = {safe:'var(--green)',caution:'var(--amber)',warning:'var(--amber)',danger:'var(--red)'}[veri.safety_level] || 'var(--text3)';
+
+  document.getElementById('report-content').innerHTML = `
+
+  <!-- ── HEADER ── -->
+  <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:16px;padding:24px 28px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:32px;font-weight:800;color:#fff;margin-bottom:4px">${d.country_name}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:3px">${d.continent} · ${d.iso} · Last updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="freshness ${f.cls}">${f.label}</span>
+        ${meta.flag_png?`<img src="${meta.flag_png}" style="height:28px;border-radius:3px;border:1px solid var(--border)">`:'' }
+        ${veri.safety_level?`<span style="padding:4px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,0.3);border:1px solid ${safeColor};color:${safeColor}">${veri.safety_level.toUpperCase()}</span>`:''}
+      </div>
+    </div>
+    ${d.ai_vibe?`<div style="margin-top:14px;font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px">"${d.ai_vibe}"</div>`:''}
+  </div>
+
+  <!-- ── FLOW DIAGRAM ── -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:4px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:16px">HOW THIS INTEL WAS BUILT</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:10px">
+      <div style="padding:8px 14px;background:rgba(42,127,255,.1);border:1px solid rgba(42,127,255,.3);border-radius:8px;color:var(--accent)">26+ DATA SOURCES</div>
+      <div style="color:var(--text3)">→</div>
+      <div style="padding:8px 14px;background:rgba(0,229,255,.08);border:1px solid rgba(0,229,255,.2);border-radius:8px;color:var(--accent2)">MISTRAL AI SYNTHESIS</div>
+      <div style="color:var(--text3)">→</div>
+      <div style="padding:8px 14px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:8px;color:var(--green)">VERIFICATION AI</div>
+      <div style="color:var(--text3)">→</div>
+      <div style="padding:8px 14px;background:rgba(255,171,0,.08);border:1px solid rgba(255,171,0,.2);border-radius:8px;color:var(--amber)">SUPABASE STORAGE</div>
+      <div style="color:var(--text3)">→</div>
+      <div style="padding:8px 14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff">USER</div>
+    </div>
+  </div>
+
+  <!-- ── GRID: META + WEATHER + AIR + COST ── -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:20px">
+
+    <!-- Country Meta -->
+    ${meta.capital?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">COUNTRY FACTS</div>
+      ${[
+        ['Capital',    meta.capital],
+        ['Population', meta.population?meta.population.toLocaleString():null],
+        ['Languages',  (meta.languages||[]).join(', ')],
+        ['Currency',   (meta.currencies||[]).map(c=>c.symbol+' '+c.name).join(', ')],
+        ['Calling Code',meta.calling_code],
+        ['Driving',    meta.driving_side],
+        ['Timezone',   (meta.timezones||[])[0]],
+      ].filter(([,v])=>v).map(([l,v])=>`
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+          <span style="font-size:10px;color:var(--text3)">${l}</span>
+          <span style="font-size:11px;color:var(--text);font-family:'Space Mono',monospace;text-align:right;max-width:60%">${v}</span>
+        </div>`).join('')}
+    </div>`:''}
+
+    <!-- Weather -->
+    ${d.weather_now?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">WEATHER NOW</div>
+      <div style="font-size:36px;font-weight:800;color:#fff;line-height:1">${d.weather_now.temp}°C</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px;text-transform:capitalize">${d.weather_now.condition}</div>
+      <div style="margin-top:10px;display:flex;gap:16px">
+        <div><div style="font-size:10px;color:var(--text3)">Humidity</div><div style="font-size:12px;color:var(--text)">${d.weather_now.humidity}%</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">Wind</div><div style="font-size:12px;color:var(--text)">${d.weather_now.wind} km/h</div></div>
+        <div><div style="font-size:10px;color:var(--text3)">Feels</div><div style="font-size:12px;color:var(--text)">${d.weather_now.feels_like}°C</div></div>
+      </div>
+      ${(d.weather_forecast||[]).length?`<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+        ${d.weather_forecast.slice(0,5).map(f=>`<div style="flex:1;min-width:40px;text-align:center;background:var(--bg3);border-radius:6px;padding:6px 4px">
+          <div style="font-size:9px;color:var(--text3)">${f.date?.slice(5)}</div>
+          <div style="font-size:11px;color:#fff;margin-top:2px">${f.high}°</div>
+          <div style="font-size:10px;color:var(--text3)">${f.low}°</div>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`:''}
+
+    <!-- Air Quality -->
+    ${d.air_quality?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">AIR QUALITY</div>
+      <div style="font-size:40px;font-weight:800;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'};line-height:1">${d.air_quality.aqi||'—'}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:4px">${d.air_quality.aqi_label||''}</div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">
+        ${d.air_quality.pm25!=null?`PM2.5: ${d.air_quality.pm25} · `:''}${d.air_quality.pm10!=null?`PM10: ${d.air_quality.pm10}`:''}
+      </div>
+    </div>`:''}
+
+    <!-- Cost of Living -->
+    ${d.cost_of_living?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">COST OF LIVING</div>
+      ${[
+        ['Cheap meal',    d.cost_of_living.meal_cheap,    '$'],
+        ['Mid restaurant',d.cost_of_living.meal_mid,      '$'],
+        ['Coffee',        d.cost_of_living.coffee,        '$'],
+        ['Local beer',    d.cost_of_living.beer_local,    '$'],
+        ['1-bed rent/mo', d.cost_of_living.one_bed_city_rent,'$'],
+        ['Transport/mo',  d.cost_of_living.monthly_transport,'$'],
+        ['Taxi per km',   d.cost_of_living.taxi_per_km,   '$'],
+        ['Avg salary/mo', d.cost_of_living.avg_salary,    '$'],
+      ].filter(([,v])=>v!=null).map(([l,v,sym])=>`
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+          <span style="font-size:10px;color:var(--text3)">${l}</span>
+          <span style="font-size:11px;color:var(--green);font-family:'Space Mono',monospace">${sym}${Math.round(v*100)/100}</span>
+        </div>`).join('')}
+    </div>`:''}
+  </div>
+
+  <!-- ── AI BRIEFING ── -->
+  ${d.ai_briefing?`<div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — MISTRAL LARGE</div>
+    <div style="font-size:14px;color:var(--text);line-height:1.8">${d.ai_briefing}</div>
+  </div>`:''}
+
+  <!-- ── VERIFICATION RESULT ── -->
+  ${veri.verification_notes?`<div style="background:${veri.verified?'rgba(0,230,118,.04)':'rgba(255,61,87,.04)'};border:1px solid ${veri.verified?'rgba(0,230,118,.2)':'rgba(255,61,87,.2)'};border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <div style="font-size:9px;letter-spacing:3px;color:${veri.verified?'var(--green)':'var(--red)'};font-family:'Space Mono',monospace">🤖 VERIFICATION RESULT — MISTRAL + WEB SEARCH</div>
+      <div style="display:flex;gap:8px">
+        <span style="font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:var(--text2)">Confidence: ${Math.round((veri.confidence||0)*100)}%</span>
+        <span style="font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:${safeColor}">${veri.safety_level?.toUpperCase()||''}</span>
+        <span style="font-size:10px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:var(--text2)">${veri.data_freshness||''}</span>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:${((veri.flags||[]).length||(veri.current_alerts||[]).length)?'12px':'0'}">${veri.verification_notes}</div>
+    ${veri.safety_detail?`<div style="font-size:12px;color:${safeColor};margin-bottom:8px">🛡 ${veri.safety_detail}</div>`:''}
+    ${veri.trending_topic?`<div style="font-size:12px;color:var(--accent2)">📈 Trending: ${veri.trending_topic}</div>`:''}
+    ${(veri.current_alerts||[]).length?`<div style="margin-top:10px">${veri.current_alerts.map(a=>`<div style="font-size:11px;color:var(--red);padding:5px 0;border-bottom:1px solid rgba(255,61,87,.1)">⚠ ${a}</div>`).join('')}</div>`:''}
+    ${(veri.flags||[]).length?`<div style="margin-top:8px">${veri.flags.map(f=>`<div style="font-size:11px;color:var(--amber);padding:3px 0">⚑ ${f}</div>`).join('')}</div>`:''}
+    ${(veri.missed_stories||[]).length?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">MISSED STORIES: ${veri.missed_stories.join(' · ')}</div>`:''}
+  </div>`:''}
+
+  <!-- ── SAFETY + RECOMMENDATIONS SIDE BY SIDE ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    ${d.ai_safety_summary?`<div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">SAFETY SUMMARY</div>
+      <div style="font-size:12px;color:#e0c070;line-height:1.6">${d.ai_safety_summary}</div>
+      ${d.ai_avoid_if?`<div style="margin-top:10px;font-size:11px;color:var(--text3)"><span style="color:var(--amber)">Avoid if:</span> ${d.ai_avoid_if}</div>`:''}
+    </div>`:'<div></div>'}
+    ${(d.ai_best_months||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">BEST MONTHS TO VISIT</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${d.ai_best_months.map(m=>`<span style="padding:5px 10px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:6px;font-size:12px;color:var(--green)">${m}</span>`).join('')}
+      </div>
+      ${d.ai_hidden_gem?`<div style="margin-top:12px;font-size:11px;color:var(--accent2)">💎 Hidden Gem: ${d.ai_hidden_gem}</div>`:''}
+    </div>`:'<div></div>'}
+  </div>
+
+  <!-- ── AI RECOMMENDATIONS ── -->
+  ${(d.ai_recommendations||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">AI RECOMMENDATIONS (${d.ai_recommendations.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+      ${d.ai_recommendations.map((r,i)=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div style="font-size:13px;font-weight:600;color:#fff">${r.title}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--border2);flex-shrink:0;margin-left:8px">${r.rating||'—'}/5</div>
+          </div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${r.why}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15);font-family:'Space Mono',monospace">${r.type||''}</span>
+            <span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':r.risk==='medium'?'background:rgba(255,171,0,.08);color:var(--amber);border:1px solid rgba(255,171,0,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
+            ${r.when?`<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border);font-family:'Space Mono',monospace">${r.when}</span>`:''}
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── NEWS + NATIONAL NEWS SIDE BY SIDE ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px">
+    ${(d.news_headlines||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">NEWS HEADLINES (${d.news_headlines.length} sources)</div>
+      ${d.news_headlines.slice(0,6).map(n=>`
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
+          <span style="flex-shrink:0;font-size:9px;padding:2px 6px;border-radius:3px;margin-top:1px;font-family:'Space Mono',monospace;${n.risk_level==='high'?'background:rgba(255,61,87,.1);color:var(--red)':n.risk_level==='medium'?'background:rgba(255,171,0,.1);color:var(--amber)':'background:rgba(0,230,118,.1);color:var(--green)'}">${n.risk_level||'low'}</span>
+          <a href="${n.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${n.title}</a>
+        </div>`).join('')}
+    </div>`:'<div></div>'}
+    ${d.national_news?.articles?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">NATIONAL BROADCASTER</div>
+      <div style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:12px">📺 ${d.national_news.source}</div>
+      ${d.national_news.articles.slice(0,6).map(a=>`
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <a href="${a.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${a.title}</a>
+          ${a.published_at?`<div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${new Date(a.published_at).toLocaleDateString()}</div>`:''}
+        </div>`).join('')}
+    </div>`:'<div></div>'}
+  </div>
+
+  <!-- ── EVENTS ── -->
+  ${(d.events||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">UPCOMING EVENTS (${d.events.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">
+      ${d.events.slice(0,9).map(e=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div>
+            <div style="font-size:12px;color:#fff;font-weight:600">${e.name}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${e.venue||''} ${e.city?'· '+e.city:''}</div>
+            ${e.source?`<div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source}</div>`:''}
+          </div>
+          <div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;flex-shrink:0;text-align:right">${e.date||'TBC'}</div>
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── ATTRACTIONS + PLACES ── -->
+  ${(d.top_places||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">TOP ATTRACTIONS</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      ${d.top_places.slice(0,10).map(p=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px">
+          <div style="font-size:12px;color:#fff">${p.name}</div>
+          <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${(p.categories||[])[0]||''}</div>
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── BOOKING.COM HOTELS ── -->
+  ${(d.booking?.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🏨 BOOKING.COM HOTELS</div>
+      <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">View all ↗</a>
+    </div>
+    <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">
+      Avg $${d.booking.avg_price_per_night||'—'}/night · Min $${d.booking.min_price||'—'} · Max $${d.booking.max_price||'—'} · ${d.booking.checkin} → ${d.booking.checkout}
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px">
+      ${d.booking.hotels.slice(0,6).map(h=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden">
+          ${h.photo?`<img src="${h.photo}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.display='none'">`:''}
+          <div style="padding:10px 12px">
+            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px">${h.name}</div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:6px">
+              ${h.rating?`<span style="font-size:11px;color:var(--accent2)">${h.rating}/10</span>`:''}
+              ${h.stars?`<span style="font-size:10px;color:var(--amber)">${'★'.repeat(Math.min(h.stars,5))}</span>`:''}
+              ${h.review_count?`<span style="font-size:9px;color:var(--text3)">${h.review_count.toLocaleString()} reviews</span>`:''}
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              ${h.price_per_night?`<span style="font-size:16px;font-weight:700;color:var(--green)">$${Math.round(h.price_per_night)}<span style="font-size:10px;font-weight:400;color:var(--text3)">/night</span></span>`:'<span></span>'}
+              <a href="${h.booking_url}" target="_blank" style="font-size:10px;padding:4px 10px;background:rgba(0,107,255,0.15);border:1px solid rgba(0,107,255,0.3);border-radius:5px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">BOOK ↗</a>
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── AI CALENDAR ── -->
+  ${(d.ai_calendar||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">AI EVENT CALENDAR (NEXT 14 DAYS)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${d.ai_calendar.map(c=>`
+        <div style="padding:6px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;cursor:default;
+          ${c.color==='green'?'background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)':
+            c.color==='red'?'background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.2);color:var(--red)':
+            'background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)'}"
+          title="${c.reason||''}">
+          ${c.date} · ${c.label}
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── PHOTOS ── -->
+  ${(d.photos||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">UNSPLASH PHOTOS (${d.photos.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px">
+      ${d.photos.slice(0,9).map(p=>`
+        <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--bg3)">
+          <img src="${p.url_small||p.url_regular}" alt="${p.alt||''}" loading="lazy"
+            style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+          ${p.credit?`<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:6px 8px;font-size:8px;color:rgba(255,255,255,.6)">📷 ${p.credit}</div>`:''}
+        </div>`).join('')}
+    </div>
+  </div>`:''}
+
+  <!-- ── DATA SOURCES CHECKLIST ── -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">DATA SOURCES STATUS FOR THIS COUNTRY</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+      ${[
+        ['Wikipedia',      d.wiki_summary],
+        ['Wikivoyage',     d.wiki_sections && Object.keys(d.wiki_sections).length],
+        ['Weather',        d.weather_now],
+        ['Forecast',       (d.weather_forecast||[]).length],
+        ['News Headlines', (d.news_headlines||[]).length],
+        ['National News',  d.national_news?.articles?.length],
+        ['GDACS Alerts',   (d.gdacs_alerts||[]).length != null],
+        ['Events',         (d.events||[]).length],
+        ['Top Places',     (d.top_places||[]).length],
+        ['Photos',         (d.photos||[]).length],
+        ['Air Quality',    d.air_quality?.aqi],
+        ['Cost of Living', d.cost_of_living?.meal_cheap],
+        ['Country Meta',   d.country_meta?.capital],
+        ['Airbnb',         d.airbnb?.avg_price_per_night],
+        ['Booking.com',    (d.booking?.hotels||[]).length],
+        ['TripAdvisor',    (d.tripadvisor?.attractions||[]).length],
+        ['Flight Prices',  d.flight_prices],
+        ['Currency Rates', d.currency_rates?.rates],
+        ['YouTube Videos', (d.youtube_videos?.videos||[]).length],
+        ['AI Briefing',    d.ai_briefing],
+        ['AI Recommendations',(d.ai_recommendations||[]).length],
+        ['AI Calendar',    (d.ai_calendar||[]).length],
+        ['Verification',   d.verification?.verified_at],
+      ].map(([label,val])=>{
+        const ok = val && val !== 0 && val !== false;
+        return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:7px;border:1px solid ${ok?'rgba(0,230,118,.1)':'rgba(255,61,87,.08)'}">
+          <div style="width:7px;height:7px;border-radius:50%;background:${ok?'var(--green)':'var(--red)'};flex-shrink:0"></div>
+          <span style="font-size:11px;color:${ok?'var(--text)':'var(--text3)'}"> ${label}</span>
+          ${typeof val==='number'&&val>0?`<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto">${val}</span>`:''}
+        </div>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <!-- ── RAW JSON VIEWER ── -->
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">RAW INTEL DATA (JSON)</div>
+      <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
+    </div>
+    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+  </div>
+
+  `;
+}
+
+function toggleRawJson() {
+  const el = document.getElementById('raw-json');
+  if(el) el.style.display = el.style.display==='none'?'block':'none';
 }
 
 // ── Init ──────────────────────────────────────────────────────────
