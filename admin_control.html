@@ -623,6 +623,30 @@ async function openCountry(iso) {
             </div></div>`).join('')}</div>`:''}
       ${d.ai_hidden_gem?`<div class="modal-section"><div class="modal-section-title">HIDDEN GEM</div>
         <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;font-size:12px;color:var(--accent2)">${d.ai_hidden_gem}</div></div>`:''}
+      ${(d.booking?.hotels||[]).length?`<div class="modal-section"><div class="modal-section-title">🏨 BOOKING.COM HOTELS</div>
+        <div style="margin-bottom:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">
+          Avg $${d.booking.avg_price_per_night||'—'}/night · ${d.booking.checkin} → ${d.booking.checkout}
+          <a href="${d.booking.search_url}" target="_blank" style="color:var(--accent);margin-left:12px;text-decoration:none">🔗 View all on Booking.com ↗</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${(d.booking.hotels||[]).slice(0,5).map(h=>`
+            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start">
+              ${h.photo?`<img src="${h.photo}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:''}
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">${h.name||'—'}</div>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+                  ${h.rating?`<span style="font-size:11px;color:var(--accent2)">${h.rating}/10 ${h.rating_word||''}</span>`:''}
+                  ${h.stars?`<span style="font-size:11px;color:var(--amber)">${'★'.repeat(Math.min(h.stars,5))}</span>`:''}
+                  ${h.review_count?`<span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${h.review_count.toLocaleString()} reviews</span>`:''}
+                </div>
+                <div style="display:flex;gap:10px;margin-top:6px;align-items:center">
+                  ${h.price_per_night?`<span style="font-size:14px;font-weight:700;color:var(--green)">$${Math.round(h.price_per_night)}<span style="font-size:10px;font-weight:400;color:var(--text3)">/night</span></span>`:''}
+                  <a href="${h.booking_url}" target="_blank" style="font-size:10px;padding:4px 10px;background:rgba(0,107,255,0.15);border:1px solid rgba(0,107,255,0.3);border-radius:5px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">BOOK ↗</a>
+                  ${h.app_deep_link?`<a href="${h.app_deep_link}" style="font-size:10px;padding:4px 10px;background:rgba(0,107,255,0.08);border:1px solid rgba(0,107,255,0.2);border-radius:5px;color:var(--text2);text-decoration:none;font-family:'Space Mono',monospace">APP ↗</a>`:''}
+                </div>
+              </div>
+            </div>`).join('')}
+        </div></div>`:''}
       <div style="text-align:right;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-top:16px">
         Last updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}
       </div>`;
