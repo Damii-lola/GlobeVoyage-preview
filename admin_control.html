@@ -443,7 +443,10 @@ function toast(msg) {
 // ── Live Status ───────────────────────────────────────────────────
 async function loadStatus() {
   try {
-    const r = await fetch(API+'/api/status', { headers: getAuthHeaders() });
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const r = await fetch(API+'/api/status', { headers: getAuthHeaders(), signal: ctrl.signal });
+    clearTimeout(timer);
     const d = await r.json();
     const ping = d.keepalive;
     const dot  = document.getElementById('st-ping-dot');
@@ -461,8 +464,10 @@ async function loadStatus() {
       `<span class="next-run-chip" title="${new Date(r.timestamp).toLocaleString()}">${r.time_utc} · in ${r.runs_in}</span>`
     ).join('');
   } catch(e) {
-    document.getElementById('st-ping-text').textContent = 'Could not reach server';
+    const isTimeout = e.name === 'AbortError';
+    document.getElementById('st-ping-text').textContent = isTimeout ? 'Backend waking up — please wait ~30s...' : 'Could not reach server';
     document.getElementById('st-ping-dot').className = 'ping-dot warn';
+    if(isTimeout) setTimeout(loadStatus, 10000);
   }
 }
 
@@ -470,15 +475,23 @@ async function loadStatus() {
 async function loadHealth() {
   const t = Date.now();
   try {
-    const r = await fetch(API+'/', { headers: getAuthHeaders() });
+    // Use AbortController for timeout — Render cold start can take 30s
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const r = await fetch(API+'/', { headers: getAuthHeaders(), signal: ctrl.signal });
+    clearTimeout(timer);
     const ms = Date.now()-t;
     setCard('backend-card','ok',`Responding in ${ms}ms`,ms+'ms');
     document.getElementById('live-dot').style.background='var(--green)';
     document.getElementById('live-text').textContent='BACKEND LIVE';
   } catch(e) {
-    setCard('backend-card','fail','Backend unreachable: '+e.message,'');
-    document.getElementById('live-dot').style.background='var(--red)';
-    document.getElementById('live-text').textContent='BACKEND DOWN';
+    const msg = e.name==='AbortError' ? 'Backend waking up (cold start ~30s) — retrying...' : 'Backend unreachable: '+e.message;
+    setCard('backend-card','fail',msg,'');
+    document.getElementById('live-dot').style.background='var(--amber)';
+    document.getElementById('live-text').textContent = e.name==='AbortError' ? 'WAKING UP...' : 'BACKEND DOWN';
+    // Auto-retry after 10s on cold start
+    setTimeout(loadHealth, 10000);
+    return;
   }
   try {
     const r = await fetch(API+'/api/health', { headers: getAuthHeaders() });
@@ -492,15 +505,12 @@ async function loadHealth() {
     } catch(e) { setCard('globe-card','fail','Globe endpoint error',''); }
 
     const sourceKeys = [
-      // Core data sources
       'wikipedia','wikivoyage','openweathermap','newsapi','google_news','gdacs',
       'ticketmaster','eventbrite','predicthq','geoapify','social_proxy',
       'unsplash','openaq','aviationstack','numbeo','rest_countries','airbnb',
       'booking','tripadvisor','skyscanner','currency','google_places',
       'travel_advisor','hotels_com','youtube','waqi',
-      // Verification AI
       'verification_ai',
-      // National news channels
       'news_bbc','news_aljazeera','news_foxnews','news_nhk','news_dw','news_abc_au',
       'news_cna','news_trt','news_rt','news_france24','news_xinhua','news_ndtv',
       'news_channels_tv','news_news24','news_cbc','news_abc_br','news_rnz',
@@ -1472,13 +1482,4 @@ async function rerunPipeline(iso, name) {
 }
 
 async function loadGeoHierarchy(iso) {
-  const container = document.getElementById('geo-hierarchy-'+iso);
-  if(!container) return;
-  container.innerHTML = '<span class="spinner"></span> Loading states...';
-  try {
-    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
-    const d = await r.json();
-    const states = d.states || [];
-    if(!states.length) {
-      container.innerHTML = `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px">
-        No states loaded yet. <button onclick="triggerGeoPipelineForCountry('${iso}')" style="padding:3px 10px;border:1px solid var(--amber);border-radius:5px;background:none;color:var(--amber);cursor:pointer;font-size:10px">LOAD
+  const container = document.getElementById('ge
