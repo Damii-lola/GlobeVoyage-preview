@@ -142,23 +142,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .rec-tag.risk-medium{background:rgba(255,171,0,.08);color:var(--amber);border:1px solid rgba(255,171,0,.15)}
 .rec-tag.risk-high{background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.15)}
 
-.cal-row{display:flex;flex-wrap:wrap;gap:6px}
-.cal-item{padding:5px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;cursor:default}
-.cal-item.green{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)}
-.cal-item.amber{background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)}
-.cal-item.red{background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.2);color:var(--red)}
-
-.events-list{display:flex;flex-direction:column;gap:6px}
-.event-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.event-name{font-size:12px;color:var(--text);font-weight:600}
-.event-meta{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px}
-.event-date{font-family:'Space Mono',monospace;font-size:10px;color:var(--accent2);flex-shrink:0}
-
-.trend-list{display:flex;flex-direction:column;gap:8px}
-.trend-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
-.trend-name{font-size:12px;font-weight:600;color:#fff;margin-bottom:2px}
-.trend-why{font-size:11px;color:var(--text2)}
-
 .spinner{display:inline-block;width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 
 ::-webkit-scrollbar{width:6px}
@@ -196,7 +179,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   </div>
 </header>
 
-<!-- Wake-up banner — shown when backend is cold-starting -->
 <div id="wakeup-banner" style="display:none;background:rgba(255,171,0,.08);border-bottom:1px solid rgba(255,171,0,.2);padding:10px 32px;font-family:'Space Mono',monospace;font-size:11px;color:var(--amber);text-align:center;position:sticky;top:58px;z-index:99">
   ⏳ Backend is waking up (Render cold start — up to 60s). Page will update automatically.
   <span id="wakeup-timer" style="margin-left:8px;color:var(--text3)"></span>
@@ -206,15 +188,11 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- SYSTEM PAGE -->
 <div class="page active" id="page-health">
-
   <div class="section-title">LIVE SERVER STATUS</div>
   <div class="status-panel">
     <div class="status-block">
       <div class="status-label">Keepalive Ping</div>
-      <div class="status-value">
-        <span class="ping-dot loading" id="st-ping-dot"></span>
-        <span id="st-ping-text">Loading...</span>
-      </div>
+      <div class="status-value"><span class="ping-dot loading" id="st-ping-dot"></span><span id="st-ping-text">Loading...</span></div>
       <div class="status-sub" id="st-ping-count">— pings sent</div>
     </div>
     <div class="status-block">
@@ -229,9 +207,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     </div>
     <div class="status-block">
       <div class="status-label">Next Scheduled Runs</div>
-      <div class="next-run-row" id="st-next-runs">
-        <span class="next-run-chip">Loading...</span>
-      </div>
+      <div class="next-run-row" id="st-next-runs"><span class="next-run-chip">Loading...</span></div>
     </div>
   </div>
 
@@ -254,31 +230,12 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
   <div class="section-title">RENDER BACKEND</div>
   <div class="health-grid">
-    <div class="health-card" id="backend-card">
-      <div class="health-dot loading"></div>
-      <div class="health-info"><div class="health-name">Render Backend</div><div class="health-detail" id="backend-detail">Checking...</div></div>
-      <div class="health-ms" id="backend-ms"></div>
-    </div>
-    <div class="health-card" id="supabase-card">
-      <div class="health-dot loading"></div>
-      <div class="health-info"><div class="health-name">Supabase Database</div><div class="health-detail" id="supabase-detail">Checking...</div></div>
-    </div>
-    <div class="health-card" id="mistral-card">
-      <div class="health-dot loading"></div>
-      <div class="health-info"><div class="health-name">Mistral AI</div><div class="health-detail" id="mistral-detail">Checking...</div></div>
-    </div>
-    <div class="health-card">
-      <div class="health-dot ok"></div>
-      <div class="health-info"><div class="health-name">Preview Website (This)</div><div class="health-detail">Running — globevoyage-preview</div></div>
-    </div>
-    <div class="health-card">
-      <div class="health-dot ok"></div>
-      <div class="health-info"><div class="health-name">Expo App</div><div class="health-detail">Connected via WebView → Render</div></div>
-    </div>
-    <div class="health-card" id="globe-card">
-      <div class="health-dot loading"></div>
-      <div class="health-info"><div class="health-name">Globe WebGL</div><div class="health-detail" id="globe-detail">Checking /globe endpoint...</div></div>
-    </div>
+    <div class="health-card" id="backend-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Render Backend</div><div class="health-detail" id="backend-detail">Checking...</div></div><div class="health-ms" id="backend-ms"></div></div>
+    <div class="health-card" id="supabase-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Supabase Database</div><div class="health-detail" id="supabase-detail">Checking...</div></div></div>
+    <div class="health-card" id="mistral-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Mistral AI</div><div class="health-detail" id="mistral-detail">Checking...</div></div></div>
+    <div class="health-card"><div class="health-dot ok"></div><div class="health-info"><div class="health-name">Preview Website (This)</div><div class="health-detail">Running — globevoyage-preview</div></div></div>
+    <div class="health-card"><div class="health-dot ok"></div><div class="health-info"><div class="health-name">Expo App</div><div class="health-detail">Connected via WebView → Render</div></div></div>
+    <div class="health-card" id="globe-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Globe WebGL</div><div class="health-detail" id="globe-detail">Checking /globe endpoint...</div></div></div>
   </div>
 </div>
 
@@ -304,11 +261,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- PIPELINE PAGE -->
 <div class="page" id="page-pipeline">
-
-  <!-- Geo Hierarchy Status -->
   <div class="section-title">GEO HIERARCHY STATUS</div>
-
-  <!-- ✅ Updated banner — CountriesNow, no key needed -->
   <div style="background:rgba(0,230,118,.04);border:1px solid rgba(0,230,118,.15);border-radius:10px;padding:14px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text2);line-height:1.8">
     <div style="color:var(--green);font-weight:700;margin-bottom:6px;letter-spacing:1px">✅ NO API KEY NEEDED — POWERED BY COUNTRIESNOW</div>
     <div>Uses <strong style="color:#fff">countriesnow.space</strong> — completely free, no signup, no rate limits.</div>
@@ -331,9 +284,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
       <div class="progress-track"><div class="progress-fill" id="geo-fill" style="width:0%;background:linear-gradient(90deg,var(--accent2),var(--green))"></div></div>
       <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text)" id="geo-pct-label">0%</div>
     </div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px;padding-left:4px">
-      Current: <span id="geo-current-country" style="color:var(--accent2)">—</span>
-    </div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-top:6px;padding-left:4px">Current: <span id="geo-current-country" style="color:var(--accent2)">—</span></div>
   </div>
 
   <div id="geo-error-box" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:10px;font-family:'Space Mono',monospace;font-size:11px;color:var(--red)"></div>
@@ -345,7 +296,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     <button class="run-btn" onclick="loadGeoStats()" style="font-size:11px">↻ REFRESH</button>
   </div>
 
-  <!-- Pipeline coverage -->
   <div class="pipeline-bar">
     <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text3)">PIPELINE COVERAGE</div>
     <div class="progress-track"><div class="progress-fill" id="pipe-fill" style="width:0%"></div></div>
@@ -369,8 +319,6 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- INTEL REPORT PAGE -->
 <div class="page" id="page-report">
-
-  <!-- Country Selector -->
   <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">
     <div style="position:relative;flex:1;min-width:200px">
       <input id="report-search" placeholder="Search country..." autocomplete="off"
@@ -378,21 +326,12 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
         oninput="filterReportCountries()" onfocus="showReportDropdown()" />
       <div id="report-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto"></div>
     </div>
-    <button onclick="loadReport()" style="padding:12px 24px;border:1px solid var(--accent);border-radius:10px;background:linear-gradient(135deg,var(--accent),#1040cc);color:#fff;font-family:'Syne',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">
-      ▶ LOAD REPORT
-    </button>
-    <button onclick="refreshReport()" style="padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer">
-      ↻ REFRESH
-    </button>
+    <button onclick="loadReport()" style="padding:12px 24px;border:1px solid var(--accent);border-radius:10px;background:linear-gradient(135deg,var(--accent),#1040cc);color:#fff;font-family:'Syne',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">▶ LOAD REPORT</button>
+    <button onclick="refreshReport()" style="padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer">↻ REFRESH</button>
   </div>
-
-  <!-- Report Content -->
   <div id="report-content">
-    <div style="text-align:center;padding:80px 20px;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px">
-      SELECT A COUNTRY ABOVE TO VIEW ITS FULL INTEL REPORT
-    </div>
+    <div style="text-align:center;padding:80px 20px;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px">SELECT A COUNTRY ABOVE TO VIEW ITS FULL INTEL REPORT</div>
   </div>
-
 </div>
 
 </main>
@@ -423,13 +362,11 @@ let allIntel = [], activeCont = '', activeSearch = '';
 function getAuthHeaders() {
   return { 'Authorization': 'Basic ' + (sessionStorage.getItem('gv_auth')||'') };
 }
-
 function logout() {
   sessionStorage.removeItem('gv_auth');
   sessionStorage.removeItem('gv_user');
   window.location.replace('login');
 }
-
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -439,7 +376,6 @@ function showPage(id, btn) {
   if(id==='pipeline') { loadPipelineStatus(); loadGeoStats(); }
   if(id==='report') initReportPage();
 }
-
 function toast(msg) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -480,13 +416,9 @@ async function loadStatus() {
 // ── Health ────────────────────────────────────────────────────────
 async function loadHealth() {
   const t = Date.now();
-
-  // Show "waking up" state immediately so page doesn't look frozen
   document.getElementById('live-text').textContent = 'CONNECTING...';
   document.getElementById('health-grid').innerHTML =
     `<div class="health-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Connecting to backend...</div><div class="health-detail">Render may be waking up — takes up to 30s on cold start</div></div></div>`;
-
-  // Step 1: ping root endpoint with 40s timeout
   try {
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 40000);
@@ -498,27 +430,20 @@ async function loadHealth() {
     document.getElementById('live-text').textContent='BACKEND LIVE';
   } catch(e) {
     const isTimeout = e.name==='AbortError';
-    const msg = isTimeout
-      ? 'Still waking up — Render cold start can take up to 60s. Auto-retrying...'
-      : 'Backend unreachable: '+e.message;
+    const msg = isTimeout ? 'Still waking up — Render cold start can take up to 60s. Auto-retrying...' : 'Backend unreachable: '+e.message;
     setCard('backend-card', isTimeout?'unknown':'fail', msg, '');
     document.getElementById('live-dot').style.background = isTimeout?'var(--amber)':'var(--red)';
     document.getElementById('live-text').textContent = isTimeout ? 'WAKING UP...' : 'BACKEND DOWN';
     document.getElementById('health-grid').innerHTML =
       `<div class="health-card"><div class="health-dot ${isTimeout?'loading':'fail'}"></div><div class="health-info"><div class="health-name">${isTimeout?'Backend waking up':'Backend unreachable'}</div><div class="health-detail">${msg}</div></div></div>`;
-    // Auto-retry in 12s
     setTimeout(loadHealth, 12000);
     return;
   }
-
-  // Step 2: load health checks — this can take 30-45s (live-tests 40+ sources)
-  // Show intermediate state so user knows it's working
   document.getElementById('health-grid').innerHTML =
-    `<div class="health-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Running health checks...</div><div class="health-detail">Live-testing ${['Wikipedia','OpenWeatherMap','BBC News','Al Jazeera','Mistral AI','Supabase','WAQI','REST Countries','...and 35+ more'].join(', ')}</div></div></div>`;
-
+    `<div class="health-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Running health checks...</div><div class="health-detail">Live-testing all data sources...</div></div></div>`;
   try {
     const ctrl2 = new AbortController();
-    const timer2 = setTimeout(() => ctrl2.abort(), 60000); // 60s for health checks
+    const timer2 = setTimeout(() => ctrl2.abort(), 60000);
     const r = await fetch(API+'/api/health', { headers: getAuthHeaders(), signal: ctrl2.signal });
     clearTimeout(timer2);
     const d = await r.json();
@@ -535,8 +460,7 @@ async function loadHealth() {
       'ticketmaster','eventbrite','predicthq','geoapify','social_proxy',
       'unsplash','openaq','aviationstack','numbeo','rest_countries','airbnb',
       'booking','tripadvisor','skyscanner','currency','google_places',
-      'travel_advisor','hotels_com','youtube','waqi',
-      'verification_ai',
+      'travel_advisor','hotels_com','youtube','waqi','verification_ai',
       'news_bbc','news_aljazeera','news_foxnews','news_nhk','news_dw','news_abc_au',
       'news_cna','news_trt','news_rt','news_france24','news_xinhua','news_ndtv',
       'news_channels_tv','news_news24','news_cbc','news_abc_br','news_rnz',
@@ -565,9 +489,7 @@ async function loadHealth() {
     document.getElementById('s-coverage').textContent = (pp?.processed?Math.round(pp.processed/195*100):0)+'% coverage';
     document.getElementById('s-fresh').textContent = pp?.fresh||'0';
   } catch(e) {
-    const msg = e.name==='AbortError'
-      ? 'Health check timed out (60s) — backend may be under load. Retrying in 20s...'
-      : 'Health check failed: '+e.message;
+    const msg = e.name==='AbortError' ? 'Health check timed out (60s) — retrying in 20s...' : 'Health check failed: '+e.message;
     document.getElementById('health-grid').innerHTML =
       `<div class="health-card"><div class="health-dot fail"></div><div class="health-info"><div class="health-name">Health check failed</div><div class="health-detail">${msg}</div></div></div>`;
     if(e.name==='AbortError') setTimeout(loadHealth, 20000);
@@ -593,19 +515,16 @@ async function loadIntel() {
     document.getElementById('intel-grid').innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px;padding:20px">Failed: ${e.message}</div>`;
   }
 }
-
 function setCont(c, btn) {
   activeCont = c;
   document.querySelectorAll('.cf-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
   renderIntel();
 }
-
 function filterIntel() {
   activeSearch = document.getElementById('intel-search').value.toLowerCase();
   renderIntel();
 }
-
 function freshLabel(lu) {
   if(!lu) return {label:'Never',cls:'old'};
   const h = (Date.now()-new Date(lu).getTime())/3600000;
@@ -613,7 +532,6 @@ function freshLabel(lu) {
   if(h<24) return {label:Math.round(h)+'h ago',cls:'stale'};
   return {label:Math.round(h/24)+'d ago',cls:'old'};
 }
-
 function renderIntel() {
   const filtered = allIntel.filter(c => {
     return (!activeCont || c.continent===activeCont) &&
@@ -664,16 +582,6 @@ async function openCountry(iso) {
           <div class="modal-box"><div class="modal-box-title">CONDITIONS</div><div class="modal-box-val">${d.weather_now.temp}°C — ${d.weather_now.condition}</div></div>
           <div class="modal-box"><div class="modal-box-title">WIND & HUMIDITY</div><div class="modal-box-val">${d.weather_now.wind} km/h · ${d.weather_now.humidity}% humidity</div></div>
         </div></div>`:''}
-      ${d.cost_of_living?`<div class="modal-section"><div class="modal-section-title">COST OF LIVING</div>
-        <div class="modal-grid">
-          <div class="modal-box"><div class="modal-box-title">CHEAP MEAL</div><div class="modal-box-val">$${d.cost_of_living.meal_cheap||'—'}</div></div>
-          <div class="modal-box"><div class="modal-box-title">1-BED RENT/MO</div><div class="modal-box-val">$${d.cost_of_living.one_bed_city_rent||'—'}</div></div>
-        </div></div>`:''}
-      ${d.air_quality?`<div class="modal-section"><div class="modal-section-title">AIR QUALITY</div>
-        <div class="modal-box"><div class="modal-box-title">AQI · ${d.air_quality.aqi_label||''}</div>
-        <div class="modal-box-val" style="font-size:22px;font-weight:800;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'}</div></div></div>`:''}
-      ${d.ai_safety_summary?`<div class="modal-section"><div class="modal-section-title">SAFETY</div>
-        <div style="background:rgba(255,171,0,.06);border:1px solid rgba(255,171,0,.15);border-radius:10px;padding:14px;font-size:12px;color:#e0c070">${d.ai_safety_summary}</div></div>`:''}
       ${(d.ai_recommendations||[]).length?`<div class="modal-section"><div class="modal-section-title">AI RECOMMENDATIONS</div>
         <div class="recs-list">${(d.ai_recommendations||[]).map((r,i)=>`
           <div class="rec-item"><div class="rec-num">0${i+1}</div>
@@ -681,45 +589,6 @@ async function openCountry(iso) {
               <div class="rec-meta"><span class="rec-tag type">${r.type||''}</span><span class="rec-tag risk-${r.risk||'none'}">${r.risk||'low'} risk</span></div>
             </div><div style="font-size:20px;font-weight:700;color:var(--border2)">${r.rating||'—'}/5</div>
           </div>`).join('')}</div></div>`:''}
-      ${(d.events||[]).length?`<div class="modal-section"><div class="modal-section-title">UPCOMING EVENTS</div>
-        <div class="events-list">${(d.events||[]).slice(0,6).map(e=>`
-          <div class="event-item">
-            <div><div class="event-name">${e.name}</div><div class="event-meta">${e.venue||''} ${e.city?'· '+e.city:''}</div></div>
-            <div class="event-date">${e.date||'TBC'}</div>
-          </div>`).join('')}</div></div>`:''}
-      ${(d.news_headlines||[]).length?`<div class="modal-section"><div class="modal-section-title">NEWS HEADLINES</div>
-        ${(d.news_headlines||[]).slice(0,5).map(n=>`
-          <div style="border-bottom:1px solid var(--border);padding:8px 0;display:flex;gap:10px;align-items:flex-start">
-            <span class="badge ${n.risk_level==='high'?'error':n.risk_level==='medium'?'partial':'success'}">${n.risk_level}</span>
-            <div><a href="${n.url}" target="_blank" style="font-size:12px;color:var(--text);text-decoration:none">${n.title}</a>
-              <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${n.source||''}</div>
-            </div></div>`).join('')}</div>`:''}
-      ${d.ai_hidden_gem?`<div class="modal-section"><div class="modal-section-title">HIDDEN GEM</div>
-        <div style="background:rgba(0,229,255,.05);border:1px solid rgba(0,229,255,.12);border-radius:10px;padding:14px;font-size:12px;color:var(--accent2)">${d.ai_hidden_gem}</div></div>`:''}
-      ${(d.booking?.hotels||[]).length?`<div class="modal-section"><div class="modal-section-title">🏨 BOOKING.COM HOTELS</div>
-        <div style="margin-bottom:8px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">
-          Avg $${d.booking.avg_price_per_night||'—'}/night · ${d.booking.checkin} → ${d.booking.checkout}
-          <a href="${d.booking.search_url}" target="_blank" style="color:var(--accent);margin-left:12px;text-decoration:none">🔗 View all on Booking.com ↗</a>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${(d.booking.hotels||[]).slice(0,5).map(h=>`
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start">
-              ${h.photo?`<img src="${h.photo}" style="width:72px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0" onerror="this.style.display='none'">`:''}
-              <div style="flex:1;min-width:0">
-                <div style="font-size:13px;font-weight:600;color:#fff;margin-bottom:3px">${h.name||'—'}</div>
-                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-                  ${h.rating?`<span style="font-size:11px;color:var(--accent2)">${h.rating}/10 ${h.rating_word||''}</span>`:''}
-                  ${h.stars?`<span style="font-size:11px;color:var(--amber)">${'★'.repeat(Math.min(h.stars,5))}</span>`:''}
-                  ${h.review_count?`<span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${h.review_count.toLocaleString()} reviews</span>`:''}
-                </div>
-                <div style="display:flex;gap:10px;margin-top:6px;align-items:center">
-                  ${h.price_per_night?`<span style="font-size:14px;font-weight:700;color:var(--green)">$${Math.round(h.price_per_night)}<span style="font-size:10px;font-weight:400;color:var(--text3)">/night</span></span>`:''}
-                  <a href="${h.booking_url}" target="_blank" style="font-size:10px;padding:4px 10px;background:rgba(0,107,255,0.15);border:1px solid rgba(0,107,255,0.3);border-radius:5px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">BOOK ↗</a>
-                  ${h.app_deep_link?`<a href="${h.app_deep_link}" style="font-size:10px;padding:4px 10px;background:rgba(0,107,255,0.08);border:1px solid rgba(0,107,255,0.2);border-radius:5px;color:var(--text2);text-decoration:none;font-family:'Space Mono',monospace">APP ↗</a>`:''}
-                </div>
-              </div>
-            </div>`).join('')}
-        </div></div>`:''}
       <div style="text-align:right;font-family:'Space Mono',monospace;font-size:9px;color:var(--text3);margin-top:16px">
         Last updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}
       </div>`;
@@ -727,7 +596,6 @@ async function openCountry(iso) {
     document.getElementById('modal-content').innerHTML = `<div style="color:var(--red);padding:20px">Error: ${e.message}</div>`;
   }
 }
-
 function closeModal(e) {
   if(e && e.target !== document.getElementById('modal-overlay')) return;
   document.getElementById('modal-overlay').classList.remove('open');
@@ -771,7 +639,6 @@ async function loadPipelineStatus() {
     ).join('') || '<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:20px">No runs yet</td></tr>';
   } catch(e) { console.error(e); }
 }
-
 async function runCountry(iso, name) {
   toast(`▶ Pipeline starting for ${name}...`);
   try {
@@ -780,7 +647,6 @@ async function runCountry(iso, name) {
     setTimeout(loadPipelineStatus, 3000);
   } catch(e) { toast(`✗ Failed: ${e.message}`); }
 }
-
 async function triggerPipeline() {
   if(!confirm('Run full pipeline for all 195 countries? This takes several hours.')) return;
   toast('▶ Full pipeline started...');
@@ -789,23 +655,17 @@ async function triggerPipeline() {
 
 // ── Geo Stats ─────────────────────────────────────────────────────
 let geoPolling = null;
-
 async function loadGeoStats() {
   try {
     let stats = {}, live = {};
     try { const r = await fetch(API+'/api/geo/stats',           { headers: getAuthHeaders() }); if(r.ok) stats = await r.json(); } catch(e){}
     try { const r = await fetch(API+'/api/geo/pipeline/status', { headers: getAuthHeaders() }); if(r.ok) live  = await r.json(); } catch(e){}
-
     document.getElementById('g-states').textContent    = (stats.total_states||0).toLocaleString();
     document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
     document.getElementById('g-countries').textContent = stats.countries_loaded||0;
     document.getElementById('g-coverage').textContent  = `of 195 (${stats.coverage_pct||0}%)`;
-
-    // Fix: use stats.coverage_pct (actual geo data coverage) NOT live.progress_pct
-    // live.progress_pct is just how far the pipeline run got, not how much data exists
     const actualCoveragePct = stats.coverage_pct || 0;
     document.getElementById('g-pct').textContent = actualCoveragePct + '%';
-
     const wrap = document.getElementById('geo-progress-wrap');
     if(live.running) {
       wrap.style.display = 'block';
@@ -828,7 +688,6 @@ async function loadGeoStats() {
     else errBox.style.display='none';
   } catch(e) { document.getElementById('g-status-sub').textContent = 'Error loading'; }
 }
-
 async function testGeoNames() {
   const banner = document.getElementById('geo-test-banner');
   banner.style.cssText='display:block;margin-bottom:14px;padding:12px 16px;border-radius:10px;font-family:"Space Mono",monospace;font-size:11px;border:1px solid rgba(42,127,255,.2);background:rgba(42,127,255,.06);color:var(--accent)';
@@ -845,22 +704,15 @@ async function testGeoNames() {
     }
   } catch(e) { banner.textContent='❌ '+e.message; }
 }
-
 async function triggerGeoPipeline(forceAll=false) {
-  const msg = forceAll
-    ? 'Force re-run geo pipeline for ALL 195 countries?'
-    : 'Start geo pipeline? Loads states and cities for all 195 countries from CountriesNow (free, ~10 min).';
+  const msg = forceAll ? 'Force re-run geo pipeline for ALL 195 countries?' : 'Start geo pipeline? Loads states and cities for all 195 countries from CountriesNow (free, ~10 min).';
   if(!confirm(msg)) return;
   toast('▶ Geo pipeline starting...');
   try {
     const url = API+'/api/geo/pipeline/start'+(forceAll?'?force=true':'');
     const r   = await fetch(url, { method:'POST', headers: getAuthHeaders() });
     const d   = await r.json();
-    if(d.error) {
-      toast('✗ '+d.error);
-      const eb = document.getElementById('geo-error-box');
-      eb.style.display='block'; eb.textContent='⚠ '+d.error;
-    } else {
+    if(d.error) { toast('✗ '+d.error); } else {
       toast('✓ '+d.message);
       if(geoPolling) clearInterval(geoPolling);
       geoPolling = setInterval(loadGeoStats, 3000);
@@ -869,51 +721,52 @@ async function triggerGeoPipeline(forceAll=false) {
   } catch(e) { toast('✗ '+e.message); }
 }
 
-// ── Intel Report ─────────────────────────────────────────────────
+// ── Intel Report ──────────────────────────────────────────────────
 let reportCountries = [];
 let reportISO       = null;
 let reportData      = null;
 
 async function initReportPage() {
-  if(reportCountries.length) return;
+  if (reportCountries.length) return;
   try {
-    const r = await fetch(API+'/api/countries', { headers: getAuthHeaders() });
+    const r = await fetch(API + '/api/countries', { headers: getAuthHeaders() });
     const d = await r.json();
     reportCountries = d.all || [];
   } catch(e) {}
 }
 
 function filterReportCountries() {
-  const q = document.getElementById('report-search').value.toLowerCase();
+  const q  = document.getElementById('report-search').value.toLowerCase();
   const dd = document.getElementById('report-dropdown');
-  if(!q) { dd.style.display='none'; return; }
-  const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q)).slice(0,8);
-  if(!matches.length) { dd.style.display='none'; return; }
-  dd.style.display='block';
+  if (!q) { dd.style.display = 'none'; return; }
+  const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8);
+  if (!matches.length) { dd.style.display = 'none'; return; }
+  dd.style.display = 'block';
   dd.innerHTML = matches.map(c =>
-    `<div onclick="selectReportCountry('${c.iso}','${c.name}')"
+    `<div onclick="selectReportCountry('${c.iso}','${c.name.replace(/'/g,"&#39;")}')"
       style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text);border-bottom:1px solid var(--border)"
       onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
     >${c.name} <span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${c.iso}</span></div>`
   ).join('');
 }
-
-function showReportDropdown() {
-  filterReportCountries();
-}
-
+function showReportDropdown() { filterReportCountries(); }
 function selectReportCountry(iso, name) {
   reportISO = iso;
   document.getElementById('report-search').value = name;
   document.getElementById('report-dropdown').style.display = 'none';
 }
+document.addEventListener('click', e => {
+  if (!e.target.closest('#report-search') && !e.target.closest('#report-dropdown')) {
+    const dd = document.getElementById('report-dropdown');
+    if (dd) dd.style.display = 'none';
+  }
+});
 
 async function loadReport() {
-  if(!reportISO) {
-    // try to get from input
+  if (!reportISO) {
     const q = document.getElementById('report-search').value.trim().toLowerCase();
     const match = reportCountries.find(c => c.name.toLowerCase() === q || c.iso.toLowerCase() === q);
-    if(match) reportISO = match.iso;
+    if (match) reportISO = match.iso;
     else { alert('Please select a country first'); return; }
   }
   document.getElementById('report-content').innerHTML =
@@ -924,58 +777,52 @@ async function loadReport() {
     const r = await fetch(`${API}/api/intel/${reportISO}`, { headers: getAuthHeaders() });
     reportData = await r.json();
     renderReport(reportData);
+    // Auto-load geo hierarchy right after render
+    setTimeout(() => loadStatesForReport(reportISO), 400);
   } catch(e) {
     document.getElementById('report-content').innerHTML =
       `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">Error: ${e.message}</div>`;
   }
 }
+function refreshReport() { if (reportISO) loadReport(); }
 
-function refreshReport() { if(reportISO) loadReport(); }
+// ── Report helper renderers ───────────────────────────────────────
+function rSection(title, content) {
+  if (!content || content.trim() === '') return '';
+  return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">${title}</div>
+    ${content}
+  </div>`;
+}
+function rkv(label, val, color) {
+  if (val == null || val === '' || val === 'null' || val === 'undefined') return '';
+  return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+    <span style="font-size:10px;color:var(--text3)">${label}</span>
+    <span style="font-size:11px;color:${color||'var(--text)'};font-family:'Space Mono',monospace;text-align:right;max-width:65%">${val}</span>
+  </div>`;
+}
+function rdot(ok, label, count) {
+  return `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:7px;border:1px solid ${ok?'rgba(0,230,118,.12)':'rgba(255,61,87,.08)'}">
+    <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${ok?'var(--green)':'var(--red)'}"></div>
+    <span style="font-size:11px;color:${ok?'var(--text)':'var(--text3)'}">${label}</span>
+    ${count > 0 ? `<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto">${count}</span>` : ''}
+  </div>`;
+}
+function rpill(label, color) {
+  return `<span style="padding:4px 10px;border-radius:5px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,.3);border:1px solid ${color||'var(--accent)'};color:${color||'var(--accent)'}">${label}</span>`;
+}
 
-// Close dropdown on outside click
-document.addEventListener('click', e => {
-  if(!e.target.closest('#report-search') && !e.target.closest('#report-dropdown')) {
-    const dd = document.getElementById('report-dropdown');
-    if(dd) dd.style.display='none';
-  }
-});
-
+// ── Full report renderer ──────────────────────────────────────────
 function renderReport(d) {
-  if(!d || d.error) {
+  if (!d || d.error) {
     document.getElementById('report-content').innerHTML =
       `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">${d?.error||'No data'}</div>`;
     return;
   }
-
-  const f         = freshLabel(d.last_updated);
-  const meta      = d.country_meta || {};
-  const veri      = d.verification || {};
+  const f        = freshLabel(d.last_updated);
+  const meta     = d.country_meta || {};
+  const veri     = d.verification || {};
   const safeColor = {safe:'var(--green)',caution:'var(--amber)',warning:'var(--amber)',danger:'var(--red)'}[veri.safety_level]||'var(--text3)';
-
-  // ── helper renderers ──────────────────────────────────────────
-  const section = (title, content) =>
-    `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">${title}</div>
-      ${content}
-    </div>`;
-
-  const pill = (label, color='var(--accent)') =>
-    `<span style="padding:4px 10px;border-radius:5px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,.3);border:1px solid ${color};color:${color}">${label}</span>`;
-
-  const kv = (label, val, color='var(--text)') =>
-    val!=null&&val!==''?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)">
-      <span style="font-size:10px;color:var(--text3)">${label}</span>
-      <span style="font-size:11px;color:${color};font-family:'Space Mono',monospace;text-align:right;max-width:65%">${val}</span>
-    </div>`:'';
-
-  const dot = (ok, label, count) =>
-    `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:7px;border:1px solid ${ok?'rgba(0,230,118,.12)':'rgba(255,61,87,.08)'}">
-      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${ok?'var(--green)':'var(--red)'}"></div>
-      <span style="font-size:11px;color:${ok?'var(--text)':'var(--text3)'}">${label}</span>
-      ${count>0?`<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto">${count}</span>`:''}
-    </div>`;
-
-  // ── build each section ────────────────────────────────────────
 
   // HEADER
   const header = `
@@ -988,14 +835,14 @@ function renderReport(d) {
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span class="freshness ${f.cls}">${f.label}</span>
         ${meta.flag_png?`<img src="${meta.flag_png}" style="height:28px;border-radius:3px;border:1px solid var(--border)">`:''}
-        ${veri.safety_level?pill(veri.safety_level.toUpperCase(),safeColor):''}
-        ${veri.confidence?pill('Confidence: '+Math.round(veri.confidence*100)+'%','var(--accent2)'):''}
+        ${veri.safety_level?rpill(veri.safety_level.toUpperCase(),safeColor):''}
+        ${veri.confidence?rpill('Confidence: '+Math.round(veri.confidence*100)+'%','var(--accent2)'):''}
       </div>
     </div>
     ${d.ai_vibe?`<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px;margin-bottom:12px">"${d.ai_vibe}"</div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="rerunPipeline('${d.iso}','${d.country_name}')" style="padding:8px 16px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RE-RUN PIPELINE</button>
-      <button onclick="loadStatesForReport('${d.iso}')" style="padding:8px 16px;border:1px solid var(--accent2);border-radius:8px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">🗺 LOAD STATES & CITIES</button>
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}');"
+        style="padding:8px 16px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RE-RUN PIPELINE</button>
     </div>
   </div>`;
 
@@ -1004,98 +851,87 @@ function renderReport(d) {
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">HOW THIS INTEL WAS BUILT</div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:10px">
-      ${[
-        ['26+ DATA SOURCES','rgba(42,127,255,.1)','rgba(42,127,255,.3)','var(--accent)'],
-        ['MISTRAL SYNTHESIS','rgba(0,229,255,.08)','rgba(0,229,255,.2)','var(--accent2)'],
-        ['VERIFICATION AI','rgba(0,230,118,.08)','rgba(0,230,118,.2)','var(--green)'],
-        ['SUPABASE DB','rgba(255,171,0,.08)','rgba(255,171,0,.2)','var(--amber)'],
-        ['→ USER','rgba(255,255,255,.04)','rgba(255,255,255,.1)','#fff'],
-      ].map(([t,bg,border,color],i)=>`
-        ${i>0?'<div style="color:var(--text3)">→</div>':''}
-        <div style="padding:7px 12px;background:${bg};border:1px solid ${border};border-radius:8px;color:${color}">${t}</div>
-      `).join('')}
+      ${[['26+ DATA SOURCES','rgba(42,127,255,.1)','rgba(42,127,255,.3)','var(--accent)'],
+         ['MISTRAL SYNTHESIS','rgba(0,229,255,.08)','rgba(0,229,255,.2)','var(--accent2)'],
+         ['VERIFICATION AI','rgba(0,230,118,.08)','rgba(0,230,118,.2)','var(--green)'],
+         ['SUPABASE DB','rgba(255,171,0,.08)','rgba(255,171,0,.2)','var(--amber)'],
+         ['→ USER','rgba(255,255,255,.04)','rgba(255,255,255,.1)','#fff']
+        ].map(([t,bg,b,c],i)=>`${i>0?'<div style="color:var(--text3)">→</div>':''}<div style="padding:7px 12px;background:${bg};border:1px solid ${b};border-radius:8px;color:${c}">${t}</div>`).join('')}
     </div>
   </div>`;
 
-  // STATS GRID — meta, weather, air, cost
+  // STATS GRID
   const statsGrid = `
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px">
-
     ${meta.capital?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🌍 COUNTRY FACTS</div>
-      ${kv('Capital',meta.capital)}
-      ${kv('Population',meta.population?.toLocaleString())}
-      ${kv('Languages',(meta.languages||[]).join(', '))}
-      ${kv('Currency',(meta.currencies||[]).map(c=>c.symbol+' '+c.name).join(', '))}
-      ${kv('Calling Code',meta.calling_code)}
-      ${kv('Drive Side',meta.driving_side)}
-      ${kv('Area',meta.area_km2?meta.area_km2.toLocaleString()+' km²':null)}
-      ${kv('UN Member',meta.un_member?'Yes':'No')}
-      ${kv('Landlocked',meta.landlocked?'Yes':'No')}
-      ${meta.borders?.length?kv('Borders',meta.borders.join(', ')):''}
-      ${(meta.timezones||[]).length?kv('Timezone',meta.timezones[0]):''}
+      ${rkv('Capital',meta.capital)}
+      ${rkv('Population',meta.population?meta.population.toLocaleString():null)}
+      ${rkv('Area',meta.area_km2?meta.area_km2.toLocaleString()+' km²':null)}
+      ${rkv('Languages',(meta.languages||[]).join(', '))}
+      ${rkv('Currency',(meta.currencies||[]).map(c=>(c.symbol||'')+' '+c.name).join(', '))}
+      ${rkv('Calling Code',meta.calling_code)}
+      ${rkv('Drive Side',meta.driving_side)}
+      ${rkv('UN Member',meta.un_member?'Yes':meta.un_member===false?'No':null)}
+      ${rkv('Landlocked',meta.landlocked?'Yes':meta.landlocked===false?'No':null)}
+      ${meta.borders&&meta.borders.length?rkv('Borders',meta.borders.join(', ')):''}
+      ${meta.timezones&&meta.timezones.length?rkv('Timezone',meta.timezones[0]):''}
+      ${meta.gini?rkv('Gini Index',meta.gini):''}
       ${meta.maps?`<a href="${meta.maps}" target="_blank" style="display:inline-block;margin-top:8px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">📍 Google Maps ↗</a>`:''}
     </div>`:''}
-
     ${d.weather_now?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🌤 WEATHER NOW</div>
       <div style="font-size:38px;font-weight:800;color:#fff;line-height:1">${d.weather_now.temp}°C</div>
       <div style="font-size:12px;color:var(--text2);margin:4px 0 10px;text-transform:capitalize">${d.weather_now.condition}</div>
-      <div style="display:flex;gap:14px;flex-wrap:wrap">
-        ${kv('Feels like',d.weather_now.feels_like+'°C')}
-        ${kv('Humidity',d.weather_now.humidity+'%')}
-        ${kv('Wind',d.weather_now.wind+' km/h')}
-      </div>
+      ${rkv('Feels like',d.weather_now.feels_like!=null?d.weather_now.feels_like+'°C':null)}
+      ${rkv('Humidity',d.weather_now.humidity!=null?d.weather_now.humidity+'%':null)}
+      ${rkv('Wind',d.weather_now.wind!=null?d.weather_now.wind+' km/h':null)}
       ${(d.weather_forecast||[]).length?`
         <div style="margin-top:12px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px">5-DAY FORECAST</div>
         <div style="display:flex;gap:4px">
           ${d.weather_forecast.slice(0,5).map(f=>`
             <div style="flex:1;text-align:center;background:var(--bg3);border-radius:6px;padding:6px 2px">
-              <div style="font-size:9px;color:var(--text3)">${f.date?.slice(5)}</div>
+              <div style="font-size:9px;color:var(--text3)">${f.date?f.date.slice(5):''}</div>
               <div style="font-size:12px;color:#fff;margin:2px 0">${f.high}°</div>
               <div style="font-size:10px;color:var(--text3)">${f.low}°</div>
             </div>`).join('')}
         </div>`:''}
     </div>`:''}
-
-    ${d.air_quality?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    ${(d.air_quality||d.waqi)?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💨 AIR QUALITY</div>
-      <div style="font-size:42px;font-weight:800;line-height:1;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'}</div>
-      <div style="font-size:12px;color:var(--text2);margin:4px 0 10px">${d.air_quality.aqi_label||''}</div>
-      ${kv('Location',d.air_quality.location||d.air_quality.city)}
-      ${kv('PM2.5',d.air_quality.pm25!=null?d.air_quality.pm25+' μg/m³':null)}
-      ${kv('PM10',d.air_quality.pm10!=null?d.air_quality.pm10+' μg/m³':null)}
-      ${kv('O3',d.air_quality.o3!=null?d.air_quality.o3:null)}
-      ${kv('NO2',d.air_quality.no2!=null?d.air_quality.no2:null)}
-      ${d.air_quality.updated?`<div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:'Space Mono',monospace">Updated: ${new Date(d.air_quality.updated).toLocaleString()}</div>`:''}
+      ${(()=>{const aq=d.air_quality||d.waqi||{};const aqi=aq.aqi||0;const aqc=aqi<50?'var(--green)':aqi<100?'var(--amber)':aqi<150?'#ff8c00':'var(--red)';
+      return `<div style="font-size:42px;font-weight:800;line-height:1;color:${aqc}">${aq.aqi||'—'}</div>
+        <div style="font-size:12px;color:var(--text2);margin:4px 0 10px">${aq.aqi_label||''}</div>
+        ${rkv('Location',aq.location||aq.city)}
+        ${aq.pm25!=null?rkv('PM2.5',aq.pm25+' μg/m³'):''}
+        ${aq.pm10!=null?rkv('PM10',aq.pm10+' μg/m³'):''}
+        ${aq.o3!=null?rkv('O3',aq.o3):''}
+        ${aq.no2!=null?rkv('NO2',aq.no2):''}
+        ${aq.updated?`<div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:'Space Mono',monospace">Updated: ${new Date(aq.updated).toLocaleString()}</div>`:''}`;
+      })()}
     </div>`:''}
-
     ${d.cost_of_living?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💰 COST OF LIVING</div>
-      ${kv('Cheap meal',d.cost_of_living.meal_cheap!=null?'$'+d.cost_of_living.meal_cheap:null,'var(--green)')}
-      ${kv('Mid restaurant',d.cost_of_living.meal_mid!=null?'$'+d.cost_of_living.meal_mid:null,'var(--green)')}
-      ${kv('Coffee',d.cost_of_living.coffee!=null?'$'+d.cost_of_living.coffee:null,'var(--green)')}
-      ${kv('Local beer',d.cost_of_living.beer_local!=null?'$'+d.cost_of_living.beer_local:null,'var(--green)')}
-      ${kv('Water bottle',d.cost_of_living.water_bottle!=null?'$'+d.cost_of_living.water_bottle:null,'var(--green)')}
-      ${kv('1-bed city/mo',d.cost_of_living.one_bed_city_rent!=null?'$'+d.cost_of_living.one_bed_city_rent:null,'var(--green)')}
-      ${kv('1-bed outside/mo',d.cost_of_living.one_bed_outside_rent!=null?'$'+d.cost_of_living.one_bed_outside_rent:null,'var(--green)')}
-      ${kv('Monthly transport',d.cost_of_living.monthly_transport!=null?'$'+d.cost_of_living.monthly_transport:null,'var(--green)')}
-      ${kv('Taxi per km',d.cost_of_living.taxi_per_km!=null?'$'+d.cost_of_living.taxi_per_km:null,'var(--green)')}
-      ${kv('Internet/mo',d.cost_of_living.internet_monthly!=null?'$'+d.cost_of_living.internet_monthly:null,'var(--green)')}
-      ${kv('Avg salary/mo',d.cost_of_living.avg_salary!=null?'$'+d.cost_of_living.avg_salary:null,'var(--accent2)')}
-    </div>`:''}
-
+      ${rkv('Cheap meal',d.cost_of_living.meal_cheap!=null?'$'+d.cost_of_living.meal_cheap:null,'var(--green)')}
+      ${rkv('Mid restaurant',d.cost_of_living.meal_mid!=null?'$'+d.cost_of_living.meal_mid:null,'var(--green)')}
+      ${rkv('Coffee',d.cost_of_living.coffee!=null?'$'+d.cost_of_living.coffee:null,'var(--green)')}
+      ${rkv('Local beer',d.cost_of_living.beer_local!=null?'$'+d.cost_of_living.beer_local:null,'var(--green)')}
+      ${rkv('Water bottle',d.cost_of_living.water_bottle!=null?'$'+d.cost_of_living.water_bottle:null,'var(--green)')}
+      ${rkv('1-bed city/mo',d.cost_of_living.one_bed_city_rent!=null?'$'+d.cost_of_living.one_bed_city_rent:null,'var(--green)')}
+      ${rkv('1-bed outside/mo',d.cost_of_living.one_bed_outside_rent!=null?'$'+d.cost_of_living.one_bed_outside_rent:null,'var(--green)')}
+      ${rkv('Monthly transport',d.cost_of_living.monthly_transport!=null?'$'+d.cost_of_living.monthly_transport:null,'var(--green)')}
+      ${rkv('Taxi/km',d.cost_of_living.taxi_per_km!=null?'$'+d.cost_of_living.taxi_per_km:null,'var(--green)')}
+      ${rkv('Internet/mo',d.cost_of_living.internet_monthly!=null?'$'+d.cost_of_living.internet_monthly:null,'var(--green)')}
+      ${rkv('Avg salary/mo',d.cost_of_living.avg_salary!=null?'$'+d.cost_of_living.avg_salary:null,'var(--accent2)')}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.2);border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;min-height:80px">
+      <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace">💰 COST OF LIVING</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">No data — RapidAPI key needed<br>or Numbeo monthly cap reached</div>
+    </div>`}
     ${d.currency_rates?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💱 CURRENCY RATES (vs USD)</div>
-      ${(meta.currencies||[]).map(c=>{
-        const code = Object.keys(d.currency_rates.rates||{}).find(k=>c.name?.toLowerCase().includes(k.toLowerCase())||c.symbol?.includes(k));
-        const rate = code?d.currency_rates.rates[code]:null;
-        return rate?kv(c.name,`1 USD = ${rate} ${code}`):'';
-      }).join('')}
-      <div style="margin-top:10px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">Base: USD · ${d.currency_rates.updated?new Date(d.currency_rates.updated).toLocaleDateString():''}</div>
-      <div style="margin-top:8px;font-size:9px;color:var(--text3)">Full rates: ${Object.keys(d.currency_rates.rates||{}).length} currencies available</div>
+      ${Object.entries(d.currency_rates.rates||{}).slice(0,12).map(([code,rate])=>rkv(code,'1 USD = '+rate+' '+code)).join('')}
+      <div style="margin-top:8px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${Object.keys(d.currency_rates.rates||{}).length} currencies · Base: USD</div>
     </div>`:''}
-
   </div>`;
 
   // AI BRIEFING
@@ -1106,15 +942,35 @@ function renderReport(d) {
     ${d.ai_hidden_gem?`<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2)">💎 Hidden Gem: ${d.ai_hidden_gem}</div>`:''}
   </div>`:'';
 
+  // WIKIPEDIA
+  const wikiSection = d.wiki_summary?rSection('📖 WIKIPEDIA SUMMARY',
+    `<div style="font-size:12px;color:var(--text2);line-height:1.8">${d.wiki_summary}</div>
+     ${d.wiki_highlights&&d.wiki_highlights.length?`
+       <div style="margin-top:12px;font-size:9px;letter-spacing:2px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">HIGHLIGHTS</div>
+       <div style="display:flex;flex-wrap:wrap;gap:6px">
+         ${d.wiki_highlights.map(h=>`<span style="font-size:11px;color:var(--text2);padding:4px 10px;background:rgba(255,255,255,.04);border-radius:5px;border:1px solid rgba(255,255,255,.06)">• ${h}</span>`).join('')}
+       </div>`:''}`):'';
+
+  // WIKIVOYAGE
+  const wvSections = d.wiki_sections||{};
+  const wikiVoyage = Object.keys(wvSections).length?rSection('✈️ WIKIVOYAGE TRAVEL GUIDE',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+      ${Object.entries(wvSections).map(([title,text])=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
+          <div style="font-size:10px;font-weight:700;color:var(--accent2);margin-bottom:6px;font-family:'Space Mono',monospace">${title.toUpperCase()}</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.6">${text}</div>
+        </div>`).join('')}
+    </div>`):'';
+
   // VERIFICATION
   const verification = veri.verification_notes?`
   <div style="background:${veri.verified?'rgba(0,230,118,.04)':'rgba(255,61,87,.04)'};border:1px solid ${veri.verified?'rgba(0,230,118,.2)':'rgba(255,61,87,.2)'};border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
       <div style="font-size:9px;letter-spacing:3px;color:${veri.verified?'var(--green)':'var(--red)'};font-family:'Space Mono',monospace">🤖 VERIFICATION — MISTRAL LARGE + WEB SEARCH</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        ${pill('Confidence: '+Math.round((veri.confidence||0)*100)+'%','var(--text2)')}
-        ${veri.safety_level?pill(veri.safety_level.toUpperCase(),safeColor):''}
-        ${veri.data_freshness?pill(veri.data_freshness,'var(--text2)'):''}
+        ${rpill('Confidence: '+Math.round((veri.confidence||0)*100)+'%','var(--text2)')}
+        ${veri.safety_level?rpill(veri.safety_level.toUpperCase(),safeColor):''}
+        ${veri.data_freshness?rpill(veri.data_freshness,'var(--text2)'):''}
       </div>
     </div>
     <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${veri.verification_notes}</div>
@@ -1123,7 +979,6 @@ function renderReport(d) {
     ${(veri.current_alerts||[]).length?`<div style="margin-top:8px">${veri.current_alerts.map(a=>`<div style="font-size:11px;color:var(--red);padding:4px 0;border-bottom:1px solid rgba(255,61,87,.1)">⚠ ${a}</div>`).join('')}</div>`:''}
     ${(veri.flags||[]).length?`<div style="margin-top:8px">${veri.flags.map(f=>`<div style="font-size:11px;color:var(--amber);padding:3px 0">⚑ ${f}</div>`).join('')}</div>`:''}
     ${(veri.missed_stories||[]).length?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">MISSED: ${veri.missed_stories.join(' · ')}</div>`:''}
-    ${(veri.corrections&&Object.keys(veri.corrections).length)?`<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:'Space Mono',monospace">CORRECTIONS APPLIED: ${Object.keys(veri.corrections).join(', ')}</div>`:''}
   </div>`:'';
 
   // SAFETY + BEST MONTHS
@@ -1133,13 +988,13 @@ function renderReport(d) {
       <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY SUMMARY</div>
       <div style="font-size:12px;color:#e0c070;line-height:1.6;margin-bottom:8px">${d.ai_safety_summary}</div>
       ${d.ai_avoid_if?`<div style="font-size:11px;color:var(--text3)"><span style="color:var(--amber)">Avoid if:</span> ${d.ai_avoid_if}</div>`:''}
-      ${(d.safety_flags||[]).length?`<div style="margin-top:8px">${d.safety_flags.slice(0,3).map(f=>`<div style="font-size:10px;color:var(--red);padding:3px 0;font-family:'Space Mono',monospace">⚠ ${f.description||f.type||JSON.stringify(f)}</div>`).join('')}</div>`:''}
+      ${(d.safety_flags||[]).length?`<div style="margin-top:8px">${d.safety_flags.slice(0,3).map(f=>`<div style="font-size:10px;color:var(--red);padding:3px 0;font-family:'Space Mono',monospace">⚠ ${f.description||f.type||''}</div>`).join('')}</div>`:''}
     </div>`:'<div></div>'}
     <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">📅 BEST MONTHS</div>
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">📅 BEST MONTHS TO VISIT</div>
       ${(d.ai_best_months||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
         ${d.ai_best_months.map(m=>`<span style="padding:5px 10px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:6px;font-size:12px;color:var(--green)">${m}</span>`).join('')}
-      </div>`:'<div style="font-size:11px;color:var(--text3)">Not available</div>'}
+      </div>`:'<div style="font-size:11px;color:var(--text3);margin-bottom:10px">Not available</div>'}
       ${(d.ai_trending_now||[]).length?`
         <div style="font-size:9px;letter-spacing:2px;color:var(--text3);font-family:'Space Mono',monospace;margin:10px 0 6px">TRENDING NOW</div>
         ${d.ai_trending_now.slice(0,3).map(t=>`<div style="font-size:11px;color:var(--accent2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">📈 <strong>${t.name}</strong> — ${t.why_trending||''}</div>`).join('')}`:''}
@@ -1147,20 +1002,19 @@ function renderReport(d) {
   </div>`;
 
   // AI CALENDAR
-  const calendar = (d.ai_calendar||[]).length?section('📅 AI EVENT CALENDAR — NEXT 14 DAYS',
+  const calendar = (d.ai_calendar||[]).length?rSection('📅 AI EVENT CALENDAR — NEXT 14 DAYS',
     `<div style="display:flex;flex-wrap:wrap;gap:6px">
       ${d.ai_calendar.map(c=>`
-        <div style="padding:6px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;cursor:default;
+        <div style="padding:6px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;
           ${c.color==='green'?'background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)':
             c.color==='red'?'background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.2);color:var(--red)':
-            'background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)'}"
-          title="${c.reason||''}">
+            'background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)'}">
           ${c.date} · ${c.label}
         </div>`).join('')}
     </div>`):'';
 
-  // AI RECOMMENDATIONS
-  const recommendations = (d.ai_recommendations||[]).length?section(
+  // AI RECS
+  const recommendations = (d.ai_recommendations||[]).length?rSection(
     `🎯 AI RECOMMENDATIONS (${d.ai_recommendations.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
       ${d.ai_recommendations.map((r,i)=>`
@@ -1178,7 +1032,7 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // NEWS + NATIONAL NEWS
+  // NEWS
   const newsRow = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${(d.news_headlines||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -1192,7 +1046,7 @@ function renderReport(d) {
           </div>
         </div>`).join('')}
     </div>`:'<div></div>'}
-    ${d.national_news?.articles?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    ${d.national_news&&d.national_news.articles&&d.national_news.articles.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">📺 NATIONAL BROADCASTER</div>
       <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:12px">${d.national_news.source}</div>
       ${d.national_news.articles.slice(0,8).map(a=>`
@@ -1200,19 +1054,20 @@ function renderReport(d) {
           <a href="${a.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${a.title}</a>
           <div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${a.published_at?new Date(a.published_at).toLocaleDateString():''}</div>
         </div>`).join('')}
-    </div>`:'<div></div>'}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,171,0,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center">
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">📺 National news not available for this country</div>
+    </div>`}
   </div>`;
 
   // EVENTS
-  const events = (d.events||[]).length?section(
-    `🎭 UPCOMING EVENTS (${d.events.length})`,
+  const events = (d.events||[]).length?rSection(`🎭 UPCOMING EVENTS (${d.events.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">
       ${d.events.slice(0,12).map(e=>`
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px">
           <div style="flex:1;min-width:0">
             <div style="font-size:12px;color:#fff;font-weight:600">${e.name}</div>
-            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${e.venue?e.venue+' · ':''} ${e.city||''}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source||''} ${e.type?'· '+e.type:''}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${e.venue?e.venue+' · ':''}${e.city||''}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source||''}${e.type?' · '+e.type:''}</div>
             ${e.price?`<div style="font-size:10px;color:var(--green);margin-top:3px">${e.price}</div>`:''}
           </div>
           <div>
@@ -1222,10 +1077,9 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // GDACS ALERTS
-  const gdacs = (d.gdacs_alerts||[]).length?section(
-    `🚨 GDACS DISASTER ALERTS (${d.gdacs_alerts.length})`,
-    `${d.gdacs_alerts.map(g=>`
+  // GDACS
+  const gdacs = (d.gdacs_alerts||[]).length?rSection(`🚨 GDACS DISASTER ALERTS (${d.gdacs_alerts.length})`,
+    d.gdacs_alerts.map(g=>`
       <div style="padding:10px 12px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:8px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div>
@@ -1235,7 +1089,7 @@ function renderReport(d) {
           <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;white-space:nowrap;margin-left:10px">${g.date?new Date(g.date).toLocaleDateString():''}</div>
         </div>
         ${g.url?`<a href="${g.url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none;margin-top:6px;display:inline-block">Details ↗</a>`:''}
-      </div>`).join('')}`):'';
+      </div>`).join('')):'';
 
   // ATTRACTIONS
   const attractions = `
@@ -1250,7 +1104,7 @@ function renderReport(d) {
           </div>`).join('')}
       </div>
     </div>`:'<div></div>'}
-    ${(d.tripadvisor?.attractions||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    ${d.tripadvisor&&(d.tripadvisor.attractions||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">⭐ TRIPADVISOR TOP ATTRACTIONS</div>
       ${d.tripadvisor.attractions.slice(0,6).map(a=>`
         <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:flex-start">
@@ -1264,27 +1118,12 @@ function renderReport(d) {
             ${a.review_count?`<div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${a.review_count.toLocaleString()} reviews</div>`:''}
           </div>
         </div>`).join('')}
-    </div>`:'<div></div>'}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">⭐ TripAdvisor data not available<br>RapidAPI key needed</div></div>`}
   </div>`;
 
-  // RESTAURANTS
-  const restaurants = (d.restaurants?.restaurants||[]).length?section(
-    '🍽 RESTAURANTS (Travel Advisor)',
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-      ${d.restaurants.restaurants.slice(0,6).map(r=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
-          ${r.photo?`<img src="${r.photo}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
-          <div style="font-size:12px;color:#fff;font-weight:600">${r.name}</div>
-          <div style="font-size:10px;color:var(--text3);margin-top:2px">${r.cuisine||''} ${r.price?'· '+r.price:''}</div>
-          ${r.rating?`<div style="font-size:11px;color:var(--green);margin-top:4px">${r.rating}/5 ${r.reviews?`<span style="color:var(--text3);font-size:9px">(${r.reviews} reviews)</span>`:''}</div>`:''}
-          ${r.address?`<div style="font-size:9px;color:var(--text3);margin-top:3px;font-family:'Space Mono',monospace">${r.address}</div>`:''}
-        </div>`).join('')}
-    </div>`):'';
-
   // GOOGLE PLACES
-  const googlePlaces = (d.google_places?.places||[]).length?section(
-    '📍 GOOGLE PLACES',
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+  const googlePlaces = d.google_places&&(d.google_places.places||[]).length?rSection('📍 GOOGLE PLACES',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
       ${d.google_places.places.slice(0,8).map(p=>`
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
           ${p.photo?`<img src="${p.photo}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
@@ -1298,10 +1137,23 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
+  // RESTAURANTS
+  const restaurants = d.restaurants&&(d.restaurants.restaurants||[]).length?rSection('🍽 RESTAURANTS (Travel Advisor)',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
+      ${d.restaurants.restaurants.slice(0,6).map(r=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+          ${r.photo?`<img src="${r.photo}" style="width:100%;height:60px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
+          <div style="font-size:12px;color:#fff;font-weight:600">${r.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${r.cuisine||''}${r.price?' · '+r.price:''}</div>
+          ${r.rating?`<div style="font-size:11px;color:var(--green);margin-top:4px">${r.rating}/5 ${r.reviews?`<span style="color:var(--text3);font-size:9px">(${r.reviews} reviews)</span>`:''}</div>`:''}
+          ${r.address?`<div style="font-size:9px;color:var(--text3);margin-top:3px">${r.address}</div>`:''}
+        </div>`).join('')}
+    </div>`):'';
+
   // ACCOMMODATION
   const accommodation = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    ${(d.booking?.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    ${d.booking&&(d.booking.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🏨 BOOKING.COM</div>
         <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">All Hotels ↗</a>
@@ -1320,15 +1172,15 @@ function renderReport(d) {
             </div>
           </div>
         </div>`).join('')}
-    </div>`:'<div></div>'}
-    ${(d.airbnb?.listings||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">🏨 Booking.com data not available<br>RapidAPI key needed</div></div>`}
+    ${d.airbnb&&(d.airbnb.listings||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">🏠 AIRBNB</div>
       <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.airbnb.avg_price_per_night||'—'}/night · ${d.airbnb.sample_size||0} listings</div>
       ${d.airbnb.listings.slice(0,5).map(l=>`
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start">
           ${l.image?`<img src="${l.image}" style="width:56px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:''}
           <div style="flex:1;min-width:0">
-            <div style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.name}</div>
+            <div style="font-size:11px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</div>
             <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.type||''} · ${l.beds||'?'} beds</div>
             <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
               ${l.price?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(l.price)}/night</span>`:''}
@@ -1336,38 +1188,35 @@ function renderReport(d) {
             </div>
           </div>
         </div>`).join('')}
-    </div>`:'<div></div>'}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">🏠 Airbnb data not available<br>RapidAPI key needed</div></div>`}
   </div>`;
 
   // FLIGHTS
   const flights = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
-    ${d.flights?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">✈️ AIRPORTS</div>
+    ${d.flights&&d.flights.airports&&d.flights.airports.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">✈️ AIRPORTS (Aviationstack)</div>
       ${d.flights.airports.map(a=>`
         <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between">
-          <div>
-            <div style="font-size:12px;color:#fff">${a.name}</div>
-            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${a.city||''}</div>
-          </div>
+          <div><div style="font-size:12px;color:#fff">${a.name}</div><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${a.city||''}</div></div>
           <div style="font-size:14px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace">${a.iata}</div>
         </div>`).join('')}
     </div>`:'<div></div>'}
-    ${d.flight_prices?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+    ${d.flight_prices&&d.flight_prices.airports&&d.flight_prices.airports.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🛫 SKYSCANNER AIRPORTS</div>
       ${d.flight_prices.airports.map(a=>`
         <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
           <div style="font-size:12px;color:#fff">${a.name||a.iata}</div>
           <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${a.subtitle||''}</div>
         </div>`).join('')}
-      <a href="https://www.skyscanner.com/flights-to/${d.iso?.toLowerCase()}" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">Search Flights ↗</a>
+      <a href="https://www.skyscanner.com/flights-to/${d.iso?d.iso.toLowerCase():''}" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">Search Flights ↗</a>
     </div>`:'<div></div>'}
   </div>`;
 
   // YOUTUBE
-  const youtube = (d.youtube_videos?.videos||[]).length?section(
+  const youtube = d.youtube_videos&&(d.youtube_videos.videos||[]).length?rSection(
     `▶️ YOUTUBE TRAVEL VIDEOS (${d.youtube_videos.videos.length})`,
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
       ${d.youtube_videos.videos.map(v=>`
         <a href="${v.url}" target="_blank" style="text-decoration:none;display:block;background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
           ${v.thumbnail?`<img src="${v.thumbnail}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.display='none'">`:''}
@@ -1383,76 +1232,70 @@ function renderReport(d) {
     </div>`):'';
 
   // PHOTOS
-  const photos = (d.photos||[]).length?section(
-    `📸 UNSPLASH PHOTOS (${d.photos.length})`,
+  const photos = (d.photos||[]).length?rSection(`📸 UNSPLASH PHOTOS (${d.photos.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
       ${d.photos.slice(0,12).map(p=>`
         <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--bg3)">
-          <img src="${p.url_small||p.url_regular}" alt="${p.alt||''}" loading="lazy"
-            style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+          <img src="${p.url_small||p.url_regular}" alt="${p.alt||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
           ${p.credit?`<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:5px 7px;font-size:8px;color:rgba(255,255,255,.6)">📷 ${p.credit}</div>`:''}
         </div>`).join('')}
     </div>`):'';
 
-  // TRENDING / SOCIAL
-  const social = (d.trending_spots||[]).length?section(
-    `📱 SOCIAL TRENDS (${d.trending_spots.length})`,
-    `${d.trending_spots.slice(0,6).map(s=>`
-      <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div>
-          <span style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace">[${s.platform||'Social'}]</span>
-          <a href="${s.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;margin-left:8px;line-height:1.4">${s.caption}</a>
-        </div>
-      </div>`).join('')}`):'';
+  // SOCIAL
+  const social = (d.trending_spots||[]).length?rSection(`📱 SOCIAL TRENDS (${d.trending_spots.length})`,
+    d.trending_spots.slice(0,6).map(s=>`
+      <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
+        <span style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;flex-shrink:0">[${s.platform||'Social'}]</span>
+        <a href="${s.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${s.caption}</a>
+      </div>`).join('')):'';
 
-  // GEO HIERARCHY placeholder (loaded async)
+  // GEO HIERARCHY — auto-populated after render
   const geoSection = `
   <div id="geo-hierarchy-section" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🗺 GEO HIERARCHY — STATES & CITIES</div>
-      <button onclick="loadStatesForReport('${d.iso}')" style="padding:6px 14px;border:1px solid var(--accent2);border-radius:6px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">LOAD STATES ↓</button>
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🗺 GEO HIERARCHY — STATES, PROVINCES & CITIES</div>
+      <button onclick="loadStatesForReport('${d.iso}')"
+        style="padding:6px 14px;border:1px solid var(--accent2);border-radius:6px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RELOAD</button>
     </div>
     <div id="geo-hierarchy-content" style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
-      Click LOAD STATES to see all states/provinces and their cities for ${d.country_name}
+      <div style="display:flex;align-items:center;gap:10px"><span class="spinner"></span> Loading states for ${d.country_name}...</div>
     </div>
   </div>`;
 
   // DATA SOURCES CHECKLIST
-  const checklist = section(
-    'DATA SOURCES STATUS FOR THIS COUNTRY',
+  const checklist = rSection('DATA SOURCES STATUS FOR THIS COUNTRY',
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
       ${[
-        ['Wikipedia',      !!d.wiki_summary,                          0],
-        ['Wikivoyage',     !!(d.wiki_sections&&Object.keys(d.wiki_sections).length), Object.keys(d.wiki_sections||{}).length],
-        ['Weather',        !!d.weather_now,                           0],
-        ['Forecast',       !!(d.weather_forecast||[]).length,         (d.weather_forecast||[]).length],
-        ['News Headlines', !!(d.news_headlines||[]).length,           (d.news_headlines||[]).length],
-        ['National News',  !!(d.national_news?.articles?.length),     d.national_news?.articles?.length||0],
-        ['GDACS Alerts',   !!(d.gdacs_alerts||[]).length,             (d.gdacs_alerts||[]).length],
-        ['Events',         !!(d.events||[]).length,                   (d.events||[]).length],
-        ['Top Places',     !!(d.top_places||[]).length,               (d.top_places||[]).length],
-        ['Photos',         !!(d.photos||[]).length,                   (d.photos||[]).length],
-        ['Air Quality',    d.air_quality?.aqi!=null,                  0],
-        ['Cost of Living', d.cost_of_living?.meal_cheap!=null,        0],
-        ['Country Meta',   !!d.country_meta?.capital,                 0],
-        ['Airbnb',         !!(d.airbnb?.listings||[]).length,         (d.airbnb?.listings||[]).length],
-        ['Booking.com',    !!(d.booking?.hotels||[]).length,          (d.booking?.hotels||[]).length],
-        ['TripAdvisor',    !!(d.tripadvisor?.attractions||[]).length, (d.tripadvisor?.attractions||[]).length],
-        ['Restaurants',    !!(d.restaurants?.restaurants||[]).length, (d.restaurants?.restaurants||[]).length],
-        ['Google Places',  !!(d.google_places?.places||[]).length,    (d.google_places?.places||[]).length],
-        ['Flight Prices',  !!(d.flight_prices?.airports||[]).length,  (d.flight_prices?.airports||[]).length],
-        ['Airports',       !!(d.flights?.airports||[]).length,        (d.flights?.airports||[]).length],
-        ['Currency Rates', !!(d.currency_rates?.rates),               Object.keys(d.currency_rates?.rates||{}).length],
-        ['YouTube Videos', !!(d.youtube_videos?.videos||[]).length,   (d.youtube_videos?.videos||[]).length],
-        ['Social Trends',  !!(d.trending_spots||[]).length,           (d.trending_spots||[]).length],
-        ['Hotel Deals',    !!d.hotel_deals?.destination,              0],
-        ['AI Briefing',    !!d.ai_briefing,                           0],
-        ['AI Recommendations',!!(d.ai_recommendations||[]).length,    (d.ai_recommendations||[]).length],
-        ['AI Calendar',    !!(d.ai_calendar||[]).length,              (d.ai_calendar||[]).length],
-        ['AI Trending',    !!(d.ai_trending_now||[]).length,          (d.ai_trending_now||[]).length],
-        ['Safety Summary', !!d.ai_safety_summary,                     0],
-        ['Verification',   !!d.verification?.verified_at,             0],
-      ].map(([label,ok,count])=>dot(ok,label,count)).join('')}
+        ['Wikipedia',         !!d.wiki_summary,                                  0],
+        ['Wikivoyage',        !!(d.wiki_sections&&Object.keys(d.wiki_sections).length), Object.keys(d.wiki_sections||{}).length],
+        ['Weather',           !!d.weather_now,                                   0],
+        ['Forecast',          !!(d.weather_forecast||[]).length,                 (d.weather_forecast||[]).length],
+        ['News Headlines',    !!(d.news_headlines||[]).length,                   (d.news_headlines||[]).length],
+        ['National News',     !!(d.national_news?.articles?.length),             d.national_news?.articles?.length||0],
+        ['GDACS Alerts',      !!(d.gdacs_alerts||[]).length,                     (d.gdacs_alerts||[]).length],
+        ['Events',            !!(d.events||[]).length,                           (d.events||[]).length],
+        ['Top Places',        !!(d.top_places||[]).length,                       (d.top_places||[]).length],
+        ['Photos (Unsplash)', !!(d.photos||[]).length,                           (d.photos||[]).length],
+        ['Air Quality',       !!(d.air_quality||d.waqi),                         0],
+        ['Cost of Living',    !!(d.cost_of_living?.meal_cheap!=null),            0],
+        ['Country Meta',      !!d.country_meta?.capital,                         0],
+        ['Airbnb',            !!(d.airbnb?.listings||[]).length,                 (d.airbnb?.listings||[]).length],
+        ['Booking.com',       !!(d.booking?.hotels||[]).length,                  (d.booking?.hotels||[]).length],
+        ['TripAdvisor',       !!(d.tripadvisor?.attractions||[]).length,         (d.tripadvisor?.attractions||[]).length],
+        ['Restaurants',       !!(d.restaurants?.restaurants||[]).length,         (d.restaurants?.restaurants||[]).length],
+        ['Google Places',     !!(d.google_places?.places||[]).length,            (d.google_places?.places||[]).length],
+        ['Flight Prices',     !!(d.flight_prices?.airports||[]).length,          (d.flight_prices?.airports||[]).length],
+        ['Airports',          !!(d.flights?.airports||[]).length,                (d.flights?.airports||[]).length],
+        ['Currency Rates',    !!(d.currency_rates?.rates),                       Object.keys(d.currency_rates?.rates||{}).length],
+        ['YouTube Videos',    !!(d.youtube_videos?.videos||[]).length,           (d.youtube_videos?.videos||[]).length],
+        ['Social Trends',     !!(d.trending_spots||[]).length,                   (d.trending_spots||[]).length],
+        ['AI Briefing',       !!d.ai_briefing,                                   0],
+        ['AI Recommendations',!!(d.ai_recommendations||[]).length,               (d.ai_recommendations||[]).length],
+        ['AI Calendar',       !!(d.ai_calendar||[]).length,                      (d.ai_calendar||[]).length],
+        ['AI Trending',       !!(d.ai_trending_now||[]).length,                  (d.ai_trending_now||[]).length],
+        ['Safety Summary',    !!d.ai_safety_summary,                             0],
+        ['Verification AI',   !!d.verification?.verified_at,                     0],
+      ].map(([label,ok,count])=>rdot(ok,label,count)).join('')}
     </div>`);
 
   // RAW JSON
@@ -1462,25 +1305,24 @@ function renderReport(d) {
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA</div>
       <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
     </div>
-    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(d,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
   </div>`;
 
-  // ASSEMBLE
   document.getElementById('report-content').innerHTML =
     header + flow + statsGrid + aiBriefing + verification +
-    safetyRow + calendar + recommendations + newsRow + events +
-    (gdacs||'') + attractions + restaurants + googlePlaces +
+    safetyRow + wikiSection + wikiVoyage + calendar + recommendations +
+    newsRow + events + gdacs + attractions + restaurants + googlePlaces +
     accommodation + flights + youtube + photos + social +
     geoSection + checklist + rawJson;
 }
 
 function toggleRawJson() {
   const el = document.getElementById('raw-json');
-  if(el) el.style.display = el.style.display==='none'?'block':'none';
+  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 
 async function rerunPipeline(iso, name) {
-  if(!confirm(`Re-run full pipeline for ${name}? This will refresh all data sources.`)) return;
+  if (!confirm(`Re-run full pipeline for ${name}? This refreshes all data sources.`)) return;
   toast(`▶ Pipeline starting for ${name}...`);
   try {
     await fetch(`${API}/api/pipeline/run/${iso}`, { method:'POST', headers: getAuthHeaders() });
@@ -1488,126 +1330,89 @@ async function rerunPipeline(iso, name) {
   } catch(e) { toast(`✗ ${e.message}`); }
 }
 
-async function loadGeoHierarchy(iso) {
-  const container = document.getElementById('geo-hierarchy-'+iso);
-  if(!container) return;
-  container.innerHTML = '<span class="spinner"></span> Loading states...';
-  try {
-    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
-    const d = await r.json();
-    const states = d.states || [];
-    if(!states.length) {
-      container.innerHTML = `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px">
-        No states loaded yet. <button onclick="triggerGeoPipelineForCountry('${iso}')" style="padding:3px 10px;border:1px solid var(--amber);border-radius:5px;background:none;color:var(--amber);cursor:pointer;font-size:10px">LOAD NOW</button>
-      </div>`;
-      return;
-    }
-    container.innerHTML = `
-      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">${states.length} states/provinces loaded</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:400px;overflow-y:auto">
-        ${states.map(s=>`
-          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;cursor:pointer"
-            onclick="loadStateCities('${iso}',${s.id},'${s.name.replace(/'/g,"\\'")}',this)">
-            <div style="font-size:11px;color:#fff">${s.name}</div>
-            ${s.state_code?`<div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${s.state_code}</div>`:''}
-            <div id="cities-${s.id}" style="display:none;margin-top:6px"></div>
-          </div>`).join('')}
-      </div>`;
-  } catch(e) {
-    container.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">${e.message}</div>`;
-  }
-}
-
-async function loadStateCities(iso, stateId, stateName, el) {
-  const citiesDiv = document.getElementById('cities-'+stateId);
-  if(!citiesDiv) return;
-  if(citiesDiv.style.display !== 'none') { citiesDiv.style.display='none'; return; }
-  citiesDiv.style.display='block';
-  citiesDiv.innerHTML = '<span class="spinner"></span>';
-  try {
-    const r = await fetch(`${API}/api/geo/states/${stateId}/areas`, { headers: getAuthHeaders() });
-    const d = await r.json();
-    const areas = d.areas || [];
-    if(!areas.length) { citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--text3)">No cities loaded</div>`; return; }
-    citiesDiv.innerHTML = `
-      <div style="font-size:9px;color:var(--accent2);margin-bottom:4px">${areas.length} cities</div>
-      ${areas.slice(0,20).map(a=>`<div style="font-size:9px;color:var(--text2);padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)">${a.name}</div>`).join('')}
-      ${areas.length>20?`<div style="font-size:9px;color:var(--text3)">+${areas.length-20} more</div>`:''}`;
-  } catch(e) {
-    citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--red)">${e.message}</div>`;
-  }
-}
-
-async function triggerGeoPipelineForCountry(iso) {
-  toast(`▶ Loading geo data for ${iso}...`);
-  try {
-    await fetch(`${API}/api/geo/pipeline/country/${iso}`, { method:'POST', headers: getAuthHeaders() });
-    toast(`✓ Started — check back in 30 seconds`);
-  } catch(e) { toast(`✗ ${e.message}`); }
-}
-
-// ── Geo Hierarchy for Report ──────────────────────────────────────
+// ── Geo Hierarchy (auto-loads after report renders) ───────────────
 async function loadStatesForReport(iso) {
   const el = document.getElementById('geo-hierarchy-content');
-  if(!el) return;
-  el.innerHTML = `<span style="color:var(--accent2)">Loading states for ${iso}... <span class="spinner"></span></span>`;
-
+  if (!el) return;
+  el.innerHTML = `<div style="display:flex;align-items:center;gap:10px;color:var(--accent2);font-family:'Space Mono',monospace;font-size:11px"><span class="spinner"></span> Loading states for ${iso}...</div>`;
   try {
     const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
     const d = await r.json();
     const states = d.states || [];
-
-    if(!states.length) {
-      el.innerHTML = `<div style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
-        No states loaded yet for ${iso}.
-        <button onclick="triggerGeoForCountry('${iso}')" style="margin-left:10px;padding:4px 10px;border:1px solid var(--accent);border-radius:5px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">Load from CountriesNow</button>
-      </div>`;
+    if (!states.length) {
+      el.innerHTML = `
+        <div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px;padding:10px 0">
+          No states loaded yet for ${iso}.
+          <button onclick="triggerGeoForCountry('${iso}')"
+            style="margin-left:10px;padding:4px 10px;border:1px solid var(--accent);border-radius:5px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">
+            Load from CountriesNow
+          </button>
+        </div>`;
       return;
     }
-
     el.innerHTML = `
-      <div style="margin-bottom:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">${states.length} states/provinces loaded — click any to see cities</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px" id="states-grid-${iso}">
+      <div style="margin-bottom:12px">
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px">${states.length} states/provinces loaded — click any to expand cities</div>
+        <input id="state-search-${iso}" placeholder="Filter states..." oninput="filterStatesReport('${iso}')"
+          style="width:100%;max-width:320px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;margin-bottom:10px">
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:520px;overflow-y:auto" id="states-grid-${iso}">
         ${states.map(s=>`
-          <div onclick="loadCitiesForState(${s.id},'${s.name}')"
+          <div id="state-item-${s.id}"
+            onclick="toggleStateCities(${s.id},'${iso}',this)"
+            data-state-name="${(s.name||'').toLowerCase()}"
             style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:border-color .2s"
-            onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">
+            onmouseover="if(!this.classList.contains('expanded'))this.style.borderColor='var(--accent2)'"
+            onmouseout="if(!this.classList.contains('expanded'))this.style.borderColor='var(--border)'">
             <div style="font-size:12px;color:#fff;font-weight:500">${s.name}</div>
             <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${s.state_code||s.type||'state'}</div>
+            <div id="cities-inline-${s.id}" style="display:none;margin-top:8px"></div>
           </div>`).join('')}
-      </div>
-      <div id="cities-panel" style="margin-top:14px"></div>`;
+      </div>`;
   } catch(e) {
     el.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">Error: ${e.message}</div>`;
   }
 }
 
-async function loadCitiesForState(stateId, stateName) {
-  const panel = document.getElementById('cities-panel');
-  if(!panel) return;
-  panel.innerHTML = `<div style="color:var(--accent2);font-family:'Space Mono',monospace;font-size:11px">Loading cities for ${stateName}... <span class="spinner"></span></div>`;
+function filterStatesReport(iso) {
+  const q = (document.getElementById(`state-search-${iso}`)?.value || '').toLowerCase();
+  document.querySelectorAll(`#states-grid-${iso} > div[data-state-name]`).forEach(el => {
+    el.style.display = el.dataset.stateName.includes(q) ? '' : 'none';
+  });
+}
 
-  try {
-    const r = await fetch(`${API}/api/geo/states/${stateId}/areas`, { headers: getAuthHeaders() });
-    const d = await r.json();
-    const areas = d.areas || [];
-
-    if(!areas.length) {
-      panel.innerHTML = `<div style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px;padding:10px 0">No cities loaded yet for ${stateName}</div>`;
-      return;
+async function toggleStateCities(stateId, iso, el) {
+  const citiesDiv = document.getElementById(`cities-inline-${stateId}`);
+  if (!citiesDiv) return;
+  if (citiesDiv.style.display !== 'none') {
+    citiesDiv.style.display = 'none';
+    el.classList.remove('expanded');
+    el.style.borderColor = 'var(--border)';
+    return;
+  }
+  el.classList.add('expanded');
+  el.style.borderColor = 'var(--accent2)';
+  citiesDiv.style.display = 'block';
+  if (!citiesDiv.dataset.loaded) {
+    citiesDiv.innerHTML = `<span style="font-size:9px;color:var(--text3)"><span class="spinner" style="width:10px;height:10px;border-width:1px;display:inline-block"></span> loading...</span>`;
+    try {
+      const r = await fetch(`${API}/api/geo/states/${stateId}/areas`, { headers: getAuthHeaders() });
+      const d = await r.json();
+      const areas = d.areas || [];
+      citiesDiv.dataset.loaded = 'true';
+      if (!areas.length) {
+        citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--text3);padding:4px 0">No cities loaded yet</div>`;
+      } else {
+        citiesDiv.innerHTML = `
+          <div style="font-size:9px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:6px">${areas.length} cities</div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px">
+            ${areas.slice(0,30).map(a=>`<span style="font-size:9px;color:var(--text2);padding:2px 6px;background:rgba(255,255,255,.04);border-radius:3px;border:1px solid rgba(255,255,255,.06)">${a.name}</span>`).join('')}
+            ${areas.length>30?`<span style="font-size:9px;color:var(--text3);padding:2px 6px">+${areas.length-30} more</span>`:''}
+          </div>`;
+      }
+    } catch(e) {
+      citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--red)">${e.message}</div>`;
     }
-
-    panel.innerHTML = `
-      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px">
-        <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:10px">CITIES IN ${stateName.toUpperCase()} (${areas.length})</div>
-        <div style="display:flex;flex-wrap:wrap;gap:6px">
-          ${areas.map(a=>`
-            <span style="padding:4px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text)">${a.name}</span>
-          `).join('')}
-        </div>
-      </div>`;
-  } catch(e) {
-    panel.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">Error: ${e.message}</div>`;
   }
 }
 
@@ -1623,23 +1428,20 @@ async function triggerGeoForCountry(iso) {
 // ── Init ──────────────────────────────────────────────────────────
 loadHealth();
 loadStatus();
-setInterval(loadHealth, 45000); // less frequent — health check takes time
+setInterval(loadHealth, 45000);
 setInterval(loadStatus, 5000);
 
-// Wake-up banner — show if backend not live within 5s
-let wakeupSeconds = 0;
-let wakeupInterval = null;
+let wakeupSeconds = 0, wakeupInterval = null;
 setTimeout(() => {
   const liveText = document.getElementById('live-text');
-  if(liveText && liveText.textContent !== 'BACKEND LIVE') {
+  if (liveText && liveText.textContent !== 'BACKEND LIVE') {
     const banner = document.getElementById('wakeup-banner');
-    if(banner) banner.style.display = 'block';
+    if (banner) banner.style.display = 'block';
     wakeupInterval = setInterval(() => {
       wakeupSeconds++;
       const timerEl = document.getElementById('wakeup-timer');
-      if(timerEl) timerEl.textContent = `(${wakeupSeconds}s)`;
-      // Hide banner once backend is live
-      if(document.getElementById('live-text')?.textContent === 'BACKEND LIVE') {
+      if (timerEl) timerEl.textContent = `(${wakeupSeconds}s)`;
+      if (document.getElementById('live-text')?.textContent === 'BACKEND LIVE') {
         banner.style.display = 'none';
         clearInterval(wakeupInterval);
       }
@@ -1647,7 +1449,6 @@ setTimeout(() => {
   }
 }, 5000);
 
-// Wake-up ping — fires every 5s so Render never sleeps while dashboard is open
 setInterval(() => {
   fetch(API+'/', { method:'GET', cache:'no-store', headers: getAuthHeaders() }).catch(()=>{});
 }, 5000);
