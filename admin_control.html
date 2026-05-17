@@ -196,6 +196,12 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   </div>
 </header>
 
+<!-- Wake-up banner — shown when backend is cold-starting -->
+<div id="wakeup-banner" style="display:none;background:rgba(255,171,0,.08);border-bottom:1px solid rgba(255,171,0,.2);padding:10px 32px;font-family:'Space Mono',monospace;font-size:11px;color:var(--amber);text-align:center;position:sticky;top:58px;z-index:99">
+  ⏳ Backend is waking up (Render cold start — up to 60s). Page will update automatically.
+  <span id="wakeup-timer" style="margin-left:8px;color:var(--text3)"></span>
+</div>
+
 <main>
 
 <!-- SYSTEM PAGE -->
@@ -474,10 +480,16 @@ async function loadStatus() {
 // ── Health ────────────────────────────────────────────────────────
 async function loadHealth() {
   const t = Date.now();
+
+  // Show "waking up" state immediately so page doesn't look frozen
+  document.getElementById('live-text').textContent = 'CONNECTING...';
+  document.getElementById('health-grid').innerHTML =
+    `<div class="health-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Connecting to backend...</div><div class="health-detail">Render may be waking up — takes up to 30s on cold start</div></div></div>`;
+
+  // Step 1: ping root endpoint with 40s timeout
   try {
-    // Use AbortController for timeout — Render cold start can take 30s
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 35000);
+    const timer = setTimeout(() => ctrl.abort(), 40000);
     const r = await fetch(API+'/', { headers: getAuthHeaders(), signal: ctrl.signal });
     clearTimeout(timer);
     const ms = Date.now()-t;
@@ -485,16 +497,30 @@ async function loadHealth() {
     document.getElementById('live-dot').style.background='var(--green)';
     document.getElementById('live-text').textContent='BACKEND LIVE';
   } catch(e) {
-    const msg = e.name==='AbortError' ? 'Backend waking up (cold start ~30s) — retrying...' : 'Backend unreachable: '+e.message;
-    setCard('backend-card','fail',msg,'');
-    document.getElementById('live-dot').style.background='var(--amber)';
-    document.getElementById('live-text').textContent = e.name==='AbortError' ? 'WAKING UP...' : 'BACKEND DOWN';
-    // Auto-retry after 10s on cold start
-    setTimeout(loadHealth, 10000);
+    const isTimeout = e.name==='AbortError';
+    const msg = isTimeout
+      ? 'Still waking up — Render cold start can take up to 60s. Auto-retrying...'
+      : 'Backend unreachable: '+e.message;
+    setCard('backend-card', isTimeout?'unknown':'fail', msg, '');
+    document.getElementById('live-dot').style.background = isTimeout?'var(--amber)':'var(--red)';
+    document.getElementById('live-text').textContent = isTimeout ? 'WAKING UP...' : 'BACKEND DOWN';
+    document.getElementById('health-grid').innerHTML =
+      `<div class="health-card"><div class="health-dot ${isTimeout?'loading':'fail'}"></div><div class="health-info"><div class="health-name">${isTimeout?'Backend waking up':'Backend unreachable'}</div><div class="health-detail">${msg}</div></div></div>`;
+    // Auto-retry in 12s
+    setTimeout(loadHealth, 12000);
     return;
   }
+
+  // Step 2: load health checks — this can take 30-45s (live-tests 40+ sources)
+  // Show intermediate state so user knows it's working
+  document.getElementById('health-grid').innerHTML =
+    `<div class="health-card"><div class="health-dot loading"></div><div class="health-info"><div class="health-name">Running health checks...</div><div class="health-detail">Live-testing ${['Wikipedia','OpenWeatherMap','BBC News','Al Jazeera','Mistral AI','Supabase','WAQI','REST Countries','...and 35+ more'].join(', ')}</div></div></div>`;
+
   try {
-    const r = await fetch(API+'/api/health', { headers: getAuthHeaders() });
+    const ctrl2 = new AbortController();
+    const timer2 = setTimeout(() => ctrl2.abort(), 60000); // 60s for health checks
+    const r = await fetch(API+'/api/health', { headers: getAuthHeaders(), signal: ctrl2.signal });
+    clearTimeout(timer2);
     const d = await r.json();
     const checks = d.checks||{};
     setCard('supabase-card', checks.supabase?.ok?'ok':'fail', checks.supabase?.detail||'Unknown','');
@@ -538,7 +564,14 @@ async function loadHealth() {
     document.getElementById('s-processed').textContent = pp?.processed||'—';
     document.getElementById('s-coverage').textContent = (pp?.processed?Math.round(pp.processed/195*100):0)+'% coverage';
     document.getElementById('s-fresh').textContent = pp?.fresh||'0';
-  } catch(e) { console.error('Health error:', e); }
+  } catch(e) {
+    const msg = e.name==='AbortError'
+      ? 'Health check timed out (60s) — backend may be under load. Retrying in 20s...'
+      : 'Health check failed: '+e.message;
+    document.getElementById('health-grid').innerHTML =
+      `<div class="health-card"><div class="health-dot fail"></div><div class="health-info"><div class="health-name">Health check failed</div><div class="health-detail">${msg}</div></div></div>`;
+    if(e.name==='AbortError') setTimeout(loadHealth, 20000);
+  }
 }
 
 function setCard(id, status, detail, ms) {
@@ -1424,45 +1457,4 @@ function renderReport(d) {
 
   // RAW JSON
   const rawJson = `
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA</div>
-      <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
-    </div>
-    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-  </div>`;
-
-  // ASSEMBLE
-  document.getElementById('report-content').innerHTML =
-    header + flow + statsGrid + aiBriefing + verification +
-    safetyRow + calendar + recommendations + newsRow + events +
-    (gdacs||'') + attractions + restaurants + googlePlaces +
-    accommodation + flights + youtube + photos + social +
-    geoSection + checklist + rawJson;
-}
-
-function toggleRawJson() {
-  const el = document.getElementById('raw-json');
-  if(el) el.style.display = el.style.display==='none'?'block':'none';
-}
-
-async function rerunPipeline(iso, name) {
-  if(!confirm(`Re-run full pipeline for ${name}? This will refresh all data sources.`)) return;
-  toast(`▶ Pipeline starting for ${name}...`);
-  try {
-    await fetch(`${API}/api/pipeline/run/${iso}`, { method:'POST', headers: getAuthHeaders() });
-    toast(`✓ Pipeline started — reload report in ~2 minutes`);
-  } catch(e) { toast(`✗ ${e.message}`); }
-}
-
-async function loadGeoHierarchy(iso) {
-  const container = document.getElementById('geo-hierarchy-'+iso);
-  if(!container) return;
-  container.innerHTML = '<span class="spinner"></span> Loading states...';
-  try {
-    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
-    const d = await r.json();
-    const states = d.states || [];
-    if(!states.length) {
-      container.innerHTML = `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px">
-        No states loaded yet. <button onclick="triggerGeoPipelineForCountry('${iso}')" style="padding:3px 10px;border:1px solid var(--amber);border-radius:5px;background:none;color:var(--amber)
+  <div style="background:var(--bg2);borde
