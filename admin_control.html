@@ -914,557 +914,531 @@ function renderReport(d) {
     return;
   }
 
-  const f        = freshLabel(d.last_updated);
-  const meta     = d.country_meta || {};
-  const veri     = d.verification || {};
-  const safeColor = {safe:'var(--green)',caution:'var(--amber)',warning:'var(--amber)',danger:'var(--red)'}[veri.safety_level] || 'var(--text3)';
+  const f         = freshLabel(d.last_updated);
+  const meta      = d.country_meta || {};
+  const veri      = d.verification || {};
+  const safeColor = {safe:'var(--green)',caution:'var(--amber)',warning:'var(--amber)',danger:'var(--red)'}[veri.safety_level]||'var(--text3)';
 
-  // Helper: section wrapper
-  const sec = (title, content, color) => content ? `
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
-      <div style="font-size:9px;letter-spacing:3px;color:${color||'var(--text3)'};font-family:'Space Mono',monospace;margin-bottom:14px">${title}</div>
+  // ── helper renderers ──────────────────────────────────────────
+  const section = (title, content) =>
+    `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:14px">${title}</div>
       ${content}
-    </div>` : '';
+    </div>`;
 
-  const row = (label, val, color) => val!=null&&val!==''&&val!==false ? `
-    <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-      <span style="font-size:11px;color:var(--text3)">${label}</span>
-      <span style="font-size:11px;color:${color||'var(--text)'};font-family:'Space Mono',monospace;text-align:right;max-width:65%">${val}</span>
-    </div>` : '';
+  const pill = (label, color='var(--accent)') =>
+    `<span style="padding:4px 10px;border-radius:5px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,.3);border:1px solid ${color};color:${color}">${label}</span>`;
 
-  document.getElementById('report-content').innerHTML = `
+  const kv = (label, val, color='var(--text)') =>
+    val!=null&&val!==''?`<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.03)">
+      <span style="font-size:10px;color:var(--text3)">${label}</span>
+      <span style="font-size:11px;color:${color};font-family:'Space Mono',monospace;text-align:right;max-width:65%">${val}</span>
+    </div>`:'';
 
-  <!-- HEADER -->
+  const dot = (ok, label, count) =>
+    `<div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--bg3);border-radius:7px;border:1px solid ${ok?'rgba(0,230,118,.12)':'rgba(255,61,87,.08)'}">
+      <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${ok?'var(--green)':'var(--red)'}"></div>
+      <span style="font-size:11px;color:${ok?'var(--text)':'var(--text3)'}">${label}</span>
+      ${count>0?`<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-left:auto">${count}</span>`:''}
+    </div>`;
+
+  // ── build each section ────────────────────────────────────────
+
+  // HEADER
+  const header = `
   <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:16px;padding:24px 28px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px">
       <div>
-        <div style="font-size:28px;font-weight:800;color:#fff">${d.country_name}</div>
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:4px">
-          ${d.continent} · ISO: ${d.iso} · Updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}
-        </div>
+        <div style="font-size:30px;font-weight:800;color:#fff">${d.country_name}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:4px">${d.continent} · ISO: ${d.iso} · Updated: ${d.last_updated?new Date(d.last_updated).toLocaleString():'Never'}</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <span class="freshness ${f.cls}">${f.label}</span>
         ${meta.flag_png?`<img src="${meta.flag_png}" style="height:28px;border-radius:3px;border:1px solid var(--border)">`:''}
-        ${veri.safety_level?`<span style="padding:4px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;border:1px solid ${safeColor};color:${safeColor}">${veri.safety_level.toUpperCase()}</span>`:''}
-        <button onclick="rerunPipeline('${d.iso}','${d.country_name}')" style="padding:6px 14px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ RE-RUN PIPELINE</button>
+        ${veri.safety_level?pill(veri.safety_level.toUpperCase(),safeColor):''}
+        ${veri.confidence?pill('Confidence: '+Math.round(veri.confidence*100)+'%','var(--accent2)'):''}
       </div>
     </div>
-    ${d.ai_vibe?`<div style="margin-top:14px;font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px">"${d.ai_vibe}"</div>`:''}
-  </div>
+    ${d.ai_vibe?`<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px;margin-bottom:12px">"${d.ai_vibe}"</div>`:''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name}')" style="padding:8px 16px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RE-RUN PIPELINE</button>
+      <button onclick="loadStatesForReport('${d.iso}')" style="padding:8px 16px;border:1px solid var(--accent2);border-radius:8px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">🗺 LOAD STATES & CITIES</button>
+    </div>
+  </div>`;
 
-  <!-- PIPELINE FLOW -->
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+  // PIPELINE FLOW
+  const flow = `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">HOW THIS INTEL WAS BUILT</div>
     <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-family:'Space Mono',monospace;font-size:10px">
-      ${['26+ DATA SOURCES|var(--accent)','MISTRAL SYNTHESIS|var(--accent2)','VERIFICATION AI|var(--green)','SUPABASE STORAGE|var(--amber)','MOBILE APP|#fff'].map(s=>{const[t,c]=s.split('|');return`<div style="padding:7px 12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:${c}">${t}</div><div style="color:var(--text3)">→</div>`;}).join('').replace(/<div style="color:var\(--text3\)">→<\/div>$/,'')}
+      ${[
+        ['26+ DATA SOURCES','rgba(42,127,255,.1)','rgba(42,127,255,.3)','var(--accent)'],
+        ['MISTRAL SYNTHESIS','rgba(0,229,255,.08)','rgba(0,229,255,.2)','var(--accent2)'],
+        ['VERIFICATION AI','rgba(0,230,118,.08)','rgba(0,230,118,.2)','var(--green)'],
+        ['SUPABASE DB','rgba(255,171,0,.08)','rgba(255,171,0,.2)','var(--amber)'],
+        ['→ USER','rgba(255,255,255,.04)','rgba(255,255,255,.1)','#fff'],
+      ].map(([t,bg,border,color],i)=>`
+        ${i>0?'<div style="color:var(--text3)">→</div>':''}
+        <div style="padding:7px 12px;background:${bg};border:1px solid ${border};border-radius:8px;color:${color}">${t}</div>
+      `).join('')}
     </div>
-  </div>
+  </div>`;
 
-  <!-- TOP STATS GRID -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px">
+  // STATS GRID — meta, weather, air, cost
+  const statsGrid = `
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px">
 
-    ${meta.capital?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">🌍 COUNTRY FACTS</div>
-      ${row('Capital',    meta.capital)}
-      ${row('Population', meta.population?.toLocaleString())}
-      ${row('Area',       meta.area_km2?meta.area_km2.toLocaleString()+' km²':null)}
-      ${row('Languages',  (meta.languages||[]).join(', '))}
-      ${row('Currency',   (meta.currencies||[]).map(c=>c.symbol+' '+c.name).join(', '))}
-      ${row('Calling',    meta.calling_code)}
-      ${row('Driving',    meta.driving_side)}
-      ${row('Landlocked', meta.landlocked!=null?(meta.landlocked?'Yes':'No'):null)}
-      ${row('UN Member',  meta.un_member!=null?(meta.un_member?'Yes':'No'):null)}
-      ${row('Borders',    (meta.borders||[]).slice(0,6).join(', '))}
-      ${row('TLD',        (meta.tlds||[]).join(', '))}
-      ${meta.maps?`<a href="${meta.maps}" target="_blank" style="display:block;margin-top:8px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace">📍 View on Google Maps ↗</a>`:''}
+    ${meta.capital?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🌍 COUNTRY FACTS</div>
+      ${kv('Capital',meta.capital)}
+      ${kv('Population',meta.population?.toLocaleString())}
+      ${kv('Languages',(meta.languages||[]).join(', '))}
+      ${kv('Currency',(meta.currencies||[]).map(c=>c.symbol+' '+c.name).join(', '))}
+      ${kv('Calling Code',meta.calling_code)}
+      ${kv('Drive Side',meta.driving_side)}
+      ${kv('Area',meta.area_km2?meta.area_km2.toLocaleString()+' km²':null)}
+      ${kv('UN Member',meta.un_member?'Yes':'No')}
+      ${kv('Landlocked',meta.landlocked?'Yes':'No')}
+      ${meta.borders?.length?kv('Borders',meta.borders.join(', ')):''}
+      ${(meta.timezones||[]).length?kv('Timezone',meta.timezones[0]):''}
+      ${meta.maps?`<a href="${meta.maps}" target="_blank" style="display:inline-block;margin-top:8px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">📍 Google Maps ↗</a>`:''}
     </div>`:''}
 
-    ${d.weather_now?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">🌤 WEATHER NOW</div>
+    ${d.weather_now?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🌤 WEATHER NOW</div>
       <div style="font-size:38px;font-weight:800;color:#fff;line-height:1">${d.weather_now.temp}°C</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:4px;text-transform:capitalize">${d.weather_now.condition}</div>
-      ${row('Feels like', d.weather_now.feels_like+'°C')}
-      ${row('Humidity',   d.weather_now.humidity+'%')}
-      ${row('Wind',       d.weather_now.wind+' km/h')}
-      ${(d.weather_forecast||[]).length?`<div style="margin-top:10px;display:flex;gap:4px">
-        ${d.weather_forecast.slice(0,5).map(f=>`<div style="flex:1;text-align:center;background:var(--bg3);border-radius:6px;padding:5px 2px">
-          <div style="font-size:8px;color:var(--text3)">${f.date?.slice(5)}</div>
-          <div style="font-size:10px;color:#fff">${f.high}°</div>
-          <div style="font-size:9px;color:var(--text3)">${f.low}°</div>
-        </div>`).join('')}
-      </div>`:''}
+      <div style="font-size:12px;color:var(--text2);margin:4px 0 10px;text-transform:capitalize">${d.weather_now.condition}</div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap">
+        ${kv('Feels like',d.weather_now.feels_like+'°C')}
+        ${kv('Humidity',d.weather_now.humidity+'%')}
+        ${kv('Wind',d.weather_now.wind+' km/h')}
+      </div>
+      ${(d.weather_forecast||[]).length?`
+        <div style="margin-top:12px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px">5-DAY FORECAST</div>
+        <div style="display:flex;gap:4px">
+          ${d.weather_forecast.slice(0,5).map(f=>`
+            <div style="flex:1;text-align:center;background:var(--bg3);border-radius:6px;padding:6px 2px">
+              <div style="font-size:9px;color:var(--text3)">${f.date?.slice(5)}</div>
+              <div style="font-size:12px;color:#fff;margin:2px 0">${f.high}°</div>
+              <div style="font-size:10px;color:var(--text3)">${f.low}°</div>
+            </div>`).join('')}
+        </div>`:''}
     </div>`:''}
 
-    ${d.air_quality?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">💨 AIR QUALITY</div>
+    ${d.air_quality?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💨 AIR QUALITY</div>
       <div style="font-size:42px;font-weight:800;line-height:1;color:${(d.air_quality.aqi||0)<50?'var(--green)':(d.air_quality.aqi||0)<100?'var(--amber)':'var(--red)'}">${d.air_quality.aqi||'—'}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:4px">${d.air_quality.aqi_label||''}</div>
-      ${row('PM2.5', d.air_quality.pm25!=null?d.air_quality.pm25+' µg/m³':null)}
-      ${row('PM10',  d.air_quality.pm10!=null?d.air_quality.pm10+' µg/m³':null)}
-      ${row('O3',    d.air_quality.o3!=null?d.air_quality.o3:null)}
-      ${row('NO2',   d.air_quality.no2!=null?d.air_quality.no2:null)}
-      ${row('Location', d.air_quality.location||d.air_quality.city)}
+      <div style="font-size:12px;color:var(--text2);margin:4px 0 10px">${d.air_quality.aqi_label||''}</div>
+      ${kv('Location',d.air_quality.location||d.air_quality.city)}
+      ${kv('PM2.5',d.air_quality.pm25!=null?d.air_quality.pm25+' μg/m³':null)}
+      ${kv('PM10',d.air_quality.pm10!=null?d.air_quality.pm10+' μg/m³':null)}
+      ${kv('O3',d.air_quality.o3!=null?d.air_quality.o3:null)}
+      ${kv('NO2',d.air_quality.no2!=null?d.air_quality.no2:null)}
+      ${d.air_quality.updated?`<div style="font-size:9px;color:var(--text3);margin-top:8px;font-family:'Space Mono',monospace">Updated: ${new Date(d.air_quality.updated).toLocaleString()}</div>`:''}
     </div>`:''}
 
-    ${d.cost_of_living?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">💰 COST OF LIVING</div>
-      ${row('Cheap meal',      d.cost_of_living.meal_cheap!=null?'$'+d.cost_of_living.meal_cheap:null, 'var(--green)')}
-      ${row('Mid restaurant',  d.cost_of_living.meal_mid!=null?'$'+d.cost_of_living.meal_mid:null, 'var(--green)')}
-      ${row('Coffee',          d.cost_of_living.coffee!=null?'$'+d.cost_of_living.coffee:null, 'var(--green)')}
-      ${row('Local beer',      d.cost_of_living.beer_local!=null?'$'+d.cost_of_living.beer_local:null, 'var(--green)')}
-      ${row('Water bottle',    d.cost_of_living.water_bottle!=null?'$'+d.cost_of_living.water_bottle:null, 'var(--green)')}
-      ${row('1-bed city rent', d.cost_of_living.one_bed_city_rent!=null?'$'+d.cost_of_living.one_bed_city_rent+'/mo':null, 'var(--amber)')}
-      ${row('1-bed outside',   d.cost_of_living.one_bed_outside_rent!=null?'$'+d.cost_of_living.one_bed_outside_rent+'/mo':null, 'var(--amber)')}
-      ${row('Monthly transport',d.cost_of_living.monthly_transport!=null?'$'+d.cost_of_living.monthly_transport:null)}
-      ${row('Taxi per km',     d.cost_of_living.taxi_per_km!=null?'$'+d.cost_of_living.taxi_per_km:null)}
-      ${row('Internet/mo',     d.cost_of_living.internet_monthly!=null?'$'+d.cost_of_living.internet_monthly:null)}
-      ${row('Avg salary/mo',   d.cost_of_living.avg_salary!=null?'$'+d.cost_of_living.avg_salary:null, 'var(--accent2)')}
+    ${d.cost_of_living?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💰 COST OF LIVING</div>
+      ${kv('Cheap meal',d.cost_of_living.meal_cheap!=null?'$'+d.cost_of_living.meal_cheap:null,'var(--green)')}
+      ${kv('Mid restaurant',d.cost_of_living.meal_mid!=null?'$'+d.cost_of_living.meal_mid:null,'var(--green)')}
+      ${kv('Coffee',d.cost_of_living.coffee!=null?'$'+d.cost_of_living.coffee:null,'var(--green)')}
+      ${kv('Local beer',d.cost_of_living.beer_local!=null?'$'+d.cost_of_living.beer_local:null,'var(--green)')}
+      ${kv('Water bottle',d.cost_of_living.water_bottle!=null?'$'+d.cost_of_living.water_bottle:null,'var(--green)')}
+      ${kv('1-bed city/mo',d.cost_of_living.one_bed_city_rent!=null?'$'+d.cost_of_living.one_bed_city_rent:null,'var(--green)')}
+      ${kv('1-bed outside/mo',d.cost_of_living.one_bed_outside_rent!=null?'$'+d.cost_of_living.one_bed_outside_rent:null,'var(--green)')}
+      ${kv('Monthly transport',d.cost_of_living.monthly_transport!=null?'$'+d.cost_of_living.monthly_transport:null,'var(--green)')}
+      ${kv('Taxi per km',d.cost_of_living.taxi_per_km!=null?'$'+d.cost_of_living.taxi_per_km:null,'var(--green)')}
+      ${kv('Internet/mo',d.cost_of_living.internet_monthly!=null?'$'+d.cost_of_living.internet_monthly:null,'var(--green)')}
+      ${kv('Avg salary/mo',d.cost_of_living.avg_salary!=null?'$'+d.cost_of_living.avg_salary:null,'var(--accent2)')}
     </div>`:''}
 
-    ${d.currency_rates?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">💱 CURRENCY (vs USD)</div>
-      ${(()=>{
-        const localCurr = (meta.currencies||[])[0];
-        const rates = d.currency_rates?.rates || {};
-        const updated = d.currency_rates?.updated;
-        const pairs = [];
-        // Show local currency first
-        if(localCurr?.name) {
-          const code = Object.keys(rates).find(k => (localCurr.name||'').toLowerCase().includes(k.toLowerCase()) || k === (localCurr.symbol||'').toUpperCase());
-          if(code) pairs.push([code, rates[code]]);
-        }
-        // Then show major world currencies
-        ['EUR','GBP','JPY','CNY','AUD','CAD','CHF','INR','NGN','ZAR','BRL','MXN','AED','SAR'].forEach(k=>{
-          if(rates[k] && !pairs.find(p=>p[0]===k)) pairs.push([k,rates[k]]);
-        });
-        return pairs.slice(0,10).map(([k,v])=>row('1 USD = '+v.toFixed(2), k, 'var(--accent2)')).join('')
-          + (updated?`<div style="font-size:9px;color:var(--text3);margin-top:8px">${updated}</div>`:'');
-      })()}
+    ${d.currency_rates?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💱 CURRENCY RATES (vs USD)</div>
+      ${(meta.currencies||[]).map(c=>{
+        const code = Object.keys(d.currency_rates.rates||{}).find(k=>c.name?.toLowerCase().includes(k.toLowerCase())||c.symbol?.includes(k));
+        const rate = code?d.currency_rates.rates[code]:null;
+        return rate?kv(c.name,`1 USD = ${rate} ${code}`):'';
+      }).join('')}
+      <div style="margin-top:10px;font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">Base: USD · ${d.currency_rates.updated?new Date(d.currency_rates.updated).toLocaleDateString():''}</div>
+      <div style="margin-top:8px;font-size:9px;color:var(--text3)">Full rates: ${Object.keys(d.currency_rates.rates||{}).length} currencies available</div>
     </div>`:''}
 
-  </div>
+  </div>`;
 
-  <!-- AI BRIEFING -->
-  ${d.ai_briefing?`<div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
+  // AI BRIEFING
+  const aiBriefing = d.ai_briefing?`
+  <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — MISTRAL LARGE</div>
-    <div style="font-size:14px;color:var(--text);line-height:1.8">${d.ai_briefing}</div>
-  </div>`:''}
+    <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:${d.ai_hidden_gem?'12px':'0'}">${d.ai_briefing}</div>
+    ${d.ai_hidden_gem?`<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2)">💎 Hidden Gem: ${d.ai_hidden_gem}</div>`:''}
+  </div>`:'';
 
-  <!-- VERIFICATION -->
-  ${veri.verification_notes?`<div style="background:${veri.verified?'rgba(0,230,118,.03)':'rgba(255,61,87,.03)'};border:1px solid ${veri.verified?'rgba(0,230,118,.2)':'rgba(255,61,87,.2)'};border-radius:12px;padding:20px;margin-bottom:16px">
+  // VERIFICATION
+  const verification = veri.verification_notes?`
+  <div style="background:${veri.verified?'rgba(0,230,118,.04)':'rgba(255,61,87,.04)'};border:1px solid ${veri.verified?'rgba(0,230,118,.2)':'rgba(255,61,87,.2)'};border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
       <div style="font-size:9px;letter-spacing:3px;color:${veri.verified?'var(--green)':'var(--red)'};font-family:'Space Mono',monospace">🤖 VERIFICATION — MISTRAL LARGE + WEB SEARCH</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap">
-        <span style="font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:var(--text2)">Confidence: ${Math.round((veri.confidence||0)*100)}%</span>
-        <span style="font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:${safeColor}">${(veri.safety_level||'').toUpperCase()}</span>
-        <span style="font-size:9px;font-family:'Space Mono',monospace;padding:3px 8px;border-radius:4px;background:rgba(0,0,0,.3);color:var(--text2)">${veri.data_freshness||''}</span>
+        ${pill('Confidence: '+Math.round((veri.confidence||0)*100)+'%','var(--text2)')}
+        ${veri.safety_level?pill(veri.safety_level.toUpperCase(),safeColor):''}
+        ${veri.data_freshness?pill(veri.data_freshness,'var(--text2)'):''}
       </div>
     </div>
-    <div style="font-size:12px;color:var(--text2);line-height:1.6">${veri.verification_notes}</div>
-    ${veri.safety_detail?`<div style="font-size:12px;color:${safeColor};margin-top:8px">🛡 ${veri.safety_detail}</div>`:''}
-    ${veri.trending_topic?`<div style="font-size:12px;color:var(--accent2);margin-top:6px">📈 Trending: ${veri.trending_topic}</div>`:''}
-    ${(veri.current_alerts||[]).length?`<div style="margin-top:10px">${veri.current_alerts.map(a=>`<div style="font-size:11px;color:var(--red);padding:5px 0;border-bottom:1px solid rgba(255,61,87,.1)">⚠ ${a}</div>`).join('')}</div>`:''}
+    <div style="font-size:12px;color:var(--text2);line-height:1.6;margin-bottom:8px">${veri.verification_notes}</div>
+    ${veri.safety_detail?`<div style="font-size:12px;color:${safeColor};margin-bottom:6px">🛡 ${veri.safety_detail}</div>`:''}
+    ${veri.trending_topic?`<div style="font-size:12px;color:var(--accent2);margin-bottom:6px">📈 Trending: ${veri.trending_topic}</div>`:''}
+    ${(veri.current_alerts||[]).length?`<div style="margin-top:8px">${veri.current_alerts.map(a=>`<div style="font-size:11px;color:var(--red);padding:4px 0;border-bottom:1px solid rgba(255,61,87,.1)">⚠ ${a}</div>`).join('')}</div>`:''}
     ${(veri.flags||[]).length?`<div style="margin-top:8px">${veri.flags.map(f=>`<div style="font-size:11px;color:var(--amber);padding:3px 0">⚑ ${f}</div>`).join('')}</div>`:''}
     ${(veri.missed_stories||[]).length?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">MISSED: ${veri.missed_stories.join(' · ')}</div>`:''}
-  </div>`:''}
+    ${(veri.corrections&&Object.keys(veri.corrections).length)?`<div style="margin-top:8px;font-size:10px;color:var(--amber);font-family:'Space Mono',monospace">CORRECTIONS APPLIED: ${Object.keys(veri.corrections).join(', ')}</div>`:''}
+  </div>`:'';
 
-  <!-- SAFETY + BEST MONTHS + HIDDEN GEM -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-bottom:16px">
-    ${d.ai_safety_summary?`<div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY</div>
-      <div style="font-size:12px;color:#e0c070;line-height:1.6">${d.ai_safety_summary}</div>
-      ${d.ai_avoid_if?`<div style="margin-top:8px;font-size:11px;color:var(--text3)"><span style="color:var(--amber)">Avoid if:</span> ${d.ai_avoid_if}</div>`:''}
-      ${(d.safety_flags||[]).length?`<div style="margin-top:8px">${d.safety_flags.slice(0,3).map(f=>`<div style="font-size:10px;color:var(--red);padding:3px 0">⚠ ${f.description||f.type||''}</div>`).join('')}</div>`:''}
-    </div>`:''}
-    ${(d.ai_best_months||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
+  // SAFETY + BEST MONTHS
+  const safetyRow = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    ${d.ai_safety_summary?`<div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY SUMMARY</div>
+      <div style="font-size:12px;color:#e0c070;line-height:1.6;margin-bottom:8px">${d.ai_safety_summary}</div>
+      ${d.ai_avoid_if?`<div style="font-size:11px;color:var(--text3)"><span style="color:var(--amber)">Avoid if:</span> ${d.ai_avoid_if}</div>`:''}
+      ${(d.safety_flags||[]).length?`<div style="margin-top:8px">${d.safety_flags.slice(0,3).map(f=>`<div style="font-size:10px;color:var(--red);padding:3px 0;font-family:'Space Mono',monospace">⚠ ${f.description||f.type||JSON.stringify(f)}</div>`).join('')}</div>`:''}
+    </div>`:'<div></div>'}
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:8px">📅 BEST MONTHS</div>
-      <div style="display:flex;flex-wrap:wrap;gap:5px">${d.ai_best_months.map(m=>`<span style="padding:4px 10px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:6px;font-size:12px;color:var(--green)">${m}</span>`).join('')}</div>
-    </div>`:''}
-    ${d.ai_hidden_gem?`<div style="background:rgba(0,229,255,.04);border:1px solid rgba(0,229,255,.15);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:8px">💎 HIDDEN GEM</div>
-      <div style="font-size:12px;color:var(--accent2);line-height:1.6">${d.ai_hidden_gem}</div>
-    </div>`:''}
-  </div>
+      ${(d.ai_best_months||[]).length?`<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${d.ai_best_months.map(m=>`<span style="padding:5px 10px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:6px;font-size:12px;color:var(--green)">${m}</span>`).join('')}
+      </div>`:'<div style="font-size:11px;color:var(--text3)">Not available</div>'}
+      ${(d.ai_trending_now||[]).length?`
+        <div style="font-size:9px;letter-spacing:2px;color:var(--text3);font-family:'Space Mono',monospace;margin:10px 0 6px">TRENDING NOW</div>
+        ${d.ai_trending_now.slice(0,3).map(t=>`<div style="font-size:11px;color:var(--accent2);padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)">📈 <strong>${t.name}</strong> — ${t.why_trending||''}</div>`).join('')}`:''}
+    </div>
+  </div>`;
 
-  <!-- AI RECOMMENDATIONS -->
-  ${(d.ai_recommendations||[]).length?sec('🎯 AI RECOMMENDATIONS ('+d.ai_recommendations.length+')',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px">
-      ${d.ai_recommendations.map(r=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px">
-          <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-            <div style="font-size:12px;font-weight:600;color:#fff">${r.title}</div>
-            <div style="font-size:16px;font-weight:800;color:var(--border2)">${r.rating||'—'}/5</div>
+  // AI CALENDAR
+  const calendar = (d.ai_calendar||[]).length?section('📅 AI EVENT CALENDAR — NEXT 14 DAYS',
+    `<div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${d.ai_calendar.map(c=>`
+        <div style="padding:6px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;cursor:default;
+          ${c.color==='green'?'background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)':
+            c.color==='red'?'background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.2);color:var(--red)':
+            'background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)'}"
+          title="${c.reason||''}">
+          ${c.date} · ${c.label}
+        </div>`).join('')}
+    </div>`):'';
+
+  // AI RECOMMENDATIONS
+  const recommendations = (d.ai_recommendations||[]).length?section(
+    `🎯 AI RECOMMENDATIONS (${d.ai_recommendations.length})`,
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
+      ${d.ai_recommendations.map((r,i)=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+            <div style="font-size:13px;font-weight:600;color:#fff;flex:1">${r.title}</div>
+            <div style="font-size:18px;font-weight:800;color:var(--border2);margin-left:8px">${r.rating||'—'}/5</div>
           </div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:7px">${r.why}</div>
-          ${r.when?`<div style="font-size:10px;color:var(--text3);margin-bottom:5px">⏰ ${r.when}</div>`:''}
-          <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15)">${r.type||''}</span>
-            <span style="font-size:9px;padding:2px 7px;border-radius:4px;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':r.risk==='medium'?'background:rgba(255,171,0,.08);color:var(--amber);border:1px solid rgba(255,171,0,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${r.why}</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15);font-family:'Space Mono',monospace">${r.type||''}</span>
+            <span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':r.risk==='medium'?'background:rgba(255,171,0,.08);color:var(--amber);border:1px solid rgba(255,171,0,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
+            ${r.when?`<span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.04);color:var(--text3);border:1px solid var(--border);font-family:'Space Mono',monospace">${r.when}</span>`:''}
           </div>
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- AI TRENDING NOW -->
-  ${(d.ai_trending_now||[]).length?sec('📈 TRENDING NOW',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-      ${d.ai_trending_now.map(t=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px">
-          <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:4px">${t.name}</div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.4">${t.why_trending||''}</div>
-          ${t.best_time?`<div style="font-size:10px;color:var(--accent2);margin-top:4px">Best: ${t.best_time}</div>`:''}
-          ${t.warning?`<div style="font-size:10px;color:var(--amber);margin-top:4px">⚠ ${t.warning}</div>`:''}
-        </div>`).join('')}
-    </div>`
-  ):''}
-
-  <!-- AI EVENT CALENDAR -->
-  ${(d.ai_calendar||[]).length?sec('📆 AI EVENT CALENDAR',`
-    <div style="display:flex;flex-wrap:wrap;gap:6px">
-      ${d.ai_calendar.map(c=>`<div title="${c.reason||''}" style="padding:5px 12px;border-radius:6px;font-size:10px;font-family:'Space Mono',monospace;
-        ${c.color==='green'?'background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.2);color:var(--green)':
-          c.color==='red'?'background:rgba(255,61,87,.1);border:1px solid rgba(255,61,87,.2);color:var(--red)':
-          'background:rgba(255,171,0,.1);border:1px solid rgba(255,171,0,.2);color:var(--amber)'}">
-        ${c.date} · ${c.label}
-      </div>`).join('')}
-    </div>`
-  ):''}
-
-  <!-- NEWS HEADLINES + NATIONAL NEWS -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-    ${(d.news_headlines||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">📰 NEWS HEADLINES (${d.news_headlines.length})</div>
+  // NEWS + NATIONAL NEWS
+  const newsRow = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    ${(d.news_headlines||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">📰 NEWS HEADLINES (${d.news_headlines.length})</div>
       ${d.news_headlines.slice(0,8).map(n=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:7px;align-items:flex-start">
-          <span style="flex-shrink:0;font-size:8px;padding:2px 5px;border-radius:3px;font-family:'Space Mono',monospace;margin-top:1px;
-            ${n.risk_level==='high'?'background:rgba(255,61,87,.1);color:var(--red)':n.risk_level==='medium'?'background:rgba(255,171,0,.1);color:var(--amber)':'background:rgba(0,230,118,.1);color:var(--green)'}">${n.risk_level||'low'}</span>
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
+          <span style="flex-shrink:0;font-size:9px;padding:2px 6px;border-radius:3px;margin-top:1px;font-family:'Space Mono',monospace;${n.risk_level==='high'?'background:rgba(255,61,87,.1);color:var(--red)':n.risk_level==='medium'?'background:rgba(255,171,0,.1);color:var(--amber)':'background:rgba(0,230,118,.1);color:var(--green)'}">${n.risk_level||'low'}</span>
           <div>
             <a href="${n.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${n.title}</a>
-            ${n.source?`<div style="font-size:9px;color:var(--text3);margin-top:1px">${n.source}</div>`:''}
+            <div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${n.source||''} ${n.published_at?'· '+new Date(n.published_at).toLocaleDateString():''}</div>
           </div>
         </div>`).join('')}
     </div>`:'<div></div>'}
-
-    ${d.national_news?.articles?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
+    ${d.national_news?.articles?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">📺 NATIONAL BROADCASTER</div>
-      <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">${d.national_news.source}</div>
+      <div style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:12px">${d.national_news.source}</div>
       ${d.national_news.articles.slice(0,8).map(a=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
           <a href="${a.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${a.title}</a>
-          ${a.published_at?`<div style="font-size:9px;color:var(--text3);margin-top:2px">${new Date(a.published_at).toLocaleDateString()}</div>`:''}
-          ${a.description?`<div style="font-size:10px;color:var(--text3);margin-top:2px">${a.description.slice(0,100)}...</div>`:''}
+          <div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${a.published_at?new Date(a.published_at).toLocaleDateString():''}</div>
         </div>`).join('')}
     </div>`:'<div></div>'}
-  </div>
+  </div>`;
 
-  <!-- GDACS DISASTER ALERTS -->
-  ${(d.gdacs_alerts||[]).length?sec('🚨 DISASTER ALERTS (GDACS)',`
-    ${d.gdacs_alerts.map(g=>`
-      <div style="padding:8px 12px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.15);border-radius:8px;margin-bottom:6px">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div style="font-size:12px;font-weight:600;color:var(--red)">${g.event_type||g.type||''}</div>
-          <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(255,61,87,.1);color:var(--red)">${g.severity||''}</span>
-        </div>
-        <div style="font-size:11px;color:var(--text2);margin-top:4px">${g.description||''}</div>
-        ${g.date?`<div style="font-size:9px;color:var(--text3);margin-top:4px">${g.date}</div>`:''}
-      </div>`).join('')}
-  `,'var(--red)'):''}
-
-  <!-- EVENTS -->
-  ${(d.events||[]).length?sec('🎪 UPCOMING EVENTS ('+d.events.length+')',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">
-      ${d.events.map(e=>`
+  // EVENTS
+  const events = (d.events||[]).length?section(
+    `🎭 UPCOMING EVENTS (${d.events.length})`,
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">
+      ${d.events.slice(0,12).map(e=>`
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;display:flex;justify-content:space-between;gap:8px">
-          <div>
+          <div style="flex:1;min-width:0">
             <div style="font-size:12px;color:#fff;font-weight:600">${e.name}</div>
-            ${e.venue?`<div style="font-size:10px;color:var(--text3);margin-top:2px">📍 ${e.venue}${e.city?' · '+e.city:''}</div>`:''}
-            ${e.type?`<div style="font-size:9px;color:var(--accent2);margin-top:2px">${e.type}</div>`:''}
-            ${e.price?`<div style="font-size:10px;color:var(--green);margin-top:2px">${e.price}</div>`:''}
-            ${e.source?`<div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source}</div>`:''}
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${e.venue?e.venue+' · ':''} ${e.city||''}</div>
+            <div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source||''} ${e.type?'· '+e.type:''}</div>
+            ${e.price?`<div style="font-size:10px;color:var(--green);margin-top:3px">${e.price}</div>`:''}
           </div>
-          <div style="flex-shrink:0;text-align:right">
-            <div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace">${e.date||'TBC'}</div>
-            ${e.url?`<a href="${e.url}" target="_blank" style="font-size:9px;color:var(--accent);margin-top:4px;display:block">↗</a>`:''}
+          <div>
+            <div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;text-align:right;white-space:nowrap">${e.date||'TBC'}</div>
+            ${e.url?`<a href="${e.url}" target="_blank" style="font-size:9px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">TICKETS ↗</a>`:''}
           </div>
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- TOP PLACES + TRIPADVISOR -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-    ${(d.top_places||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">📍 TOP ATTRACTIONS (OpenTripMap)</div>
-      ${d.top_places.map(p=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-          <div style="font-size:12px;color:#fff">${p.name}</div>
-          <div style="font-size:9px;color:var(--text3);margin-top:2px">${(p.categories||[])[0]||''}</div>
-        </div>`).join('')}
+  // GDACS ALERTS
+  const gdacs = (d.gdacs_alerts||[]).length?section(
+    `🚨 GDACS DISASTER ALERTS (${d.gdacs_alerts.length})`,
+    `${d.gdacs_alerts.map(g=>`
+      <div style="padding:10px 12px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:8px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:12px;color:var(--red);font-weight:600">${g.event_type||g.type||'Alert'} — ${g.severity||''}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:3px">${g.description||''}</div>
+          </div>
+          <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;white-space:nowrap;margin-left:10px">${g.date?new Date(g.date).toLocaleDateString():''}</div>
+        </div>
+        ${g.url?`<a href="${g.url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none;margin-top:6px;display:inline-block">Details ↗</a>`:''}
+      </div>`).join('')}`):'';
+
+  // ATTRACTIONS
+  const attractions = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    ${(d.top_places||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🏛 TOP PLACES (OpenTripMap) — ${d.top_places.length}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${d.top_places.map(p=>`
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px">
+            <div style="font-size:11px;color:#fff">${p.name}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${(p.categories||[])[0]||''}</div>
+          </div>`).join('')}
+      </div>
     </div>`:'<div></div>'}
-
-    ${(d.tripadvisor?.attractions||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">⭐ TRIPADVISOR ATTRACTIONS</div>
-      ${d.tripadvisor.attractions.map(a=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;gap:8px">
+    ${(d.tripadvisor?.attractions||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">⭐ TRIPADVISOR TOP ATTRACTIONS</div>
+      ${d.tripadvisor.attractions.slice(0,6).map(a=>`
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:flex-start">
           <div>
             <div style="font-size:12px;color:#fff">${a.name}</div>
-            ${a.category?`<div style="font-size:9px;color:var(--text3)">${a.category}</div>`:''}
-            ${a.ranking?`<div style="font-size:9px;color:var(--accent2)">${a.ranking}</div>`:''}
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${a.category||''}</div>
+            ${a.ranking?`<div style="font-size:9px;color:var(--accent2);font-family:'Space Mono',monospace;margin-top:2px">${a.ranking}</div>`:''}
           </div>
-          <div style="text-align:right;flex-shrink:0">
-            ${a.rating?`<div style="font-size:12px;color:var(--green)">${a.rating}/5</div>`:''}
-            ${a.review_count?`<div style="font-size:9px;color:var(--text3)">${a.review_count.toLocaleString()}</div>`:''}
+          <div style="text-align:right;flex-shrink:0;margin-left:10px">
+            ${a.rating?`<div style="font-size:13px;font-weight:700;color:var(--green)">${a.rating}/5</div>`:''}
+            ${a.review_count?`<div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${a.review_count.toLocaleString()} reviews</div>`:''}
           </div>
         </div>`).join('')}
     </div>`:'<div></div>'}
-  </div>
+  </div>`;
 
-  <!-- GOOGLE PLACES -->
-  ${(d.google_places?.places||[]).length?sec('🗺 GOOGLE PLACES',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-      ${d.google_places.places.map(p=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px">
-          ${p.photo?`<img src="${p.photo}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:7px" onerror="this.style.display='none'">`:''}
-          <div style="font-size:11px;font-weight:600;color:#fff">${p.name}</div>
-          ${p.type?`<div style="font-size:9px;color:var(--text3);margin-top:2px">${p.type}</div>`:''}
-          <div style="display:flex;justify-content:space-between;margin-top:4px">
-            ${p.rating?`<span style="font-size:10px;color:var(--green)">${p.rating}★ (${(p.reviews||0).toLocaleString()})</span>`:''}
-            ${p.open_now!=null?`<span style="font-size:9px;color:${p.open_now?'var(--green)':'var(--red)'}">${p.open_now?'Open':'Closed'}</span>`:''}
-          </div>
+  // RESTAURANTS
+  const restaurants = (d.restaurants?.restaurants||[]).length?section(
+    '🍽 RESTAURANTS (Travel Advisor)',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+      ${d.restaurants.restaurants.slice(0,6).map(r=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+          ${r.photo?`<img src="${r.photo}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
+          <div style="font-size:12px;color:#fff;font-weight:600">${r.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${r.cuisine||''} ${r.price?'· '+r.price:''}</div>
+          ${r.rating?`<div style="font-size:11px;color:var(--green);margin-top:4px">${r.rating}/5 ${r.reviews?`<span style="color:var(--text3);font-size:9px">(${r.reviews} reviews)</span>`:''}</div>`:''}
+          ${r.address?`<div style="font-size:9px;color:var(--text3);margin-top:3px;font-family:'Space Mono',monospace">${r.address}</div>`:''}
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- RESTAURANTS -->
-  ${(d.restaurants?.restaurants||[]).length?sec('🍽 RESTAURANTS (Travel Advisor)',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-      ${d.restaurants.restaurants.map(r=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px">
-          ${r.photo?`<img src="${r.photo}" style="width:100%;height:65px;object-fit:cover;border-radius:5px;margin-bottom:7px" onerror="this.style.display='none'">`:''}
-          <div style="font-size:11px;font-weight:600;color:#fff">${r.name}</div>
-          ${r.cuisine?`<div style="font-size:9px;color:var(--accent2);margin-top:2px">${r.cuisine}</div>`:''}
-          <div style="display:flex;justify-content:space-between;margin-top:4px">
-            ${r.rating?`<span style="font-size:10px;color:var(--green)">${r.rating}★</span>`:''}
-            ${r.price?`<span style="font-size:9px;color:var(--text3)">${r.price}</span>`:''}
-            ${r.reviews?`<span style="font-size:9px;color:var(--text3)">${r.reviews} reviews</span>`:''}
+  // GOOGLE PLACES
+  const googlePlaces = (d.google_places?.places||[]).length?section(
+    '📍 GOOGLE PLACES',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+      ${d.google_places.places.slice(0,8).map(p=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+          ${p.photo?`<img src="${p.photo}" style="width:100%;height:70px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
+          <div style="font-size:12px;color:#fff;font-weight:600">${p.name}</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:2px">${p.type||''}</div>
+          <div style="display:flex;justify-content:space-between;margin-top:4px;align-items:center">
+            ${p.rating?`<span style="font-size:11px;color:var(--green)">${p.rating}/5 <span style="font-size:9px;color:var(--text3)">(${(p.reviews||0).toLocaleString()})</span></span>`:'<span></span>'}
+            ${p.open_now!=null?`<span style="font-size:9px;font-family:'Space Mono',monospace;color:${p.open_now?'var(--green)':'var(--red)'}">${p.open_now?'OPEN':'CLOSED'}</span>`:''}
           </div>
-          ${r.address?`<div style="font-size:9px;color:var(--text3);margin-top:3px">📍 ${r.address}</div>`:''}
+          ${p.address?`<div style="font-size:9px;color:var(--text3);margin-top:4px">${p.address}</div>`:''}
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- BOOKING.COM -->
-  ${(d.booking?.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🏨 BOOKING.COM HOTELS</div>
-      <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace">View all ↗</a>
-    </div>
-    <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">
-      Avg $${d.booking.avg_price_per_night||'—'} · Min $${d.booking.min_price||'—'} · Max $${d.booking.max_price||'—'}/night · ${d.booking.checkin} → ${d.booking.checkout}
-      ${d.booking.total_results?` · ${d.booking.total_results.toLocaleString()} total results`:''}
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">
-      ${d.booking.hotels.map(h=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden">
-          ${h.photo?`<img src="${h.photo}" style="width:100%;height:90px;object-fit:cover" onerror="this.style.display='none'">`:''}
-          <div style="padding:10px 12px">
-            <div style="font-size:12px;font-weight:600;color:#fff;margin-bottom:3px">${h.name}</div>
-            <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-              ${h.rating?`<span style="font-size:11px;color:var(--accent2)">${h.rating}/10 ${h.rating_word||''}</span>`:''}
+  // ACCOMMODATION
+  const accommodation = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    ${(d.booking?.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🏨 BOOKING.COM</div>
+        <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">All Hotels ↗</a>
+      </div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.booking.avg_price_per_night||'—'}/night · Min $${d.booking.min_price||'—'} · ${d.booking.checkin}→${d.booking.checkout}</div>
+      ${d.booking.hotels.slice(0,5).map(h=>`
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start">
+          ${h.photo?`<img src="${h.photo}" style="width:56px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:''}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:#fff;font-weight:600">${h.name}</div>
+            <div style="display:flex;gap:8px;margin-top:3px;align-items:center;flex-wrap:wrap">
+              ${h.rating?`<span style="font-size:10px;color:var(--accent2)">${h.rating}/10</span>`:''}
               ${h.stars?`<span style="font-size:10px;color:var(--amber)">${'★'.repeat(Math.min(h.stars,5))}</span>`:''}
-              ${h.review_count?`<span style="font-size:9px;color:var(--text3)">${h.review_count.toLocaleString()} reviews</span>`:''}
-              ${h.is_preferred?`<span style="font-size:9px;color:var(--amber)">⭐ Preferred</span>`:''}
-            </div>
-            ${row('Check-in from', h.checkin_from)}
-            ${row('Check-out until', h.checkout_until)}
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
-              ${h.price_per_night?`<span style="font-size:16px;font-weight:700;color:var(--green)">$${Math.round(h.price_per_night)}<span style="font-size:9px;color:var(--text3)">/night</span></span>`:'<span></span>'}
-              <div style="display:flex;gap:5px">
-                <a href="${h.booking_url}" target="_blank" style="font-size:9px;padding:4px 8px;background:rgba(0,107,255,.15);border:1px solid rgba(0,107,255,.3);border-radius:5px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">WEB ↗</a>
-                ${h.app_deep_link?`<a href="${h.app_deep_link}" style="font-size:9px;padding:4px 8px;background:rgba(0,107,255,.08);border:1px solid rgba(0,107,255,.2);border-radius:5px;color:var(--text2);text-decoration:none;font-family:'Space Mono',monospace">APP ↗</a>`:''}
-              </div>
+              ${h.price_per_night?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(h.price_per_night)}</span>`:''}
+              <a href="${h.booking_url}" target="_blank" style="font-size:9px;padding:2px 7px;background:rgba(0,107,255,.15);border:1px solid rgba(0,107,255,.3);border-radius:4px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">BOOK ↗</a>
             </div>
           </div>
         </div>`).join('')}
-    </div>
-  </div>`:''}
-
-  <!-- AIRBNB -->
-  ${(d.airbnb?.listings||[]).length?sec('🏠 AIRBNB LISTINGS',`
-    <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">
-      Avg $${d.airbnb.avg_price_per_night||'—'}/night · ${d.airbnb.sample_size||0} listings
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
-      ${d.airbnb.listings.map(l=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
-          ${l.image?`<img src="${l.image}" style="width:100%;height:80px;object-fit:cover" onerror="this.style.display='none'">`:''}
-          <div style="padding:8px 10px">
-            <div style="font-size:11px;font-weight:600;color:#fff;margin-bottom:3px">${l.name||'Listing'}</div>
-            ${l.type?`<div style="font-size:9px;color:var(--text3)">${l.type}</div>`:''}
-            <div style="display:flex;justify-content:space-between;margin-top:6px;align-items:center">
-              ${l.price?`<span style="font-size:13px;font-weight:700;color:var(--green)">$${l.price}<span style="font-size:9px;color:var(--text3)">/night</span></span>`:''}
-              ${l.rating?`<span style="font-size:10px;color:var(--accent2)">${l.rating}★</span>`:''}
+    </div>`:'<div></div>'}
+    ${(d.airbnb?.listings||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">🏠 AIRBNB</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.airbnb.avg_price_per_night||'—'}/night · ${d.airbnb.sample_size||0} listings</div>
+      ${d.airbnb.listings.slice(0,5).map(l=>`
+        <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start">
+          ${l.image?`<img src="${l.image}" style="width:56px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:''}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;color:#fff;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.name}</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.type||''} · ${l.beds||'?'} beds</div>
+            <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
+              ${l.price?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(l.price)}/night</span>`:''}
+              ${l.rating?`<span style="font-size:10px;color:var(--accent2)">${l.rating}/10</span>`:''}
             </div>
-            ${l.beds?`<div style="font-size:9px;color:var(--text3);margin-top:3px">${l.beds} beds · ${l.bathrooms||'?'} baths</div>`:''}
-            ${l.url?`<a href="${l.url}" target="_blank" style="font-size:9px;color:var(--accent);margin-top:4px;display:block">View on Airbnb ↗</a>`:''}
           </div>
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`:'<div></div>'}
+  </div>`;
 
-  <!-- FLIGHT PRICES + AIRPORTS -->
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-    ${d.flight_prices?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">✈️ AIRPORTS (Skyscanner)</div>
+  // FLIGHTS
+  const flights = `
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
+    ${d.flights?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">✈️ AIRPORTS</div>
+      ${d.flights.airports.map(a=>`
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between">
+          <div>
+            <div style="font-size:12px;color:#fff">${a.name}</div>
+            <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${a.city||''}</div>
+          </div>
+          <div style="font-size:14px;font-weight:700;color:var(--accent);font-family:'Space Mono',monospace">${a.iata}</div>
+        </div>`).join('')}
+    </div>`:'<div></div>'}
+    ${d.flight_prices?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🛫 SKYSCANNER AIRPORTS</div>
       ${d.flight_prices.airports.map(a=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+        <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)">
           <div style="font-size:12px;color:#fff">${a.name||a.iata}</div>
-          ${a.subtitle?`<div style="font-size:10px;color:var(--text3)">${a.subtitle}</div>`:''}
-          ${a.iata?`<div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace">${a.iata}</div>`:''}
+          <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${a.subtitle||''}</div>
         </div>`).join('')}
-      <div style="font-size:10px;color:var(--text3);margin-top:8px">${d.flight_prices.search_hint||''}</div>
+      <a href="https://www.skyscanner.com/flights-to/${d.iso?.toLowerCase()}" target="_blank" style="display:inline-block;margin-top:10px;font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">Search Flights ↗</a>
     </div>`:'<div></div>'}
+  </div>`;
 
-    ${d.flights?.airports?.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🛫 MAJOR AIRPORTS (Aviationstack)</div>
-      ${d.flights.airports.slice(0,5).map(a=>`
-        <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-          <div style="font-size:12px;color:#fff">${a.name}</div>
-          <div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace">${a.iata||''} ${a.city?'· '+a.city:''}</div>
-        </div>`).join('')}
-    </div>`:'<div></div>'}
-  </div>
-
-  <!-- YOUTUBE VIDEOS -->
-  ${(d.youtube_videos?.videos||[]).length?sec('▶️ YOUTUBE TRAVEL VIDEOS',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+  // YOUTUBE
+  const youtube = (d.youtube_videos?.videos||[]).length?section(
+    `▶️ YOUTUBE TRAVEL VIDEOS (${d.youtube_videos.videos.length})`,
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px">
       ${d.youtube_videos.videos.map(v=>`
-        <a href="${v.url}" target="_blank" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:block;text-decoration:none">
-          ${v.thumbnail?`<img src="${v.thumbnail}" style="width:100%;height:80px;object-fit:cover" onerror="this.style.display='none'">`:''}
+        <a href="${v.url}" target="_blank" style="text-decoration:none;display:block;background:var(--bg3);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          ${v.thumbnail?`<img src="${v.thumbnail}" style="width:100%;height:100px;object-fit:cover" onerror="this.style.display='none'">`:''}
           <div style="padding:8px 10px">
-            <div style="font-size:11px;color:#fff;line-height:1.4">${v.title||''}</div>
-            <div style="font-size:9px;color:var(--text3);margin-top:4px">${v.channel||''}</div>
-            <div style="display:flex;gap:8px;margin-top:4px">
-              ${v.views?`<span style="font-size:9px;color:var(--text3)">👁 ${v.views}</span>`:''}
-              ${v.length?`<span style="font-size:9px;color:var(--text3)">⏱ ${v.length}</span>`:''}
-              ${v.published?`<span style="font-size:9px;color:var(--text3)">${v.published}</span>`:''}
+            <div style="font-size:11px;color:#fff;line-height:1.3;margin-bottom:4px">${v.title}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${v.channel||''}</div>
+            <div style="display:flex;justify-content:space-between;margin-top:4px">
+              <span style="font-size:9px;color:var(--text3)">${v.views||''}</span>
+              <span style="font-size:9px;color:var(--text3)">${v.length||''}</span>
             </div>
           </div>
         </a>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- SOCIAL TRENDS -->
-  ${(d.trending_spots||[]).length?sec('📣 SOCIAL TRENDS',`
-    <div style="display:flex;flex-direction:column;gap:6px">
-      ${d.trending_spots.map(t=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-          <div style="flex:1">
-            <div style="font-size:11px;color:var(--text);line-height:1.4">${t.caption||t.name||''}</div>
-            ${t.platform?`<div style="font-size:9px;color:var(--accent2);margin-top:3px">${t.platform}</div>`:''}
-          </div>
-          ${t.url?`<a href="${t.url}" target="_blank" style="font-size:9px;color:var(--accent);text-decoration:none;flex-shrink:0">↗</a>`:''}
-        </div>`).join('')}
-    </div>`
-  ):''}
-
-  <!-- WIKIVOYAGE SECTIONS -->
-  ${d.wiki_sections && Object.keys(d.wiki_sections).length?sec('📖 WIKIVOYAGE GUIDE',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:8px">
-      ${Object.entries(d.wiki_sections).map(([title,text])=>`
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
-          <div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;letter-spacing:1px;margin-bottom:6px">${title.toUpperCase()}</div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.6">${text.slice(0,300)}${text.length>300?'...':''}</div>
-        </div>`).join('')}
-    </div>
-    ${(d.wiki_highlights||[]).length?`<div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px">
-      ${d.wiki_highlights.map(h=>`<span style="padding:4px 10px;background:rgba(42,127,255,.06);border:1px solid rgba(42,127,255,.15);border-radius:5px;font-size:10px;color:var(--text2)">${h}</span>`).join('')}
-    </div>`:''}
-  `):''}
-
-  <!-- PHOTOS -->
-  ${(d.photos||[]).length?sec('📸 UNSPLASH PHOTOS ('+d.photos.length+')',`
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
-      ${d.photos.map(p=>`
+  // PHOTOS
+  const photos = (d.photos||[]).length?section(
+    `📸 UNSPLASH PHOTOS (${d.photos.length})`,
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
+      ${d.photos.slice(0,12).map(p=>`
         <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--bg3)">
-          <img src="${p.url_small||p.url_regular}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+          <img src="${p.url_small||p.url_regular}" alt="${p.alt||''}" loading="lazy"
+            style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
           ${p.credit?`<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:5px 7px;font-size:8px;color:rgba(255,255,255,.6)">📷 ${p.credit}</div>`:''}
         </div>`).join('')}
-    </div>`
-  ):''}
+    </div>`):'';
 
-  <!-- GEO HIERARCHY -->
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+  // TRENDING / SOCIAL
+  const social = (d.trending_spots||[]).length?section(
+    `📱 SOCIAL TRENDS (${d.trending_spots.length})`,
+    `${d.trending_spots.slice(0,6).map(s=>`
+      <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <span style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace">[${s.platform||'Social'}]</span>
+          <a href="${s.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;margin-left:8px;line-height:1.4">${s.caption}</a>
+        </div>
+      </div>`).join('')}`):'';
+
+  // GEO HIERARCHY placeholder (loaded async)
+  const geoSection = `
+  <div id="geo-hierarchy-section" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🗺 GEO HIERARCHY — STATES & CITIES</div>
-      <button onclick="loadGeoHierarchy('${d.iso}')" style="padding:5px 12px;border:1px solid var(--accent);border-radius:7px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">LOAD HIERARCHY</button>
+      <button onclick="loadStatesForReport('${d.iso}')" style="padding:6px 14px;border:1px solid var(--accent2);border-radius:6px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">LOAD STATES ↓</button>
     </div>
-    <div id="geo-hierarchy-${d.iso}" style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
-      Click "LOAD HIERARCHY" to see all states, provinces and cities for ${d.country_name}
+    <div id="geo-hierarchy-content" style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
+      Click LOAD STATES to see all states/provinces and their cities for ${d.country_name}
     </div>
-  </div>
+  </div>`;
 
-  <!-- DATA SOURCES CHECKLIST -->
+  // DATA SOURCES CHECKLIST
+  const checklist = section(
+    'DATA SOURCES STATUS FOR THIS COUNTRY',
+    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
+      ${[
+        ['Wikipedia',      !!d.wiki_summary,                          0],
+        ['Wikivoyage',     !!(d.wiki_sections&&Object.keys(d.wiki_sections).length), Object.keys(d.wiki_sections||{}).length],
+        ['Weather',        !!d.weather_now,                           0],
+        ['Forecast',       !!(d.weather_forecast||[]).length,         (d.weather_forecast||[]).length],
+        ['News Headlines', !!(d.news_headlines||[]).length,           (d.news_headlines||[]).length],
+        ['National News',  !!(d.national_news?.articles?.length),     d.national_news?.articles?.length||0],
+        ['GDACS Alerts',   !!(d.gdacs_alerts||[]).length,             (d.gdacs_alerts||[]).length],
+        ['Events',         !!(d.events||[]).length,                   (d.events||[]).length],
+        ['Top Places',     !!(d.top_places||[]).length,               (d.top_places||[]).length],
+        ['Photos',         !!(d.photos||[]).length,                   (d.photos||[]).length],
+        ['Air Quality',    d.air_quality?.aqi!=null,                  0],
+        ['Cost of Living', d.cost_of_living?.meal_cheap!=null,        0],
+        ['Country Meta',   !!d.country_meta?.capital,                 0],
+        ['Airbnb',         !!(d.airbnb?.listings||[]).length,         (d.airbnb?.listings||[]).length],
+        ['Booking.com',    !!(d.booking?.hotels||[]).length,          (d.booking?.hotels||[]).length],
+        ['TripAdvisor',    !!(d.tripadvisor?.attractions||[]).length, (d.tripadvisor?.attractions||[]).length],
+        ['Restaurants',    !!(d.restaurants?.restaurants||[]).length, (d.restaurants?.restaurants||[]).length],
+        ['Google Places',  !!(d.google_places?.places||[]).length,    (d.google_places?.places||[]).length],
+        ['Flight Prices',  !!(d.flight_prices?.airports||[]).length,  (d.flight_prices?.airports||[]).length],
+        ['Airports',       !!(d.flights?.airports||[]).length,        (d.flights?.airports||[]).length],
+        ['Currency Rates', !!(d.currency_rates?.rates),               Object.keys(d.currency_rates?.rates||{}).length],
+        ['YouTube Videos', !!(d.youtube_videos?.videos||[]).length,   (d.youtube_videos?.videos||[]).length],
+        ['Social Trends',  !!(d.trending_spots||[]).length,           (d.trending_spots||[]).length],
+        ['Hotel Deals',    !!d.hotel_deals?.destination,              0],
+        ['AI Briefing',    !!d.ai_briefing,                           0],
+        ['AI Recommendations',!!(d.ai_recommendations||[]).length,    (d.ai_recommendations||[]).length],
+        ['AI Calendar',    !!(d.ai_calendar||[]).length,              (d.ai_calendar||[]).length],
+        ['AI Trending',    !!(d.ai_trending_now||[]).length,          (d.ai_trending_now||[]).length],
+        ['Safety Summary', !!d.ai_safety_summary,                     0],
+        ['Verification',   !!d.verification?.verified_at,             0],
+      ].map(([label,ok,count])=>dot(ok,label,count)).join('')}
+    </div>`);
+
+  // RAW JSON
+  const rawJson = `
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">✅ DATA SOURCES STATUS</div>
-      <button onclick="rerunPipeline('${d.iso}','${d.country_name}')" style="padding:5px 12px;border:1px solid var(--amber);border-radius:7px;background:none;color:var(--amber);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ RE-RUN TO FIX MISSING</button>
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px">
-      ${[
-        ['Wikipedia',           d.wiki_summary?.length > 10],
-        ['Wikivoyage',          d.wiki_sections && Object.keys(d.wiki_sections).length > 0],
-        ['Wiki Highlights',     (d.wiki_highlights||[]).length > 0],
-        ['Weather Now',         !!d.weather_now],
-        ['Weather Forecast',    (d.weather_forecast||[]).length > 0],
-        ['News Headlines',      (d.news_headlines||[]).length > 0, (d.news_headlines||[]).length],
-        ['National News',       !!d.national_news?.articles?.length, d.national_news?.articles?.length],
-        ['GDACS Alerts',        true, (d.gdacs_alerts||[]).length+' alerts'],
-        ['Events',              (d.events||[]).length > 0, (d.events||[]).length],
-        ['Top Places',          (d.top_places||[]).length > 0, (d.top_places||[]).length],
-        ['TripAdvisor',         (d.tripadvisor?.attractions||[]).length > 0, (d.tripadvisor?.attractions||[]).length],
-        ['Google Places',       (d.google_places?.places||[]).length > 0, (d.google_places?.places||[]).length],
-        ['Photos (Unsplash)',   (d.photos||[]).length > 0, (d.photos||[]).length],
-        ['Air Quality',         d.air_quality?.aqi != null, d.air_quality?.aqi_label],
-        ['Cost of Living',      !!d.cost_of_living?.meal_cheap],
-        ['Country Meta',        !!d.country_meta?.capital],
-        ['Currency Rates',      !!d.currency_rates?.rates],
-        ['Airbnb',              (d.airbnb?.listings||[]).length > 0, (d.airbnb?.listings||[]).length+' listings'],
-        ['Booking.com',         (d.booking?.hotels||[]).length > 0, (d.booking?.hotels||[]).length+' hotels'],
-        ['Restaurants',         (d.restaurants?.restaurants||[]).length > 0, (d.restaurants?.restaurants||[]).length],
-        ['Flight Prices',       !!d.flight_prices?.airports?.length],
-        ['Airports',            !!d.flights?.airports?.length],
-        ['YouTube Videos',      (d.youtube_videos?.videos||[]).length > 0, (d.youtube_videos?.videos||[]).length],
-        ['Social Trends',       (d.trending_spots||[]).length > 0, (d.trending_spots||[]).length],
-        ['Safety Flags',        true, (d.safety_flags||[]).length+' flags'],
-        ['AI Briefing',         !!d.ai_briefing],
-        ['AI Vibe',             !!d.ai_vibe],
-        ['AI Recommendations',  (d.ai_recommendations||[]).length > 0, (d.ai_recommendations||[]).length],
-        ['AI Trending Now',     (d.ai_trending_now||[]).length > 0, (d.ai_trending_now||[]).length],
-        ['AI Calendar',         (d.ai_calendar||[]).length > 0, (d.ai_calendar||[]).length],
-        ['AI Safety Summary',   !!d.ai_safety_summary],
-        ['AI Best Months',      (d.ai_best_months||[]).length > 0],
-        ['AI Hidden Gem',       !!d.ai_hidden_gem],
-        ['Verification AI',     !!d.verification?.verified_at, d.verification?.confidence?Math.round(d.verification.confidence*100)+'% conf':null],
-      ].map(([label, ok, detail])=>`
-        <div style="display:flex;align-items:center;gap:7px;padding:6px 9px;background:var(--bg3);border-radius:7px;border:1px solid ${ok?'rgba(0,230,118,.1)':'rgba(255,61,87,.08)'}">
-          <div style="width:6px;height:6px;border-radius:50%;background:${ok?'var(--green)':'var(--red)'};flex-shrink:0"></div>
-          <span style="font-size:10px;color:${ok?'var(--text)':'var(--text3)'};flex:1">${label}</span>
-          ${detail!=null?`<span style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${detail}</span>`:''}
-        </div>`).join('')}
-    </div>
-  </div>
-
-  <!-- RAW JSON -->
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA (JSON)</div>
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA</div>
       <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
     </div>
-    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:500px;font-family:'Space Mono',monospace;line-height:1.5">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-  </div>
+    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+  </div>`;
 
-  `;
+  // ASSEMBLE
+  document.getElementById('report-content').innerHTML =
+    header + flow + statsGrid + aiBriefing + verification +
+    safetyRow + calendar + recommendations + newsRow + events +
+    (gdacs||'') + attractions + restaurants + googlePlaces +
+    accommodation + flights + youtube + photos + social +
+    geoSection + checklist + rawJson;
 }
 
 function toggleRawJson() {
@@ -1482,4 +1456,13 @@ async function rerunPipeline(iso, name) {
 }
 
 async function loadGeoHierarchy(iso) {
-  const container = document.getElementById('ge
+  const container = document.getElementById('geo-hierarchy-'+iso);
+  if(!container) return;
+  container.innerHTML = '<span class="spinner"></span> Loading states...';
+  try {
+    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
+    const d = await r.json();
+    const states = d.states || [];
+    if(!states.length) {
+      container.innerHTML = `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px">
+        No states loaded yet. <button onclick="triggerGeoPipelineForCountry('${iso}')" style="padding:3px 10px;border:1px solid var(--amber);border-radius:5px;background:none;color:var(--amber)
