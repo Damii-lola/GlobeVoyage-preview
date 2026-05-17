@@ -1457,4 +1457,200 @@ function renderReport(d) {
 
   // RAW JSON
   const rawJson = `
-  <div style="background:var(--bg2);borde
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA</div>
+      <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
+    </div>
+    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(reportData,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+  </div>`;
+
+  // ASSEMBLE
+  document.getElementById('report-content').innerHTML =
+    header + flow + statsGrid + aiBriefing + verification +
+    safetyRow + calendar + recommendations + newsRow + events +
+    (gdacs||'') + attractions + restaurants + googlePlaces +
+    accommodation + flights + youtube + photos + social +
+    geoSection + checklist + rawJson;
+}
+
+function toggleRawJson() {
+  const el = document.getElementById('raw-json');
+  if(el) el.style.display = el.style.display==='none'?'block':'none';
+}
+
+async function rerunPipeline(iso, name) {
+  if(!confirm(`Re-run full pipeline for ${name}? This will refresh all data sources.`)) return;
+  toast(`▶ Pipeline starting for ${name}...`);
+  try {
+    await fetch(`${API}/api/pipeline/run/${iso}`, { method:'POST', headers: getAuthHeaders() });
+    toast(`✓ Pipeline started — reload report in ~2 minutes`);
+  } catch(e) { toast(`✗ ${e.message}`); }
+}
+
+async function loadGeoHierarchy(iso) {
+  const container = document.getElementById('geo-hierarchy-'+iso);
+  if(!container) return;
+  container.innerHTML = '<span class="spinner"></span> Loading states...';
+  try {
+    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
+    const d = await r.json();
+    const states = d.states || [];
+    if(!states.length) {
+      container.innerHTML = `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px">
+        No states loaded yet. <button onclick="triggerGeoPipelineForCountry('${iso}')" style="padding:3px 10px;border:1px solid var(--amber);border-radius:5px;background:none;color:var(--amber);cursor:pointer;font-size:10px">LOAD NOW</button>
+      </div>`;
+      return;
+    }
+    container.innerHTML = `
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">${states.length} states/provinces loaded</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;max-height:400px;overflow-y:auto">
+        ${states.map(s=>`
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;cursor:pointer"
+            onclick="loadStateCities('${iso}',${s.id},'${s.name.replace(/'/g,"\\'")}',this)">
+            <div style="font-size:11px;color:#fff">${s.name}</div>
+            ${s.state_code?`<div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${s.state_code}</div>`:''}
+            <div id="cities-${s.id}" style="display:none;margin-top:6px"></div>
+          </div>`).join('')}
+      </div>`;
+  } catch(e) {
+    container.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">${e.message}</div>`;
+  }
+}
+
+async function loadStateCities(iso, stateId, stateName, el) {
+  const citiesDiv = document.getElementById('cities-'+stateId);
+  if(!citiesDiv) return;
+  if(citiesDiv.style.display !== 'none') { citiesDiv.style.display='none'; return; }
+  citiesDiv.style.display='block';
+  citiesDiv.innerHTML = '<span class="spinner"></span>';
+  try {
+    const r = await fetch(`${API}/api/geo/states/${stateId}/areas`, { headers: getAuthHeaders() });
+    const d = await r.json();
+    const areas = d.areas || [];
+    if(!areas.length) { citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--text3)">No cities loaded</div>`; return; }
+    citiesDiv.innerHTML = `
+      <div style="font-size:9px;color:var(--accent2);margin-bottom:4px">${areas.length} cities</div>
+      ${areas.slice(0,20).map(a=>`<div style="font-size:9px;color:var(--text2);padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)">${a.name}</div>`).join('')}
+      ${areas.length>20?`<div style="font-size:9px;color:var(--text3)">+${areas.length-20} more</div>`:''}`;
+  } catch(e) {
+    citiesDiv.innerHTML = `<div style="font-size:9px;color:var(--red)">${e.message}</div>`;
+  }
+}
+
+async function triggerGeoPipelineForCountry(iso) {
+  toast(`▶ Loading geo data for ${iso}...`);
+  try {
+    await fetch(`${API}/api/geo/pipeline/country/${iso}`, { method:'POST', headers: getAuthHeaders() });
+    toast(`✓ Started — check back in 30 seconds`);
+  } catch(e) { toast(`✗ ${e.message}`); }
+}
+
+// ── Geo Hierarchy for Report ──────────────────────────────────────
+async function loadStatesForReport(iso) {
+  const el = document.getElementById('geo-hierarchy-content');
+  if(!el) return;
+  el.innerHTML = `<span style="color:var(--accent2)">Loading states for ${iso}... <span class="spinner"></span></span>`;
+
+  try {
+    const r = await fetch(`${API}/api/geo/countries/${iso}/states`, { headers: getAuthHeaders() });
+    const d = await r.json();
+    const states = d.states || [];
+
+    if(!states.length) {
+      el.innerHTML = `<div style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
+        No states loaded yet for ${iso}.
+        <button onclick="triggerGeoForCountry('${iso}')" style="margin-left:10px;padding:4px 10px;border:1px solid var(--accent);border-radius:5px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">Load from CountriesNow</button>
+      </div>`;
+      return;
+    }
+
+    el.innerHTML = `
+      <div style="margin-bottom:10px;font-family:'Space Mono',monospace;font-size:10px;color:var(--text3)">${states.length} states/provinces loaded — click any to see cities</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px" id="states-grid-${iso}">
+        ${states.map(s=>`
+          <div onclick="loadCitiesForState(${s.id},'${s.name}')"
+            style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:border-color .2s"
+            onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">
+            <div style="font-size:12px;color:#fff;font-weight:500">${s.name}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${s.state_code||s.type||'state'}</div>
+          </div>`).join('')}
+      </div>
+      <div id="cities-panel" style="margin-top:14px"></div>`;
+  } catch(e) {
+    el.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">Error: ${e.message}</div>`;
+  }
+}
+
+async function loadCitiesForState(stateId, stateName) {
+  const panel = document.getElementById('cities-panel');
+  if(!panel) return;
+  panel.innerHTML = `<div style="color:var(--accent2);font-family:'Space Mono',monospace;font-size:11px">Loading cities for ${stateName}... <span class="spinner"></span></div>`;
+
+  try {
+    const r = await fetch(`${API}/api/geo/states/${stateId}/areas`, { headers: getAuthHeaders() });
+    const d = await r.json();
+    const areas = d.areas || [];
+
+    if(!areas.length) {
+      panel.innerHTML = `<div style="color:var(--text3);font-family:'Space Mono',monospace;font-size:11px;padding:10px 0">No cities loaded yet for ${stateName}</div>`;
+      return;
+    }
+
+    panel.innerHTML = `
+      <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:14px">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:10px">CITIES IN ${stateName.toUpperCase()} (${areas.length})</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          ${areas.map(a=>`
+            <span style="padding:4px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text)">${a.name}</span>
+          `).join('')}
+        </div>
+      </div>`;
+  } catch(e) {
+    panel.innerHTML = `<div style="color:var(--red);font-family:'Space Mono',monospace;font-size:11px">Error: ${e.message}</div>`;
+  }
+}
+
+async function triggerGeoForCountry(iso) {
+  toast(`▶ Loading geo data for ${iso}...`);
+  try {
+    await fetch(`${API}/api/geo/pipeline/country/${iso}`, { method:'POST', headers: getAuthHeaders() });
+    toast(`✓ Loading — check back in 30 seconds`);
+    setTimeout(() => loadStatesForReport(iso), 15000);
+  } catch(e) { toast(`✗ ${e.message}`); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+loadHealth();
+loadStatus();
+setInterval(loadHealth, 45000); // less frequent — health check takes time
+setInterval(loadStatus, 5000);
+
+// Wake-up banner — show if backend not live within 5s
+let wakeupSeconds = 0;
+let wakeupInterval = null;
+setTimeout(() => {
+  const liveText = document.getElementById('live-text');
+  if(liveText && liveText.textContent !== 'BACKEND LIVE') {
+    const banner = document.getElementById('wakeup-banner');
+    if(banner) banner.style.display = 'block';
+    wakeupInterval = setInterval(() => {
+      wakeupSeconds++;
+      const timerEl = document.getElementById('wakeup-timer');
+      if(timerEl) timerEl.textContent = `(${wakeupSeconds}s)`;
+      // Hide banner once backend is live
+      if(document.getElementById('live-text')?.textContent === 'BACKEND LIVE') {
+        banner.style.display = 'none';
+        clearInterval(wakeupInterval);
+      }
+    }, 1000);
+  }
+}, 5000);
+
+// Wake-up ping — fires every 5s so Render never sleeps while dashboard is open
+setInterval(() => {
+  fetch(API+'/', { method:'GET', cache:'no-store', headers: getAuthHeaders() }).catch(()=>{});
+}, 5000);
+</script>
+</body>
+</html>
