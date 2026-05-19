@@ -151,6 +151,19 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 .toast{position:fixed;bottom:24px;right:24px;z-index:9999;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:12px 18px;font-size:12px;color:var(--text);box-shadow:0 8px 32px rgba(0,0,0,.5);transform:translateY(60px);opacity:0;transition:all .3s;font-family:'Space Mono',monospace}
 .toast.show{transform:translateY(0);opacity:1}
 
+/* State report type badge */
+.report-type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;margin-bottom:16px}
+.report-type-badge.country{background:rgba(42,127,255,.1);border:1px solid rgba(42,127,255,.3);color:var(--accent)}
+.report-type-badge.state{background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.3);color:var(--accent2)}
+
+/* Search dropdown item styles */
+.search-dd-item{padding:10px 16px;cursor:pointer;display:flex;gap:10px;align-items:center;border-bottom:1px solid var(--border);transition:background .1s}
+.search-dd-item:hover{background:var(--bg3)}
+.search-dd-item:last-child{border-bottom:none}
+.search-dd-icon{font-size:16px;flex-shrink:0}
+.search-dd-name{font-size:13px;color:var(--text);font-weight:600}
+.search-dd-sub{font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:1px}
+
 @media(max-width:768px){main{padding:16px}.stat-row{grid-template-columns:1fr 1fr}header{padding:0 16px}.status-panel{grid-template-columns:1fr}}
 </style>
 </head>
@@ -215,7 +228,7 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
     <div class="stat-card"><div class="stat-val" id="s-countries">195</div><div class="stat-lbl">Countries</div><div class="stat-sub">195 total in pipeline</div></div>
     <div class="stat-card"><div class="stat-val" id="s-processed">—</div><div class="stat-lbl">Processed</div><div class="stat-sub" id="s-coverage">Checking...</div></div>
     <div class="stat-card"><div class="stat-val" id="s-fresh">—</div><div class="stat-lbl">Fresh (&lt;6h)</div><div class="stat-sub">Up to date</div></div>
-    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 26 sources</div></div>
+    <div class="stat-card"><div class="stat-val" id="s-sources">—</div><div class="stat-lbl">Sources Active</div><div class="stat-sub" id="s-sources-sub">of 44 sources</div></div>
   </div>
 
   <div class="section-title">SYSTEM CONNECTIONS</div>
@@ -319,18 +332,34 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
 
 <!-- INTEL REPORT PAGE -->
 <div class="page" id="page-report">
-  <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap">
+  <!-- State intel table warning banner -->
+  <div id="state-table-warning" style="display:none;background:rgba(255,171,0,.06);border:1px solid rgba(255,171,0,.2);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:11px;color:var(--amber)">
+    ⚠ state_intel table not found — state intel will work but won't persist between server restarts.
+    <a id="state-sql-btn" href="#" onclick="showStateSQLModal();return false;" style="color:var(--accent);margin-left:8px">View SQL to fix →</a>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center;margin-bottom:16px;flex-wrap:wrap">
     <div style="position:relative;flex:1;min-width:200px">
-      <input id="report-search" placeholder="Search country..." autocomplete="off"
+      <input id="report-search" placeholder="Search country or state/province..." autocomplete="off"
         style="width:100%;padding:12px 16px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;outline:none"
-        oninput="filterReportCountries()" onfocus="showReportDropdown()" />
-      <div id="report-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;margin-top:4px;max-height:240px;overflow-y:auto"></div>
+        oninput="filterReportSearch()" onfocus="showReportDropdown()" />
+      <div id="report-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;z-index:200;background:var(--bg2);border:1px solid var(--border2);border-radius:10px;margin-top:4px;max-height:320px;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.5)"></div>
     </div>
     <button onclick="loadReport()" style="padding:12px 24px;border:1px solid var(--accent);border-radius:10px;background:linear-gradient(135deg,var(--accent),#1040cc);color:#fff;font-family:'Syne',sans-serif;font-size:13px;letter-spacing:1px;cursor:pointer">▶ LOAD REPORT</button>
     <button onclick="refreshReport()" style="padding:12px 18px;border:1px solid var(--border);border-radius:10px;background:none;color:var(--text2);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer">↻ REFRESH</button>
   </div>
+
+  <!-- Report type indicator -->
+  <div id="report-type-indicator" style="display:none;margin-bottom:12px"></div>
+
   <div id="report-content">
-    <div style="text-align:center;padding:80px 20px;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px">SELECT A COUNTRY ABOVE TO VIEW ITS FULL INTEL REPORT</div>
+    <div style="text-align:center;padding:80px 20px;color:var(--text3);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:2px">
+      SELECT A COUNTRY OR STATE ABOVE TO VIEW ITS FULL INTEL REPORT
+      <div style="margin-top:12px;font-size:10px;color:var(--text3);line-height:1.8">
+        🌍 Search by country name (e.g. "Nigeria")<br>
+        📍 Search by state/province (e.g. "Lagos", "California", "Bavaria")
+      </div>
+    </div>
   </div>
 </div>
 
@@ -405,6 +434,10 @@ async function loadStatus() {
     document.getElementById('st-next-runs').innerHTML = (pipe.next_runs||[]).map(r =>
       `<span class="next-run-chip" title="${new Date(r.timestamp).toLocaleString()}">${r.time_utc} · in ${r.runs_in}</span>`
     ).join('');
+    // Check state_intel table status
+    if(d.state_intel_table === false) {
+      document.getElementById('state-table-warning').style.display = 'block';
+    }
   } catch(e) {
     const isTimeout = e.name === 'AbortError';
     document.getElementById('st-ping-text').textContent = isTimeout ? 'Backend waking up — please wait ~30s...' : 'Could not reach server';
@@ -664,8 +697,7 @@ async function loadGeoStats() {
     document.getElementById('g-areas').textContent     = (stats.total_areas||0).toLocaleString();
     document.getElementById('g-countries').textContent = stats.countries_loaded||0;
     document.getElementById('g-coverage').textContent  = `of 195 (${stats.coverage_pct||0}%)`;
-    const actualCoveragePct = stats.coverage_pct || 0;
-    document.getElementById('g-pct').textContent = actualCoveragePct + '%';
+    document.getElementById('g-pct').textContent = (stats.coverage_pct||0) + '%';
     const wrap = document.getElementById('geo-progress-wrap');
     if(live.running) {
       wrap.style.display = 'block';
@@ -721,10 +753,17 @@ async function triggerGeoPipeline(forceAll=false) {
   } catch(e) { toast('✗ '+e.message); }
 }
 
-// ── Intel Report ──────────────────────────────────────────────────
-let reportCountries = [];
-let reportISO       = null;
-let reportData      = null;
+// ══════════════════════════════════════════════════════════════════
+// INTEL REPORT — UNIFIED COUNTRY + STATE SEARCH
+// ══════════════════════════════════════════════════════════════════
+let reportCountries  = [];
+let reportISO        = null;
+let reportData       = null;
+let reportType       = 'country'; // 'country' | 'state'
+let reportStateId    = null;
+let reportStateName  = '';
+let reportCountryName= '';
+let searchDebounce   = null;
 
 async function initReportPage() {
   if (reportCountries.length) return;
@@ -735,26 +774,96 @@ async function initReportPage() {
   } catch(e) {}
 }
 
-function filterReportCountries() {
-  const q  = document.getElementById('report-search').value.toLowerCase();
+// Unified search: hits /api/search which returns countries + states
+async function filterReportSearch() {
+  const q  = document.getElementById('report-search').value;
   const dd = document.getElementById('report-dropdown');
-  if (!q) { dd.style.display = 'none'; return; }
-  const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q)).slice(0, 8);
-  if (!matches.length) { dd.style.display = 'none'; return; }
-  dd.style.display = 'block';
-  dd.innerHTML = matches.map(c =>
-    `<div onclick="selectReportCountry('${c.iso}','${c.name.replace(/'/g,"&#39;")}')"
-      style="padding:10px 16px;cursor:pointer;font-size:13px;color:var(--text);border-bottom:1px solid var(--border)"
-      onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background=''"
-    >${c.name} <span style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">${c.iso}</span></div>`
-  ).join('');
+  if (!q || q.length < 2) { dd.style.display = 'none'; return; }
+
+  clearTimeout(searchDebounce);
+  searchDebounce = setTimeout(async () => {
+    try {
+      const r = await fetch(`${API}/api/search?q=${encodeURIComponent(q)}`, { headers: getAuthHeaders() });
+      const d = await r.json();
+      const results = d.results || [];
+
+      if (!results.length) {
+        // Fallback: local country search
+        const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+        if (!matches.length) { dd.style.display = 'none'; return; }
+        dd.style.display = 'block';
+        dd.innerHTML = matches.map(c => `
+          <div class="search-dd-item" onclick="selectReportCountry('${c.iso}','${c.name.replace(/'/g,"&#39;")}')">
+            <span class="search-dd-icon">🌍</span>
+            <div><div class="search-dd-name">${c.name}</div><div class="search-dd-sub">${c.continent} · Country</div></div>
+          </div>`).join('');
+        return;
+      }
+
+      dd.style.display = 'block';
+      dd.innerHTML = results.map(res => {
+        if (res.type === 'country') {
+          return `<div class="search-dd-item" onclick="selectReportCountry('${res.iso}','${res.name.replace(/'/g,"&#39;")}')">
+            <span class="search-dd-icon">🌍</span>
+            <div><div class="search-dd-name">${res.name}</div><div class="search-dd-sub">${res.continent} · Country</div></div>
+          </div>`;
+        } else {
+          return `<div class="search-dd-item" onclick="selectReportState(${res.state_id},'${res.name.replace(/'/g,"&#39;")}','${res.country_name.replace(/'/g,"&#39;")}','${res.country_iso}')">
+            <span class="search-dd-icon">📍</span>
+            <div><div class="search-dd-name">${res.name}</div><div class="search-dd-sub">${res.country_name} · State / Province</div></div>
+          </div>`;
+        }
+      }).join('');
+    } catch(e) {
+      // Fallback to local search
+      const matches = reportCountries.filter(c => c.name.toLowerCase().includes(q.toLowerCase())).slice(0, 6);
+      if (!matches.length) { dd.style.display = 'none'; return; }
+      dd.style.display = 'block';
+      dd.innerHTML = matches.map(c => `
+        <div class="search-dd-item" onclick="selectReportCountry('${c.iso}','${c.name.replace(/'/g,"&#39;")}')">
+          <span class="search-dd-icon">🌍</span>
+          <div><div class="search-dd-name">${c.name}</div><div class="search-dd-sub">Country</div></div>
+        </div>`).join('');
+    }
+  }, 220);
 }
-function showReportDropdown() { filterReportCountries(); }
+
+function showReportDropdown() { filterReportSearch(); }
+
+function filterReportCountries() { filterReportSearch(); } // alias
+
 function selectReportCountry(iso, name) {
-  reportISO = iso;
+  reportISO        = iso;
+  reportType       = 'country';
+  reportStateId    = null;
+  reportStateName  = '';
+  reportCountryName= name;
   document.getElementById('report-search').value = name;
   document.getElementById('report-dropdown').style.display = 'none';
+  updateReportTypeBadge('country', name);
 }
+
+function selectReportState(stateId, stateName, countryName, countryIso) {
+  reportStateId    = stateId;
+  reportStateName  = stateName;
+  reportCountryName= countryName;
+  reportISO        = countryIso;
+  reportType       = 'state';
+  document.getElementById('report-search').value = `${stateName}, ${countryName}`;
+  document.getElementById('report-dropdown').style.display = 'none';
+  updateReportTypeBadge('state', stateName, countryName);
+}
+
+function updateReportTypeBadge(type, name, sub) {
+  const el = document.getElementById('report-type-indicator');
+  el.style.display = 'block';
+  if (type === 'country') {
+    el.innerHTML = `<span class="report-type-badge country">🌍 COUNTRY REPORT — ${name.toUpperCase()}</span>`;
+  } else {
+    el.innerHTML = `<span class="report-type-badge state">📍 STATE REPORT — ${name.toUpperCase()}${sub ? ', '+sub.toUpperCase() : ''}</span>`;
+  }
+}
+
 document.addEventListener('click', e => {
   if (!e.target.closest('#report-search') && !e.target.closest('#report-dropdown')) {
     const dd = document.getElementById('report-dropdown');
@@ -763,12 +872,19 @@ document.addEventListener('click', e => {
 });
 
 async function loadReport() {
+  if (reportType === 'state' && reportStateId) {
+    await loadStateReport(reportStateId);
+    return;
+  }
+
+  // Country report
   if (!reportISO) {
     const q = document.getElementById('report-search').value.trim().toLowerCase();
     const match = reportCountries.find(c => c.name.toLowerCase() === q || c.iso.toLowerCase() === q);
-    if (match) reportISO = match.iso;
-    else { alert('Please select a country first'); return; }
+    if (match) { reportISO = match.iso; reportType = 'country'; }
+    else { alert('Please select a country or state/province first'); return; }
   }
+
   document.getElementById('report-content').innerHTML =
     `<div style="text-align:center;padding:60px;color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
       Loading intel report for ${reportISO}... <span class="spinner"></span>
@@ -777,16 +893,378 @@ async function loadReport() {
     const r = await fetch(`${API}/api/intel/${reportISO}`, { headers: getAuthHeaders() });
     reportData = await r.json();
     renderReport(reportData);
-    // Auto-load geo hierarchy right after render
     setTimeout(() => loadStatesForReport(reportISO), 400);
   } catch(e) {
     document.getElementById('report-content').innerHTML =
       `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">Error: ${e.message}</div>`;
   }
 }
-function refreshReport() { if (reportISO) loadReport(); }
 
-// ── Report helper renderers ───────────────────────────────────────
+function refreshReport() {
+  if (reportType === 'state' && reportStateId) { loadStateReport(reportStateId); }
+  else if (reportISO) { loadReport(); }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STATE INTEL REPORT
+// ══════════════════════════════════════════════════════════════════
+let stateRefreshTimer = null;
+
+async function loadStateReport(stateId) {
+  clearTimeout(stateRefreshTimer);
+  document.getElementById('report-content').innerHTML =
+    `<div style="text-align:center;padding:60px;color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
+      Loading state intel... <span class="spinner"></span>
+    </div>`;
+
+  try {
+    const r = await fetch(`${API}/api/intel/state/${stateId}`, { headers: getAuthHeaders() });
+    const d = await r.json();
+
+    if (r.status === 202 || d.loading) {
+      document.getElementById('report-content').innerHTML = `
+        <div style="text-align:center;padding:60px;background:rgba(42,127,255,.04);border:1px solid rgba(42,127,255,.15);border-radius:16px">
+          <div style="font-size:32px;margin-bottom:16px">🔄</div>
+          <div style="font-family:'Space Mono',monospace;font-size:12px;color:var(--accent);margin-bottom:8px">GENERATING INTEL</div>
+          <div style="font-size:13px;color:var(--text2);margin-bottom:20px">${d.message || 'Collecting data and running AI analysis...'}</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:16px">
+            Fetching weather, news, photos, events, places and AI briefing for <strong style="color:#fff">${d.state_name || reportStateName}</strong>
+          </div>
+          <span class="spinner" style="width:24px;height:24px;border-width:3px"></span>
+          <div style="margin-top:16px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">Auto-checking in 30 seconds...</div>
+        </div>`;
+      stateRefreshTimer = setTimeout(() => loadStateReport(stateId), 30000);
+      return;
+    }
+
+    renderStateReport(d);
+  } catch(e) {
+    document.getElementById('report-content').innerHTML =
+      `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">Error: ${e.message}</div>`;
+  }
+}
+
+function renderStateReport(d) {
+  if (!d || d.error) {
+    document.getElementById('report-content').innerHTML =
+      `<div style="color:var(--red);padding:20px;font-family:'Space Mono',monospace">${d?.error || 'No data available'}</div>`;
+    return;
+  }
+
+  const f = freshLabel(d.last_updated);
+
+  // Header
+  const header = `
+  <div style="background:linear-gradient(135deg,rgba(0,229,255,.06),rgba(42,127,255,.04));border:1px solid rgba(0,229,255,.2);border-radius:16px;padding:24px 28px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:8px">📍 STATE / PROVINCE INTEL REPORT</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+      <div>
+        <div style="font-size:30px;font-weight:800;color:#fff">${d.state_name}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);letter-spacing:2px;margin-top:4px">
+          ${d.country_name} · ${d.state_code || ''} · ${d.continent || ''} · Updated: ${d.last_updated ? new Date(d.last_updated).toLocaleString() : 'Never'}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="freshness ${f.cls}">${f.label}</span>
+        <button onclick="rerunStatePipeline(${d.state_id},'${(d.state_name||'').replace(/'/g,"\\'")}')"
+          style="padding:8px 16px;border:1px solid var(--accent2);border-radius:8px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">
+          ↻ RE-RUN INTEL
+        </button>
+        <button onclick="selectReportCountry('${d.country_iso}','${d.country_name}');loadReport();"
+          style="padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:none;color:var(--text2);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">
+          🌍 ${d.country_name}
+        </button>
+      </div>
+    </div>
+    ${d.ai_vibe ? `<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px">"${d.ai_vibe}"</div>` : ''}
+  </div>`;
+
+  // Stats grid
+  const statsGrid = `
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px">
+    ${d.weather_now ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🌤 WEATHER NOW</div>
+      <div style="font-size:38px;font-weight:800;color:#fff;line-height:1">${d.weather_now.temp}°C</div>
+      <div style="font-size:12px;color:var(--text2);margin:4px 0 10px;text-transform:capitalize">${d.weather_now.condition}</div>
+      ${rkv('Feels like', d.weather_now.feels_like != null ? d.weather_now.feels_like + '°C' : null)}
+      ${rkv('Humidity', d.weather_now.humidity != null ? d.weather_now.humidity + '%' : null)}
+      ${rkv('Wind', d.weather_now.wind != null ? d.weather_now.wind + ' km/h' : null)}
+    </div>` : ''}
+    ${d.air_quality ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💨 AIR QUALITY</div>
+      ${(()=>{const aqi=d.air_quality.aqi||0;const aqc=aqi<50?'var(--green)':aqi<100?'var(--amber)':aqi<150?'#ff8c00':'var(--red)';return `<div style="font-size:42px;font-weight:800;line-height:1;color:${aqc}">${d.air_quality.aqi||'—'}</div><div style="font-size:12px;color:var(--text2);margin:4px 0">${d.air_quality.aqi_label||''}</div>${rkv('PM2.5', d.air_quality.pm25 != null ? d.air_quality.pm25 + ' μg/m³' : null)}`})()}
+    </div>` : ''}
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">📍 LOCATION INFO</div>
+      ${rkv('State Code', d.state_code)}
+      ${rkv('Country', d.country_name)}
+      ${rkv('Continent', d.continent)}
+      ${rkv('Coordinates', d.lat && d.lon ? `${d.lat.toFixed(3)}°, ${d.lon.toFixed(3)}°` : null)}
+      ${rkv('Cities Loaded', (d.areas||[]).length > 0 ? (d.areas||[]).length + ' cities' : null)}
+    </div>
+    ${(d.ai_best_months||[]).length ? `
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">📅 BEST MONTHS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${d.ai_best_months.map(m=>`<span style="padding:5px 10px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:6px;font-size:12px;color:var(--green)">${m}</span>`).join('')}
+      </div>
+    </div>` : ''}
+  </div>`;
+
+  // AI Briefing
+  const aiBriefing = d.ai_briefing ? `
+  <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — ${(d.state_name||'').toUpperCase()}</div>
+    <div style="font-size:14px;color:var(--text);line-height:1.8">${d.ai_briefing}</div>
+    ${d.ai_hidden_gem ? `<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${d.ai_hidden_gem}</div>` : ''}
+  </div>` : '';
+
+  // Safety
+  const safety = d.ai_safety_summary ? `
+  <div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY — ${(d.state_name||'').toUpperCase()}</div>
+    <div style="font-size:12px;color:#e0c070;line-height:1.6">${d.ai_safety_summary}</div>
+  </div>` : '';
+
+  // News
+  const news = (d.news_headlines||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">📰 NEWS — ${(d.state_name||'').toUpperCase()} (${d.news_headlines.length})</div>
+    ${d.news_headlines.slice(0,8).map(n=>`
+    <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
+      <span style="flex-shrink:0;font-size:9px;padding:2px 6px;border-radius:3px;margin-top:1px;font-family:'Space Mono',monospace;${n.risk_level==='high'?'background:rgba(255,61,87,.1);color:var(--red)':n.risk_level==='medium'?'background:rgba(255,171,0,.1);color:var(--amber)':'background:rgba(0,230,118,.1);color:var(--green)'}">${n.risk_level||'low'}</span>
+      <div>
+        <a href="${n.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${n.title}</a>
+        <div style="font-size:9px;color:var(--text3);margin-top:2px;font-family:'Space Mono',monospace">${n.source||''}</div>
+      </div>
+    </div>`).join('')}
+  </div>` : '';
+
+  // Events
+  const events = (d.events||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🎭 EVENTS IN ${(d.state_name||'').toUpperCase()} (${d.events.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px">
+      ${d.events.slice(0,8).map(e=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px">
+        <div style="font-size:12px;color:#fff;font-weight:600">${e.name||e.title||'Event'}</div>
+        ${e.date?`<div style="font-size:10px;color:var(--accent2);font-family:'Space Mono',monospace;margin-top:4px">${e.date}</div>`:''}
+        ${e.source?`<div style="font-size:9px;color:var(--text3);margin-top:2px">${e.source}</div>`:''}
+        ${e.url?`<a href="${e.url}" target="_blank" style="font-size:9px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">LINK ↗</a>`:''}
+      </div>`).join('')}
+    </div>
+  </div>` : '';
+
+  // Photos
+  const photos = (d.photos||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">📸 PHOTOS — ${d.state_name} (${d.photos.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
+      ${d.photos.slice(0,9).map(p=>`
+      <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:16/9;background:var(--bg3)">
+        <img src="${p.url_small||p.url_regular}" alt="${p.alt||''}" loading="lazy" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.display='none'">
+        ${p.credit?`<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.7));padding:5px 7px;font-size:8px;color:rgba(255,255,255,.6)">📷 ${p.credit}</div>`:''}
+      </div>`).join('')}
+    </div>
+  </div>` : '';
+
+  // Places
+  const places = (d.top_places||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🏛 TOP PLACES IN ${(d.state_name||'').toUpperCase()}</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      ${d.top_places.map(p=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:6px 10px">
+        <div style="font-size:11px;color:#fff">${p.name}</div>
+        <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${(p.categories||[])[0]||''}</div>
+      </div>`).join('')}
+    </div>
+  </div>` : '';
+
+  // AI Recommendations
+  const recs = (d.ai_recommendations||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">🎯 AI RECOMMENDATIONS FOR ${(d.state_name||'').toUpperCase()} (${d.ai_recommendations.length})</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px">
+      ${d.ai_recommendations.map(r=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <div style="font-size:13px;font-weight:600;color:#fff;flex:1">${r.title}</div>
+          <div style="font-size:18px;font-weight:800;color:var(--border2);margin-left:8px">${r.rating||'—'}/5</div>
+        </div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${r.why}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15);font-family:'Space Mono',monospace">${r.type||''}</span>
+          <span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>` : '';
+
+  // Trending
+  const trending = (d.ai_trending_now||[]).length ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">📈 TRENDING NOW IN ${(d.state_name||'').toUpperCase()}</div>
+    ${d.ai_trending_now.map(t=>`<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="color:var(--accent2);font-weight:600">${t.name}</span><span style="font-size:11px;color:var(--text2);margin-left:8px">— ${t.why_trending||''}</span></div>`).join('')}
+  </div>` : '';
+
+  // Areas with search
+  const areasSection = `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🗺 AREAS & CITIES IN ${(d.state_name||'').toUpperCase()}</div>
+      <button onclick="loadStateReport(${d.state_id})" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ RELOAD</button>
+    </div>
+    ${(d.areas||[]).length ? `
+      <input id="area-search-${d.state_id}" placeholder="Search areas and cities..." oninput="filterStateAreas('${d.state_id}')"
+        style="width:100%;max-width:360px;padding:8px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;margin-bottom:12px;display:block">
+      <div id="areas-grid-${d.state_id}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;max-height:400px;overflow-y:auto">
+        ${d.areas.map(a=>`
+        <div data-area-name="${(a.name||'').toLowerCase()}"
+          onclick="openAreaIntel('${(a.name||'').replace(/'/g,"\\'")}','${(d.state_name||'').replace(/'/g,"\\'")}','${(d.country_name||'').replace(/'/g,"\\'")}')"
+          style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:border-color .2s"
+          onmouseover="this.style.borderColor='var(--accent2)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:11px;color:#fff">${a.name}</div>
+          <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${a.type||'area'}</div>
+        </div>`).join('')}
+      </div>
+      <div style="margin-top:10px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">
+        ${d.areas.length} areas loaded · Click any area for AI intel
+      </div>
+    ` : `
+      <div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px;padding:10px 0">
+        No cities loaded yet for ${d.state_name}.
+        <button onclick="triggerGeoForCountry('${d.country_iso}')"
+          style="margin-left:10px;padding:4px 10px;border:1px solid var(--accent);border-radius:5px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">
+          Load from CountriesNow
+        </button>
+      </div>
+    `}
+  </div>`;
+
+  document.getElementById('report-content').innerHTML =
+    header + statsGrid + aiBriefing + safety + news + recs + trending + places + events + photos + areasSection;
+}
+
+function filterStateAreas(stateId) {
+  const q = (document.getElementById(`area-search-${stateId}`)?.value || '').toLowerCase();
+  document.querySelectorAll(`#areas-grid-${stateId} > div[data-area-name]`).forEach(el => {
+    el.style.display = el.dataset.areaName.includes(q) ? '' : 'none';
+  });
+}
+
+// Area Intel Modal
+async function openAreaIntel(areaName, stateName, countryName) {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+  overlay.classList.add('open');
+  content.innerHTML = `
+    <div style="margin-bottom:20px">
+      <div style="font-size:9px;letter-spacing:3px;color:var(--accent2);font-family:'Space Mono',monospace;margin-bottom:6px">📍 AREA INTEL</div>
+      <div class="modal-title">${areaName}</div>
+      <div class="modal-sub">${stateName} · ${countryName}</div>
+    </div>
+    <div id="area-intel-content">
+      <div style="text-align:center;padding:40px;color:var(--text3);font-family:'Space Mono',monospace;font-size:11px">
+        Generating AI intel for ${areaName}... <span class="spinner"></span>
+        <div style="margin-top:8px;font-size:10px;color:var(--text3)">Powered by Mistral Large</div>
+      </div>
+    </div>`;
+
+  try {
+    const r = await fetch(`${API}/api/intel/area`, {
+      method: 'POST',
+      headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+      body: JSON.stringify({ area: areaName, state: stateName, country: countryName })
+    });
+    const d = await r.json();
+
+    document.getElementById('area-intel-content').innerHTML = `
+      ${d.briefing ? `
+      <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:16px;margin-bottom:16px">
+        <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:8px">🤖 AI BRIEFING — ${areaName.toUpperCase()}</div>
+        <div style="font-size:13px;color:var(--text);line-height:1.8">${d.briefing}</div>
+        ${d.hidden_gem?`<div style="font-size:11px;color:var(--accent2);padding:8px 12px;background:rgba(0,229,255,.05);border-radius:6px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${d.hidden_gem}</div>`:''}
+        ${d.best_time?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">⏰ Best time: ${d.best_time}</div>`:''}
+      </div>` : ''}
+      ${(d.recommendations||[]).length ? `
+      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🎯 THINGS TO DO IN ${areaName.toUpperCase()}</div>
+      ${d.recommendations.map(rec=>`
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start">
+          <div style="flex:1">
+            <div style="font-size:13px;font-weight:600;color:#fff">${rec.title}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5">${rec.why}</div>
+          </div>
+          <div style="flex-shrink:0">
+            ${rec.rating?`<div style="font-size:16px;font-weight:700;color:var(--border2)">${rec.rating}/5</div>`:''}
+            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;text-align:right">${rec.type||''}</div>
+          </div>
+        </div>`).join('')}` : ''}
+      ${d.error ? `<div style="color:var(--amber);font-family:'Space Mono',monospace;font-size:11px;margin-top:12px">Note: ${d.error}</div>` : ''}`;
+  } catch(e) {
+    document.getElementById('area-intel-content').innerHTML =
+      `<div style="color:var(--red);font-family:'Space Mono',monospace">Error: ${e.message}</div>`;
+  }
+}
+
+async function rerunStatePipeline(stateId, stateName) {
+  toast(`▶ Re-running intel for ${stateName}...`);
+  try {
+    await fetch(`${API}/api/intel/state/${stateId}/run`, { method:'POST', headers: getAuthHeaders() });
+    toast(`✓ Pipeline started — reload in ~30 seconds`);
+    setTimeout(() => loadStateReport(stateId), 30000);
+  } catch(e) { toast(`✗ ${e.message}`); }
+}
+
+// ── SQL Modal for state_intel table ──────────────────────────────
+function showStateSQLModal() {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+  overlay.classList.add('open');
+  content.innerHTML = `
+    <div class="modal-title">Create state_intel Table</div>
+    <div class="modal-sub">RUN THIS SQL IN YOUR SUPABASE SQL EDITOR</div>
+    <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+      Without this table, state intel is generated on-demand but not persisted between server restarts.
+      Run the SQL below in your Supabase dashboard → SQL Editor to enable persistence.
+    </p>
+    <pre style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:'Space Mono',monospace;font-size:10px;color:var(--accent2);overflow:auto;max-height:360px;line-height:1.6">CREATE TABLE IF NOT EXISTS state_intel (
+  state_id INT PRIMARY KEY,
+  country_iso TEXT NOT NULL,
+  state_name TEXT NOT NULL,
+  country_name TEXT,
+  state_code TEXT,
+  continent TEXT,
+  last_updated TIMESTAMPTZ,
+  lat FLOAT,
+  lon FLOAT,
+  weather_now JSONB,
+  weather_forecast JSONB DEFAULT '[]'::jsonb,
+  news_headlines JSONB DEFAULT '[]'::jsonb,
+  photos JSONB DEFAULT '[]'::jsonb,
+  events JSONB DEFAULT '[]'::jsonb,
+  top_places JSONB DEFAULT '[]'::jsonb,
+  air_quality JSONB,
+  areas JSONB DEFAULT '[]'::jsonb,
+  ai_briefing TEXT,
+  ai_vibe TEXT,
+  ai_recommendations JSONB DEFAULT '[]'::jsonb,
+  ai_safety_summary TEXT,
+  ai_best_months JSONB DEFAULT '[]'::jsonb,
+  ai_hidden_gem TEXT,
+  ai_trending_now JSONB DEFAULT '[]'::jsonb
+);</pre>
+    <button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent);toast('SQL copied!');"
+      style="margin-top:12px;padding:10px 20px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:11px;cursor:pointer">
+      📋 COPY SQL
+    </button>`;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COUNTRY REPORT HELPERS (unchanged from original)
+// ══════════════════════════════════════════════════════════════════
 function rSection(title, content) {
   if (!content || content.trim() === '') return '';
   return `<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
@@ -812,7 +1290,7 @@ function rpill(label, color) {
   return `<span style="padding:4px 10px;border-radius:5px;font-size:10px;font-family:'Space Mono',monospace;background:rgba(0,0,0,.3);border:1px solid ${color||'var(--accent)'};color:${color||'var(--accent)'}">${label}</span>`;
 }
 
-// ── Full report renderer ──────────────────────────────────────────
+// ── Full country report renderer ──────────────────────────────────
 function renderReport(d) {
   if (!d || d.error) {
     document.getElementById('report-content').innerHTML =
@@ -824,7 +1302,6 @@ function renderReport(d) {
   const veri     = d.verification || {};
   const safeColor = {safe:'var(--green)',caution:'var(--amber)',warning:'var(--amber)',danger:'var(--red)'}[veri.safety_level]||'var(--text3)';
 
-  // HEADER
   const header = `
   <div style="background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:16px;padding:24px 28px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;margin-bottom:12px">
@@ -841,12 +1318,11 @@ function renderReport(d) {
     </div>
     ${d.ai_vibe?`<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px;margin-bottom:12px">"${d.ai_vibe}"</div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}');"
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')"
         style="padding:8px 16px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RE-RUN PIPELINE</button>
     </div>
   </div>`;
 
-  // PIPELINE FLOW
   const flow = `
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">HOW THIS INTEL WAS BUILT</div>
@@ -860,7 +1336,6 @@ function renderReport(d) {
     </div>
   </div>`;
 
-  // STATS GRID
   const statsGrid = `
   <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;margin-bottom:16px">
     ${meta.capital?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -923,9 +1398,10 @@ function renderReport(d) {
       ${rkv('Taxi/km',d.cost_of_living.taxi_per_km!=null?'$'+d.cost_of_living.taxi_per_km:null,'var(--green)')}
       ${rkv('Internet/mo',d.cost_of_living.internet_monthly!=null?'$'+d.cost_of_living.internet_monthly:null,'var(--green)')}
       ${rkv('Avg salary/mo',d.cost_of_living.avg_salary!=null?'$'+d.cost_of_living.avg_salary:null,'var(--accent2)')}
-    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.2);border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:6px;min-height:80px">
-      <div style="font-size:9px;color:var(--red);font-family:'Space Mono',monospace">💰 COST OF LIVING</div>
-      <div style="font-size:11px;color:var(--text3);text-align:center">No data — RapidAPI key needed<br>or Numbeo monthly cap reached</div>
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,171,0,.2);border-radius:12px;padding:16px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;min-height:100px">
+      <div style="font-size:9px;color:var(--amber);font-family:'Space Mono',monospace">💰 COST OF LIVING</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Not collected yet</div>
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')" style="padding:5px 12px;border:1px solid var(--accent);border-radius:6px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ Re-run pipeline</button>
     </div>`}
     ${d.currency_rates?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">💱 CURRENCY RATES (vs USD)</div>
@@ -934,7 +1410,6 @@ function renderReport(d) {
     </div>`:''}
   </div>`;
 
-  // AI BRIEFING
   const aiBriefing = d.ai_briefing?`
   <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — MISTRAL LARGE</div>
@@ -942,7 +1417,6 @@ function renderReport(d) {
     ${d.ai_hidden_gem?`<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2)">💎 Hidden Gem: ${d.ai_hidden_gem}</div>`:''}
   </div>`:'';
 
-  // WIKIPEDIA
   const wikiSection = d.wiki_summary?rSection('📖 WIKIPEDIA SUMMARY',
     `<div style="font-size:12px;color:var(--text2);line-height:1.8">${d.wiki_summary}</div>
      ${d.wiki_highlights&&d.wiki_highlights.length?`
@@ -951,7 +1425,6 @@ function renderReport(d) {
          ${d.wiki_highlights.map(h=>`<span style="font-size:11px;color:var(--text2);padding:4px 10px;background:rgba(255,255,255,.04);border-radius:5px;border:1px solid rgba(255,255,255,.06)">• ${h}</span>`).join('')}
        </div>`:''}`):'';
 
-  // WIKIVOYAGE
   const wvSections = d.wiki_sections||{};
   const wikiVoyage = Object.keys(wvSections).length?rSection('✈️ WIKIVOYAGE TRAVEL GUIDE',
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
@@ -962,7 +1435,6 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // VERIFICATION
   const verification = veri.verification_notes?`
   <div style="background:${veri.verified?'rgba(0,230,118,.04)':'rgba(255,61,87,.04)'};border:1px solid ${veri.verified?'rgba(0,230,118,.2)':'rgba(255,61,87,.2)'};border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px">
@@ -977,11 +1449,8 @@ function renderReport(d) {
     ${veri.safety_detail?`<div style="font-size:12px;color:${safeColor};margin-bottom:6px">🛡 ${veri.safety_detail}</div>`:''}
     ${veri.trending_topic?`<div style="font-size:12px;color:var(--accent2);margin-bottom:6px">📈 Trending: ${veri.trending_topic}</div>`:''}
     ${(veri.current_alerts||[]).length?`<div style="margin-top:8px">${veri.current_alerts.map(a=>`<div style="font-size:11px;color:var(--red);padding:4px 0;border-bottom:1px solid rgba(255,61,87,.1)">⚠ ${a}</div>`).join('')}</div>`:''}
-    ${(veri.flags||[]).length?`<div style="margin-top:8px">${veri.flags.map(f=>`<div style="font-size:11px;color:var(--amber);padding:3px 0">⚑ ${f}</div>`).join('')}</div>`:''}
-    ${(veri.missed_stories||[]).length?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">MISSED: ${veri.missed_stories.join(' · ')}</div>`:''}
   </div>`:'';
 
-  // SAFETY + BEST MONTHS
   const safetyRow = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${d.ai_safety_summary?`<div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px">
@@ -1001,7 +1470,6 @@ function renderReport(d) {
     </div>
   </div>`;
 
-  // AI CALENDAR
   const calendar = (d.ai_calendar||[]).length?rSection('📅 AI EVENT CALENDAR — NEXT 14 DAYS',
     `<div style="display:flex;flex-wrap:wrap;gap:6px">
       ${d.ai_calendar.map(c=>`
@@ -1013,7 +1481,6 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // AI RECS
   const recommendations = (d.ai_recommendations||[]).length?rSection(
     `🎯 AI RECOMMENDATIONS (${d.ai_recommendations.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
@@ -1032,7 +1499,6 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // NEWS
   const newsRow = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${(d.news_headlines||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -1059,7 +1525,6 @@ function renderReport(d) {
     </div>`}
   </div>`;
 
-  // EVENTS
   const events = (d.events||[]).length?rSection(`🎭 UPCOMING EVENTS (${d.events.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px">
       ${d.events.slice(0,12).map(e=>`
@@ -1077,7 +1542,6 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // GDACS
   const gdacs = (d.gdacs_alerts||[]).length?rSection(`🚨 GDACS DISASTER ALERTS (${d.gdacs_alerts.length})`,
     d.gdacs_alerts.map(g=>`
       <div style="padding:10px 12px;background:rgba(255,61,87,.06);border:1px solid rgba(255,61,87,.2);border-radius:8px;margin-bottom:6px">
@@ -1091,7 +1555,6 @@ function renderReport(d) {
         ${g.url?`<a href="${g.url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none;margin-top:6px;display:inline-block">Details ↗</a>`:''}
       </div>`).join('')):'';
 
-  // ATTRACTIONS
   const attractions = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${(d.top_places||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -1118,10 +1581,13 @@ function renderReport(d) {
             ${a.review_count?`<div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace">${a.review_count.toLocaleString()} reviews</div>`:''}
           </div>
         </div>`).join('')}
-    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">⭐ TripAdvisor data not available<br>RapidAPI key needed</div></div>`}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,171,0,.15);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+      <div style="font-size:9px;color:var(--amber);font-family:'Space Mono',monospace;text-align:center">⭐ TRIPADVISOR</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Not collected yet</div>
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')" style="padding:5px 12px;border:1px solid var(--accent);border-radius:6px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ Re-run pipeline</button>
+    </div>`}
   </div>`;
 
-  // GOOGLE PLACES
   const googlePlaces = d.google_places&&(d.google_places.places||[]).length?rSection('📍 GOOGLE PLACES',
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
       ${d.google_places.places.slice(0,8).map(p=>`
@@ -1130,14 +1596,12 @@ function renderReport(d) {
           <div style="font-size:12px;color:#fff;font-weight:600">${p.name}</div>
           <div style="font-size:10px;color:var(--text3);margin-top:2px">${p.type||''}</div>
           <div style="display:flex;justify-content:space-between;margin-top:4px;align-items:center">
-            ${p.rating?`<span style="font-size:11px;color:var(--green)">${p.rating}/5 <span style="font-size:9px;color:var(--text3)">(${(p.reviews||0).toLocaleString()})</span></span>`:'<span></span>'}
+            ${p.rating?`<span style="font-size:11px;color:var(--green)">${p.rating}/5</span>`:'<span></span>'}
             ${p.open_now!=null?`<span style="font-size:9px;font-family:'Space Mono',monospace;color:${p.open_now?'var(--green)':'var(--red)'}">${p.open_now?'OPEN':'CLOSED'}</span>`:''}
           </div>
-          ${p.address?`<div style="font-size:9px;color:var(--text3);margin-top:4px">${p.address}</div>`:''}
         </div>`).join('')}
     </div>`):'';
 
-  // RESTAURANTS
   const restaurants = d.restaurants&&(d.restaurants.restaurants||[]).length?rSection('🍽 RESTAURANTS (Travel Advisor)',
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px">
       ${d.restaurants.restaurants.slice(0,6).map(r=>`
@@ -1145,20 +1609,19 @@ function renderReport(d) {
           ${r.photo?`<img src="${r.photo}" style="width:100%;height:60px;object-fit:cover;border-radius:5px;margin-bottom:8px" onerror="this.style.display='none'">`:''}
           <div style="font-size:12px;color:#fff;font-weight:600">${r.name}</div>
           <div style="font-size:10px;color:var(--text3);margin-top:2px">${r.cuisine||''}${r.price?' · '+r.price:''}</div>
-          ${r.rating?`<div style="font-size:11px;color:var(--green);margin-top:4px">${r.rating}/5 ${r.reviews?`<span style="color:var(--text3);font-size:9px">(${r.reviews} reviews)</span>`:''}</div>`:''}
-          ${r.address?`<div style="font-size:9px;color:var(--text3);margin-top:3px">${r.address}</div>`:''}
+          ${r.rating?`<div style="font-size:11px;color:var(--green);margin-top:4px">${r.rating}/5</div>`:''}
         </div>`).join('')}
     </div>`):'';
 
-  // ACCOMMODATION
+  // Accommodation — fixed messages
   const accommodation = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${d.booking&&(d.booking.hotels||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
         <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">🏨 BOOKING.COM</div>
-        <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">All Hotels ↗</a>
+        <a href="${d.booking.search_url}" target="_blank" style="font-size:10px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">Search Hotels ↗</a>
       </div>
-      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.booking.avg_price_per_night||'—'}/night · Min $${d.booking.min_price||'—'} · ${d.booking.checkin}→${d.booking.checkout}</div>
+      <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.booking.avg_price_per_night||'—'}/night · Min $${d.booking.min_price||'—'}</div>
       ${d.booking.hotels.slice(0,5).map(h=>`
         <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);align-items:flex-start">
           ${h.photo?`<img src="${h.photo}" style="width:56px;height:44px;object-fit:cover;border-radius:5px;flex-shrink:0" onerror="this.style.display='none'">`:''}
@@ -1166,13 +1629,16 @@ function renderReport(d) {
             <div style="font-size:11px;color:#fff;font-weight:600">${h.name}</div>
             <div style="display:flex;gap:8px;margin-top:3px;align-items:center;flex-wrap:wrap">
               ${h.rating?`<span style="font-size:10px;color:var(--accent2)">${h.rating}/10</span>`:''}
-              ${h.stars?`<span style="font-size:10px;color:var(--amber)">${'★'.repeat(Math.min(h.stars,5))}</span>`:''}
               ${h.price_per_night?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(h.price_per_night)}</span>`:''}
               <a href="${h.booking_url}" target="_blank" style="font-size:9px;padding:2px 7px;background:rgba(0,107,255,.15);border:1px solid rgba(0,107,255,.3);border-radius:4px;color:#4f9eff;text-decoration:none;font-family:'Space Mono',monospace">BOOK ↗</a>
             </div>
           </div>
         </div>`).join('')}
-    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">🏨 Booking.com data not available<br>RapidAPI key needed</div></div>`}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,171,0,.15);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:120px">
+      <div style="font-size:9px;color:var(--amber);font-family:'Space Mono',monospace">🏨 BOOKING.COM</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Not collected yet<br><span style="font-size:10px">Needs booking-com15 RapidAPI subscription</span></div>
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')" style="padding:5px 12px;border:1px solid var(--accent);border-radius:6px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ Re-run pipeline</button>
+    </div>`}
     ${d.airbnb&&(d.airbnb.listings||[]).length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:4px">🏠 AIRBNB</div>
       <div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:12px">Avg $${d.airbnb.avg_price_per_night||'—'}/night · ${d.airbnb.sample_size||0} listings</div>
@@ -1182,16 +1648,16 @@ function renderReport(d) {
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;color:#fff;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.name}</div>
             <div style="font-size:10px;color:var(--text3);margin-top:2px">${l.type||''} · ${l.beds||'?'} beds</div>
-            <div style="display:flex;gap:8px;margin-top:3px;align-items:center">
-              ${l.price?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(l.price)}/night</span>`:''}
-              ${l.rating?`<span style="font-size:10px;color:var(--accent2)">${l.rating}/10</span>`:''}
-            </div>
+            ${l.price?`<span style="font-size:11px;color:var(--green);font-weight:600">$${Math.round(l.price)}/night</span>`:''}
           </div>
         </div>`).join('')}
-    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,61,87,.15);border-radius:12px;padding:16px;display:flex;align-items:center;justify-content:center"><div style="font-size:10px;color:var(--text3);font-family:'Space Mono',monospace;text-align:center">🏠 Airbnb data not available<br>RapidAPI key needed</div></div>`}
+    </div>`:`<div style="background:var(--bg2);border:1px dashed rgba(255,171,0,.15);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:120px">
+      <div style="font-size:9px;color:var(--amber);font-family:'Space Mono',monospace">🏠 AIRBNB</div>
+      <div style="font-size:11px;color:var(--text3);text-align:center">Not collected yet<br><span style="font-size:10px">Needs airbnb13 RapidAPI subscription</span></div>
+      <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')" style="padding:5px 12px;border:1px solid var(--accent);border-radius:6px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">↻ Re-run pipeline</button>
+    </div>`}
   </div>`;
 
-  // FLIGHTS
   const flights = `
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${d.flights&&d.flights.airports&&d.flights.airports.length?`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px">
@@ -1213,7 +1679,14 @@ function renderReport(d) {
     </div>`:'<div></div>'}
   </div>`;
 
-  // YOUTUBE
+  // Hotels.com section
+  const hotelDealsSection = d.hotel_deals ? `
+  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:10px">🏩 HOTELS.COM</div>
+    <div style="font-size:13px;color:#fff;margin-bottom:4px">${d.hotel_deals.destination}</div>
+    ${d.hotel_deals.search_url ? `<a href="${d.hotel_deals.search_url}" target="_blank" style="font-size:11px;color:var(--accent);font-family:'Space Mono',monospace;text-decoration:none">Search Hotels on Hotels.com ↗</a>` : ''}
+  </div>` : '';
+
   const youtube = d.youtube_videos&&(d.youtube_videos.videos||[]).length?rSection(
     `▶️ YOUTUBE TRAVEL VIDEOS (${d.youtube_videos.videos.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px">
@@ -1231,7 +1704,6 @@ function renderReport(d) {
         </a>`).join('')}
     </div>`):'';
 
-  // PHOTOS
   const photos = (d.photos||[]).length?rSection(`📸 UNSPLASH PHOTOS (${d.photos.length})`,
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">
       ${d.photos.slice(0,12).map(p=>`
@@ -1241,7 +1713,6 @@ function renderReport(d) {
         </div>`).join('')}
     </div>`):'';
 
-  // SOCIAL
   const social = (d.trending_spots||[]).length?rSection(`📱 SOCIAL TRENDS (${d.trending_spots.length})`,
     d.trending_spots.slice(0,6).map(s=>`
       <div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:8px;align-items:flex-start">
@@ -1249,7 +1720,6 @@ function renderReport(d) {
         <a href="${s.url||'#'}" target="_blank" style="font-size:11px;color:var(--text);text-decoration:none;line-height:1.4">${s.caption}</a>
       </div>`).join('')):'';
 
-  // GEO HIERARCHY — auto-populated after render
   const geoSection = `
   <div id="geo-hierarchy-section" style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
@@ -1262,7 +1732,6 @@ function renderReport(d) {
     </div>
   </div>`;
 
-  // DATA SOURCES CHECKLIST
   const checklist = rSection('DATA SOURCES STATUS FOR THIS COUNTRY',
     `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
       ${[
@@ -1289,6 +1758,7 @@ function renderReport(d) {
         ['Currency Rates',    !!(d.currency_rates?.rates),                       Object.keys(d.currency_rates?.rates||{}).length],
         ['YouTube Videos',    !!(d.youtube_videos?.videos||[]).length,           (d.youtube_videos?.videos||[]).length],
         ['Social Trends',     !!(d.trending_spots||[]).length,                   (d.trending_spots||[]).length],
+        ['Hotels.com',        !!d.hotel_deals?.destination,                      0],
         ['AI Briefing',       !!d.ai_briefing,                                   0],
         ['AI Recommendations',!!(d.ai_recommendations||[]).length,               (d.ai_recommendations||[]).length],
         ['AI Calendar',       !!(d.ai_calendar||[]).length,                      (d.ai_calendar||[]).length],
@@ -1298,7 +1768,6 @@ function renderReport(d) {
       ].map(([label,ok,count])=>rdot(ok,label,count)).join('')}
     </div>`);
 
-  // RAW JSON
   const rawJson = `
   <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -1312,7 +1781,7 @@ function renderReport(d) {
     header + flow + statsGrid + aiBriefing + verification +
     safetyRow + wikiSection + wikiVoyage + calendar + recommendations +
     newsRow + events + gdacs + attractions + restaurants + googlePlaces +
-    accommodation + flights + youtube + photos + social +
+    accommodation + hotelDealsSection + flights + youtube + photos + social +
     geoSection + checklist + rawJson;
 }
 
@@ -1330,7 +1799,7 @@ async function rerunPipeline(iso, name) {
   } catch(e) { toast(`✗ ${e.message}`); }
 }
 
-// ── Geo Hierarchy (auto-loads after report renders) ───────────────
+// ── Geo Hierarchy in country report ──────────────────────────────
 async function loadStatesForReport(iso) {
   const el = document.getElementById('geo-hierarchy-content');
   if (!el) return;
@@ -1352,20 +1821,26 @@ async function loadStatesForReport(iso) {
     }
     el.innerHTML = `
       <div style="margin-bottom:12px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px">${states.length} states/provinces loaded — click any to expand cities</div>
+        <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:8px">${states.length} states/provinces loaded — click any to expand cities, or click "INTEL" for AI state report</div>
         <input id="state-search-${iso}" placeholder="Filter states..." oninput="filterStatesReport('${iso}')"
           style="width:100%;max-width:320px;padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Space Mono',monospace;font-size:11px;outline:none;margin-bottom:10px">
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:6px;max-height:520px;overflow-y:auto" id="states-grid-${iso}">
         ${states.map(s=>`
-          <div id="state-item-${s.id}"
-            onclick="toggleStateCities(${s.id},'${iso}',this)"
-            data-state-name="${(s.name||'').toLowerCase()}"
-            style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;cursor:pointer;transition:border-color .2s"
-            onmouseover="if(!this.classList.contains('expanded'))this.style.borderColor='var(--accent2)'"
-            onmouseout="if(!this.classList.contains('expanded'))this.style.borderColor='var(--border)'">
-            <div style="font-size:12px;color:#fff;font-weight:500">${s.name}</div>
-            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-top:2px">${s.state_code||s.type||'state'}</div>
+          <div id="state-item-${s.id}" data-state-name="${(s.name||'').toLowerCase()}"
+            style="padding:8px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:7px;">
+            <div style="font-size:12px;color:#fff;font-weight:500;margin-bottom:4px">${s.name}</div>
+            <div style="font-size:9px;color:var(--text3);font-family:'Space Mono',monospace;margin-bottom:6px">${s.state_code||s.type||'state'}</div>
+            <div style="display:flex;gap:4px">
+              <button onclick="toggleStateCities(${s.id},'${iso}',this)"
+                style="flex:1;padding:3px 6px;border:1px solid var(--border);border-radius:4px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer">
+                📍 CITIES
+              </button>
+              <button onclick="selectReportState(${s.id},'${s.name.replace(/'/g,"\\'")}','${reportCountryName.replace(/'/g,"\\'")}','${iso}');loadReport();"
+                style="flex:1;padding:3px 6px;border:1px solid var(--accent2);border-radius:4px;background:none;color:var(--accent2);font-family:'Space Mono',monospace;font-size:9px;cursor:pointer">
+                🤖 INTEL
+              </button>
+            </div>
             <div id="cities-inline-${s.id}" style="display:none;margin-top:8px"></div>
           </div>`).join('')}
       </div>`;
@@ -1381,18 +1856,16 @@ function filterStatesReport(iso) {
   });
 }
 
-async function toggleStateCities(stateId, iso, el) {
+async function toggleStateCities(stateId, iso, btn) {
   const citiesDiv = document.getElementById(`cities-inline-${stateId}`);
   if (!citiesDiv) return;
   if (citiesDiv.style.display !== 'none') {
     citiesDiv.style.display = 'none';
-    el.classList.remove('expanded');
-    el.style.borderColor = 'var(--border)';
+    btn.textContent = '📍 CITIES';
     return;
   }
-  el.classList.add('expanded');
-  el.style.borderColor = 'var(--accent2)';
   citiesDiv.style.display = 'block';
+  btn.textContent = '▲ HIDE';
   if (!citiesDiv.dataset.loaded) {
     citiesDiv.innerHTML = `<span style="font-size:9px;color:var(--text3)"><span class="spinner" style="width:10px;height:10px;border-width:1px;display:inline-block"></span> loading...</span>`;
     try {
