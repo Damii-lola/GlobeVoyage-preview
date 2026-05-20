@@ -390,6 +390,16 @@ main{padding:28px 32px;max-width:1400px;margin:0 auto}
   if(btn) btn.textContent = user.toUpperCase() + '  ✕ LOGOUT';
 })();
 
+// ── Markdown → HTML (bold, italic, inline code only) ─────────────
+function renderMd(text) {
+  if (!text) return '';
+  return text
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g,     '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,         '<em>$1</em>')
+    .replace(/`(.+?)`/g,           '<code style="background:rgba(0,229,255,.1);padding:1px 4px;border-radius:3px;font-size:0.9em">$1</code>');
+}
+
 const API = 'https://globevoyage-admin.onrender.com';
 let allIntel = [], activeCont = '', activeSearch = '';
 
@@ -613,8 +623,8 @@ async function openCountry(iso) {
         <button class="run-btn" onclick="runCountry('${iso}','${d.country_name}')" style="font-size:11px;padding:6px 12px">↻ REFRESH</button>
       </div>
       ${d.ai_briefing?`<div class="modal-section"><div class="modal-section-title">AI BRIEFING</div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.7">${d.ai_briefing}</div>
-        ${d.ai_vibe?`<div style="margin-top:8px;font-size:11px;color:var(--accent2);font-style:italic">"${d.ai_vibe}"</div>`:''}</div>`:''}
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.7">${renderMd(d.ai_briefing)}</div>
+        ${d.ai_vibe?`<div style="margin-top:8px;font-size:11px;color:var(--accent2);font-style:italic">"${renderMd(d.ai_vibe)}"</div>`:''}</div>`:''}
       ${d.weather_now?`<div class="modal-section"><div class="modal-section-title">WEATHER NOW</div>
         <div class="modal-grid">
           <div class="modal-box"><div class="modal-box-title">CONDITIONS</div><div class="modal-box-val">${d.weather_now.temp}°C — ${d.weather_now.condition}</div></div>
@@ -623,7 +633,7 @@ async function openCountry(iso) {
       ${(d.ai_recommendations||[]).length?`<div class="modal-section"><div class="modal-section-title">AI RECOMMENDATIONS</div>
         <div class="recs-list">${(d.ai_recommendations||[]).map((r,i)=>`
           <div class="rec-item"><div class="rec-num">0${i+1}</div>
-            <div style="flex:1"><div class="rec-title">${r.title}</div><div class="rec-why">${r.why}</div>
+            <div style="flex:1"><div class="rec-title">${r.title}</div><div class="rec-why">${renderMd(r.why)}</div>
               <div class="rec-meta"><span class="rec-tag type">${r.type||''}</span><span class="rec-tag risk-${r.risk||'none'}">${r.risk||'low'} risk</span></div>
             </div><div style="font-size:20px;font-weight:700;color:var(--border2)">${r.rating||'—'}/5</div>
           </div>`).join('')}</div></div>`:''}
@@ -1006,7 +1016,7 @@ function renderStateReport(d) {
         </button>
       </div>
     </div>
-    ${d.ai_vibe ? `<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px">"${d.ai_vibe}"</div>` : ''}
+    ${d.ai_vibe ? `<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px">"${renderMd(d.ai_vibe)}"</div>` : ''}
   </div>`;
 
   // Stats grid
@@ -1047,15 +1057,15 @@ function renderStateReport(d) {
   const aiBriefing = d.ai_briefing ? `
   <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — ${(d.state_name||'').toUpperCase()}</div>
-    <div style="font-size:14px;color:var(--text);line-height:1.8">${d.ai_briefing}</div>
-    ${d.ai_hidden_gem ? `<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${d.ai_hidden_gem}</div>` : ''}
+    <div style="font-size:14px;color:var(--text);line-height:1.8">${renderMd(d.ai_briefing)}</div>
+    ${d.ai_hidden_gem ? `<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${renderMd(d.ai_hidden_gem)}</div>` : ''}
   </div>` : '';
 
   // Safety
   const safety = d.ai_safety_summary ? `
   <div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY — ${(d.state_name||'').toUpperCase()}</div>
-    <div style="font-size:12px;color:#e0c070;line-height:1.6">${d.ai_safety_summary}</div>
+    <div style="font-size:12px;color:#e0c070;line-height:1.6">${renderMd(d.ai_safety_summary)}</div>
   </div>` : '';
 
   // News
@@ -1124,7 +1134,7 @@ function renderStateReport(d) {
           <div style="font-size:13px;font-weight:600;color:#fff;flex:1">${r.title}</div>
           <div style="font-size:18px;font-weight:800;color:var(--border2);margin-left:8px">${r.rating||'—'}/5</div>
         </div>
-        <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${r.why}</div>
+        <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${renderMd(r.why)}</div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15);font-family:'Space Mono',monospace">${r.type||''}</span>
           <span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
@@ -1215,8 +1225,8 @@ async function openAreaIntel(areaName, stateName, countryName) {
       ${d.briefing ? `
       <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:16px;margin-bottom:16px">
         <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:8px">🤖 AI BRIEFING — ${areaName.toUpperCase()}</div>
-        <div style="font-size:13px;color:var(--text);line-height:1.8">${d.briefing}</div>
-        ${d.hidden_gem?`<div style="font-size:11px;color:var(--accent2);padding:8px 12px;background:rgba(0,229,255,.05);border-radius:6px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${d.hidden_gem}</div>`:''}
+        <div style="font-size:13px;color:var(--text);line-height:1.8">${renderMd(d.briefing)}</div>
+        ${d.hidden_gem?`<div style="font-size:11px;color:var(--accent2);padding:8px 12px;background:rgba(0,229,255,.05);border-radius:6px;border-left:3px solid var(--accent2);margin-top:10px">💎 Hidden Gem: ${renderMd(d.hidden_gem)}</div>`:''}
         ${d.best_time?`<div style="margin-top:8px;font-size:10px;color:var(--text3);font-family:'Space Mono',monospace">⏰ Best time: ${d.best_time}</div>`:''}
       </div>` : ''}
       ${(d.recommendations||[]).length ? `
@@ -1225,7 +1235,7 @@ async function openAreaIntel(areaName, stateName, countryName) {
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start">
           <div style="flex:1">
             <div style="font-size:13px;font-weight:600;color:#fff">${rec.title}</div>
-            <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5">${rec.why}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:4px;line-height:1.5">${renderMd(rec.why)}</div>
           </div>
           <div style="flex-shrink:0">
             ${rec.rating?`<div style="font-size:16px;font-weight:700;color:var(--border2)">${rec.rating}/5</div>`:''}
@@ -1346,7 +1356,7 @@ function renderReport(d) {
         ${veri.confidence?rpill('Confidence: '+Math.round(veri.confidence*100)+'%','var(--accent2)'):''}
       </div>
     </div>
-    ${d.ai_vibe?`<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px;margin-bottom:12px">"${d.ai_vibe}"</div>`:''}
+    ${d.ai_vibe?`<div style="font-size:14px;color:var(--accent2);font-style:italic;border-left:3px solid var(--accent2);padding-left:12px;margin-bottom:12px">"${renderMd(d.ai_vibe)}"</div>`:''}
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <button onclick="rerunPipeline('${d.iso}','${d.country_name.replace(/'/g,"\\'")}')"
         style="padding:8px 16px;border:1px solid var(--accent);border-radius:8px;background:none;color:var(--accent);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px">↻ RE-RUN PIPELINE</button>
@@ -1443,8 +1453,8 @@ function renderReport(d) {
   const aiBriefing = d.ai_briefing?`
   <div style="background:linear-gradient(135deg,rgba(42,127,255,.06),rgba(0,229,255,.04));border:1px solid rgba(42,127,255,.2);border-radius:12px;padding:20px;margin-bottom:16px">
     <div style="font-size:9px;letter-spacing:3px;color:var(--accent);font-family:'Space Mono',monospace;margin-bottom:10px">🤖 AI BRIEFING — MISTRAL LARGE</div>
-    <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:${d.ai_hidden_gem?'12px':'0'}">${d.ai_briefing}</div>
-    ${d.ai_hidden_gem?`<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2)">💎 Hidden Gem: ${d.ai_hidden_gem}</div>`:''}
+    <div style="font-size:14px;color:var(--text);line-height:1.8;margin-bottom:${d.ai_hidden_gem?'12px':'0'}">${renderMd(d.ai_briefing)}</div>
+    ${d.ai_hidden_gem?`<div style="font-size:12px;color:var(--accent2);padding:10px 14px;background:rgba(0,229,255,.05);border-radius:8px;border-left:3px solid var(--accent2)">💎 Hidden Gem: ${renderMd(d.ai_hidden_gem)}</div>`:''}
   </div>`:'';
 
   const wikiSection = d.wiki_summary?rSection('📖 WIKIPEDIA SUMMARY',
@@ -1485,7 +1495,7 @@ function renderReport(d) {
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px">
     ${d.ai_safety_summary?`<div style="background:rgba(255,171,0,.04);border:1px solid rgba(255,171,0,.15);border-radius:12px;padding:16px">
       <div style="font-size:9px;letter-spacing:3px;color:var(--amber);font-family:'Space Mono',monospace;margin-bottom:8px">🛡 SAFETY SUMMARY</div>
-      <div style="font-size:12px;color:#e0c070;line-height:1.6;margin-bottom:8px">${d.ai_safety_summary}</div>
+      <div style="font-size:12px;color:#e0c070;line-height:1.6;margin-bottom:8px">${renderMd(d.ai_safety_summary)}</div>
       ${d.ai_avoid_if?`<div style="font-size:11px;color:var(--text3)"><span style="color:var(--amber)">Avoid if:</span> ${d.ai_avoid_if}</div>`:''}
       ${(d.safety_flags||[]).length?`<div style="margin-top:8px">${d.safety_flags.slice(0,3).map(f=>`<div style="font-size:10px;color:var(--red);padding:3px 0;font-family:'Space Mono',monospace">⚠ ${f.description||f.type||''}</div>`).join('')}</div>`:''}
     </div>`:'<div></div>'}
@@ -1520,7 +1530,7 @@ function renderReport(d) {
             <div style="font-size:13px;font-weight:600;color:#fff;flex:1">${r.title}</div>
             <div style="font-size:18px;font-weight:800;color:var(--border2);margin-left:8px">${r.rating||'—'}/5</div>
           </div>
-          <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${r.why}</div>
+          <div style="font-size:11px;color:var(--text2);line-height:1.5;margin-bottom:8px">${renderMd(r.why)}</div>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <span style="font-size:9px;padding:2px 7px;border-radius:4px;background:rgba(0,229,255,.08);color:var(--accent2);border:1px solid rgba(0,229,255,.15);font-family:'Space Mono',monospace">${r.type||''}</span>
             <span style="font-size:9px;padding:2px 7px;border-radius:4px;font-family:'Space Mono',monospace;${r.risk==='high'?'background:rgba(255,61,87,.08);color:var(--red);border:1px solid rgba(255,61,87,.2)':r.risk==='medium'?'background:rgba(255,171,0,.08);color:var(--amber);border:1px solid rgba(255,171,0,.2)':'background:rgba(0,230,118,.08);color:var(--green);border:1px solid rgba(0,230,118,.2)'}">${r.risk||'low'} risk</span>
