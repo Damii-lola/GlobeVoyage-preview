@@ -1981,62 +1981,6 @@ function filterCityBrowse(stateId) {
     el.style.display = el.dataset.cn.includes(q) ? '' : 'none';
   });
 }
-    `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px">
-      ${[
-        ['Wikipedia',         !!d.wiki_summary,                                  0],
-        ['Wikivoyage',        !!(d.wiki_sections&&Object.keys(d.wiki_sections).length), Object.keys(d.wiki_sections||{}).length],
-        ['Weather',           !!d.weather_now,                                   0],
-        ['Forecast',          !!(d.weather_forecast||[]).length,                 (d.weather_forecast||[]).length],
-        ['News Headlines',    !!(d.news_headlines||[]).length,                   (d.news_headlines||[]).length],
-        ['National News',     !!(d.national_news?.articles?.length),             d.national_news?.articles?.length||0],
-        ['GDACS Alerts',      !!(d.gdacs_alerts||[]).length,                     (d.gdacs_alerts||[]).length],
-        ['Events',            !!(d.events||[]).length,                           (d.events||[]).length],
-        ['Top Places',        !!(d.top_places||[]).length,                       (d.top_places||[]).length],
-        ['Photos (Unsplash)', !!(d.photos||[]).length,                           (d.photos||[]).length],
-        ['Air Quality',       !!(d.air_quality||d.waqi),                         0],
-        ['Cost of Living',    !!(d.cost_of_living?.meal_cheap!=null),            0],
-        ['Country Meta',      !!d.country_meta?.capital,                         0],
-        ['Airbnb',            !!(d.airbnb?.listings||[]).length,                 (d.airbnb?.listings||[]).length],
-        ['Booking.com',       !!(d.booking?.hotels||[]).length,                  (d.booking?.hotels||[]).length],
-        ['TripAdvisor',       !!(d.tripadvisor?.attractions||[]).length,         (d.tripadvisor?.attractions||[]).length],
-        ['Restaurants',       !!(d.restaurants?.restaurants||[]).length,         (d.restaurants?.restaurants||[]).length],
-        ['Google Places',     !!(d.google_places?.places||[]).length,            (d.google_places?.places||[]).length],
-        ['Flight Prices',     !!(d.flight_prices?.airports||[]).length,          (d.flight_prices?.airports||[]).length],
-        ['Airports',          !!(d.flights?.airports||[]).length,                (d.flights?.airports||[]).length],
-        ['Currency Rates',    !!(d.currency_rates?.rates),                       Object.keys(d.currency_rates?.rates||{}).length],
-        ['YouTube Videos',    !!(d.youtube_videos?.videos||[]).length,           (d.youtube_videos?.videos||[]).length],
-        ['Social Trends',     !!(d.trending_spots||[]).length,                   (d.trending_spots||[]).length],
-        ['Hotels.com',        !!d.hotel_deals?.destination,                      0],
-        ['AI Briefing',       !!d.ai_briefing,                                   0],
-        ['AI Recommendations',!!(d.ai_recommendations||[]).length,               (d.ai_recommendations||[]).length],
-        ['AI Calendar',       !!(d.ai_calendar||[]).length,                      (d.ai_calendar||[]).length],
-        ['AI Trending',       !!(d.ai_trending_now||[]).length,                  (d.ai_trending_now||[]).length],
-        ['Safety Summary',    !!d.ai_safety_summary,                             0],
-        ['Verification AI',   !!d.verification?.verified_at,                     0],
-      ].map(([label,ok,count])=>rdot(ok,label,count)).join('')}
-    </div>`;
-
-  const rawJson = `
-  <div style="background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <div style="font-size:9px;letter-spacing:3px;color:var(--text3);font-family:'Space Mono',monospace">{ } RAW INTEL DATA</div>
-      <button onclick="toggleRawJson()" style="padding:4px 12px;border:1px solid var(--border);border-radius:6px;background:none;color:var(--text3);font-family:'Space Mono',monospace;font-size:10px;cursor:pointer">TOGGLE</button>
-    </div>
-    <pre id="raw-json" style="display:none;background:var(--bg3);border-radius:8px;padding:14px;font-size:10px;color:var(--text2);overflow:auto;max-height:400px;font-family:'Space Mono',monospace;line-height:1.6">${JSON.stringify(d,null,2).replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
-  </div>`;
-
-  document.getElementById('report-content').innerHTML =
-    header + flow + statsGrid + aiBriefing + verification +
-    safetyRow + wikiSection + wikiVoyage + calendar + recommendations +
-    newsRow + events + gdacs + attractions + restaurants + googlePlaces +
-    accommodation + hotelDealsSection + flights + youtube + photos + social +
-    geoSection + checklist + rawJson;
-}
-
-function toggleRawJson() {
-  const el = document.getElementById('raw-json');
-  if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-}
 
 async function rerunPipeline(iso, name) {
   if (!confirm(`Re-run full pipeline for ${name}? This refreshes all data sources.`)) return;
