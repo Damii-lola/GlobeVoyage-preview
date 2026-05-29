@@ -6,33 +6,34 @@
 <title>GlobeVoyage Mission Control</title>
 <style>
 :root {
-  --bg:#060d0a; --bg2:#0a1410; --bg3:#0d1a14;
-  --border:#0e2218; --border2:#152e1e;
-  --green:#00ff88; --green2:#00cc66; --green3:#3aff9a;
-  --text:#c8f0d8; --text2:#8ab89a; --text3:#4a7a5a;
-  --amber:#ffcc44; --red:#ff4444; --blue:#3a8fff;
-  --card:#0a1810; --card2:#081510;
+  --bg:#08090f; --bg2:#0c0e16; --bg3:#10121c;
+  --border:#181c28; --border2:#1e2436;
+  --accent:#4a9eff; --accent2:#2e78e0; --accent3:#74b8ff;
+  --green:#3ecf7a; --green2:#2aac62; --green3:#5edd91;
+  --text:#cdd6e8; --text2:#7a8fa8; --text3:#3d5068;
+  --amber:#f5a623; --red:#f05252; --blue:#4a9eff;
+  --card:#0c0e16; --card2:#090b13;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;}
-::-webkit-scrollbar{width:4px;height:4px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:#1a3a2a;border-radius:2px;}
+::-webkit-scrollbar{width:4px;height:4px;} ::-webkit-scrollbar-track{background:var(--bg);} ::-webkit-scrollbar-thumb{background:#1a2840;border-radius:2px;}
 
 /* NAV */
 .nav{position:sticky;top:0;z-index:100;background:rgba(6,13,10,.97);border-bottom:1px solid var(--border2);backdrop-filter:blur(12px);display:flex;align-items:center;padding:0 24px;height:56px;gap:0;}
 .nav-logo{display:flex;align-items:center;gap:10px;margin-right:40px;flex-shrink:0;}
-.nav-logo-dot{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#00ff88,#006633);box-shadow:0 0 16px rgba(0,255,136,.4);}
+.nav-logo-dot{width:32px;height:32px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#4a9eff,#1a3a8f);box-shadow:0 0 16px rgba(74,158,255,.35);}
 .nav-logo-text{display:flex;flex-direction:column;}
-.nav-logo-main{font-size:13px;font-weight:800;color:#e8fff2;letter-spacing:1.5px;}
+.nav-logo-main{font-size:13px;font-weight:800;color:#e0ecff;letter-spacing:1.5px;}
 .nav-logo-sub{font-size:8px;color:var(--text3);letter-spacing:3px;}
 .nav-tabs{display:flex;gap:2px;flex:1;}
 .nav-tab{padding:0 18px;height:56px;display:flex;align-items:center;font-size:11px;letter-spacing:2px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
 .nav-tab:hover{color:var(--text2);}
-.nav-tab.active{color:var(--green);border-bottom-color:var(--green);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
 .nav-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .backend-indicator{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:1.5px;color:var(--text3);padding:6px 12px;border:1px solid var(--border2);border-radius:20px;}
 .backend-dot{width:6px;height:6px;border-radius:50%;background:#666;}
-.backend-dot.live{background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
-.backend-indicator.live{color:var(--green2);border-color:#1a3a2a;}
+.backend-dot.live{background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 2s infinite;}
+.backend-indicator.live{color:var(--accent2);border-color:#1a2a48;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.5;}}
 .logout-btn{padding:6px 14px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--text3);font-size:10px;letter-spacing:1.5px;cursor:pointer;transition:all .2s;}
 .logout-btn:hover{color:var(--red);border-color:#3a1010;}
@@ -43,13 +44,13 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 
 /* PAGE HEADER */
 .page-header{margin-bottom:24px;}
-.page-title{font-size:20px;font-weight:700;color:#e8fff2;letter-spacing:-0.3px;}
+.page-title{font-size:20px;font-weight:700;color:#e0ecff;letter-spacing:-0.3px;}
 .page-sub{font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:4px;}
 
 /* STATS ROW */
 .stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
 .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
-.stat-val{font-size:24px;font-weight:800;color:var(--green);line-height:1;}
+.stat-val{font-size:24px;font-weight:800;color:var(--accent);line-height:1;}
 .stat-label{font-size:9px;color:var(--text3);letter-spacing:2px;margin-top:6px;}
 .stat-sub{font-size:10px;color:var(--text3);margin-top:3px;}
 
@@ -59,33 +60,33 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 /* SECTION HEADER */
 .section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .section-title{font-size:10px;letter-spacing:3px;color:var(--text3);display:flex;align-items:center;gap:8px;}
-.section-title::before{content:'';display:inline-block;width:8px;height:1px;background:var(--green);}
+.section-title::before{content:'';display:inline-block;width:8px;height:1px;background:var(--accent);}
 
 /* BUTTON */
 .btn{padding:8px 16px;border-radius:8px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:6px;}
 .btn:hover{background:var(--bg3);color:var(--text);}
-.btn.primary{background:var(--green);color:#061208;border-color:var(--green);font-weight:700;}
-.btn.primary:hover{background:var(--green3);}
+.btn.primary{background:var(--accent);color:#040812;border-color:var(--accent);font-weight:700;}
+.btn.primary:hover{background:var(--accent3);}
 .btn.danger{border-color:#3a1010;color:var(--red);}
 .btn.danger:hover{background:#1a0808;}
 .btn.small{padding:4px 10px;font-size:10px;}
-.btn.reload{background:#0a1f15;border-color:#1a3a25;color:var(--green2);}
-.btn.reload:hover{background:#0d2a1a;}
+.btn.reload{background:#0a1020;border-color:#1a2a40;color:var(--accent2);}
+.btn.reload:hover{background:#0d1a30;}
 .reload-icon{display:inline-block;transition:transform .3s;}
 .btn.reload:hover .reload-icon{transform:rotate(180deg);}
 
 /* BADGE */
 .badge{padding:2px 8px;border-radius:10px;font-size:9px;letter-spacing:1.5px;font-weight:600;}
-.badge.green{background:#0a2a15;color:var(--green2);border:1px solid #1a4a25;}
+.badge.green{background:#0a1830;color:var(--green2);border:1px solid #1a3a20;}
 .badge.amber{background:#2a1a00;color:var(--amber);border:1px solid #3a2a00;}
 .badge.red{background:#2a0808;color:var(--red);border:1px solid #3a1010;}
-.badge.gray{background:#0a1410;color:var(--text3);border:1px solid var(--border);}
+.badge.gray{background:#0c0e18;color:var(--text3);border:1px solid var(--border);}
 
 /* INTEL CARD (country/state) */
 .intel-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;}
 .intel-item:hover{border-color:var(--border2);background:var(--bg3);}
 .intel-item-flag{font-size:20px;margin-bottom:8px;}
-.intel-item-name{font-size:14px;font-weight:700;color:#e8fff2;}
+.intel-item-name{font-size:14px;font-weight:700;color:#e0ecff;}
 .intel-item-sub{font-size:10px;color:var(--text3);letter-spacing:1px;margin-top:2px;}
 .intel-item-brief{font-size:11px;color:var(--text2);line-height:1.5;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 .intel-item-footer{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
@@ -98,10 +99,10 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 /* AREA CARDS */
 .area-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;}
 .area-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;cursor:pointer;transition:all .2s;}
-.area-card:hover{border-color:#1a4a2a;background:#0a1f14;}
+.area-card:hover{border-color:#1a2a4a;background:#0a1020;}
 .area-card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:4px;}
 .area-card-type{font-size:9px;color:var(--text3);letter-spacing:1.5px;margin-bottom:8px;}
-.area-intel-link{font-size:10px;color:var(--green2);letter-spacing:1px;display:flex;align-items:center;gap:4px;}
+.area-intel-link{font-size:10px;color:var(--accent2);letter-spacing:1px;display:flex;align-items:center;gap:4px;}
 .area-intel-link::after{content:'→';transition:transform .2s;}
 .area-card:hover .area-intel-link::after{transform:translateX(4px);}
 
@@ -110,17 +111,17 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 .news-card{flex-shrink:0;width:280px;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px;}
 .news-source{font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:6px;}
 .news-title{font-size:12px;color:var(--text);line-height:1.5;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
-.news-link{font-size:10px;color:var(--green2);text-decoration:none;letter-spacing:1px;}
-.news-link:hover{color:var(--green);}
+.news-link{font-size:10px;color:var(--accent2);text-decoration:none;letter-spacing:1px;}
+.news-link:hover{color:var(--accent);}
 
 /* HEALTH GRID */
 .health-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;}
 .health-item{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;justify-content:space-between;}
 .health-left{display:flex;align-items:center;gap:10px;}
 .health-dot-wrap{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-.health-dot-wrap.ok{background:#0a2015;} .health-dot-wrap.fail{background:#1a0808;} .health-dot-wrap.unknown{background:#0a1010;}
+.health-dot-wrap.ok{background:#0a1828;} .health-dot-wrap.fail{background:#1a0808;} .health-dot-wrap.unknown{background:#0a1010;}
 .health-dot{width:8px;height:8px;border-radius:50%;}
-.health-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);}
+.health-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green2);}
 .health-dot.fail{background:var(--red);}
 .health-dot.unknown{background:#3a3a3a;}
 .health-label{font-size:12px;color:var(--text2);}
@@ -129,11 +130,11 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 
 /* PIPELINE LOG */
 .pipeline-log{background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:monospace;font-size:11px;color:var(--text2);max-height:300px;overflow-y:auto;}
-.log-line{margin:2px 0;} .log-ok{color:var(--green2);} .log-err{color:var(--red);} .log-info{color:var(--text3);}
+.log-line{margin:2px 0;} .log-ok{color:var(--accent2);} .log-err{color:var(--red);} .log-info{color:var(--text3);}
 
 /* PROGRESS BAR */
-.progress-wrap{background:#0a1410;border-radius:4px;height:6px;overflow:hidden;margin:8px 0;}
-.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--green2),var(--green));transition:width .5s;}
+.progress-wrap{background:#0c0e18;border-radius:4px;height:6px;overflow:hidden;margin:8px 0;}
+.progress-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--accent2),var(--accent));transition:width .5s;}
 
 /* COUNTRY SELECTOR */
 .country-search{width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;margin-bottom:16px;}
@@ -141,7 +142,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 
 /* STATE HEADER */
 .state-header{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;}
-.state-name{font-size:18px;font-weight:700;color:#e8fff2;}
+.state-name{font-size:18px;font-weight:700;color:#e0ecff;}
 .state-country{font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:3px;}
 .state-briefing{font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px;}
 .state-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px;}
@@ -161,7 +162,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 .breadcrumb .current{color:var(--text2);cursor:default;}
 
 /* LOADING SPINNER */
-.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto;display:block;}
+.spinner{width:32px;height:32px;border:3px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto;display:block;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-msg{text-align:center;color:var(--text3);font-size:12px;padding:40px;}
 
@@ -177,7 +178,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 .country-list{max-height:calc(100vh - 200px);overflow-y:auto;}
 .country-list-item{padding:10px 12px;border-radius:8px;cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:10px;}
 .country-list-item:hover{background:var(--bg3);}
-.country-list-item.active{background:#0a2015;border:1px solid #1a3a25;}
+.country-list-item.active{background:#0a1428;border:1px solid #1a2a48;}
 .country-flag{font-size:16px;flex-shrink:0;}
 .country-info-col{min-width:0;}
 .country-list-name{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -188,9 +189,9 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 .intel-panel-header{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
 .intel-panel-top{display:flex;align-items:flex-start;gap:16px;margin-bottom:16px;}
 .intel-country-flag{font-size:48px;line-height:1;}
-.intel-country-name{font-size:22px;font-weight:800;color:#e8fff2;}
+.intel-country-name{font-size:22px;font-weight:800;color:#e0ecff;}
 .intel-country-meta{font-size:11px;color:var(--text3);letter-spacing:2px;margin-top:4px;}
-.intel-vibe{font-size:13px;color:#7dffb8;font-style:italic;border-left:2px solid var(--green);padding-left:12px;line-height:1.6;}
+.intel-vibe{font-size:13px;color:#a0c8f8;font-style:italic;border-left:2px solid var(--accent);padding-left:12px;line-height:1.6;}
 .intel-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:16px;}
 .intel-mini{background:var(--bg3);border-radius:8px;padding:12px;}
 .intel-mini-label{font-size:9px;color:var(--text3);letter-spacing:2px;margin-bottom:4px;}
@@ -198,7 +199,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 
 /* WEATHER WIDGET */
 .wx-big{display:flex;align-items:center;gap:12px;}
-.wx-big-temp{font-size:32px;font-weight:800;color:var(--green);}
+.wx-big-temp{font-size:32px;font-weight:800;color:var(--accent);}
 .wx-big-info{display:flex;flex-direction:column;gap:2px;}
 .wx-big-cond{font-size:13px;color:var(--text2);}
 .wx-big-meta{font-size:11px;color:var(--text3);}
@@ -216,7 +217,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 /* CALENDAR STRIP */
 .calendar-strip{display:flex;gap:6px;overflow-x:auto;padding:8px 0;margin-top:8px;}
 .cal-day{flex-shrink:0;width:64px;background:var(--card2);border-radius:8px;padding:8px;text-align:center;border:1px solid var(--border);}
-.cal-day.green{border-color:#1a4a25;background:#0a1f12;}
+.cal-day.green{border-color:#1a3a20;background:#091a10;}
 .cal-day.amber{border-color:#3a2a00;background:#1a1500;}
 .cal-day.red{border-color:#3a1010;background:#180808;}
 .cal-date{font-size:9px;color:var(--text3);letter-spacing:1px;}
@@ -368,14 +369,14 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
 <!-- AREA INTEL MODAL                                          -->
 <!-- ══════════════════════════════════════════════════════════ -->
 <div id="areaIntelModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);align-items:flex-start;justify-content:center;overflow-y:auto;padding:20px 12px;">
-  <div style="background:#0d1117;border:1px solid #1e3a2f;border-radius:18px;width:100%;max-width:860px;overflow:hidden;">
-    <div style="background:linear-gradient(135deg,#0a1f15,#071510);padding:24px 28px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #1a3025;">
+  <div style="background:#0c0e18;border:1px solid #1c2236;border-radius:18px;width:100%;max-width:860px;overflow:hidden;">
+    <div style="background:linear-gradient(135deg,#0c1020,#080c18);padding:24px 28px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #181e30;">
       <div>
-        <div style="color:#00ff88;font-size:10px;letter-spacing:3px;font-family:monospace;margin-bottom:6px;">↑ AREA INTEL — AI POWERED</div>
-        <div id="areaModalTitle" style="font-size:24px;font-weight:800;color:#e8fff2;letter-spacing:-0.3px;"></div>
-        <div id="areaModalSub" style="font-size:11px;color:#3a7a56;letter-spacing:2px;font-family:monospace;margin-top:4px;"></div>
+        <div style="color:#4a9eff;font-size:10px;letter-spacing:3px;font-family:monospace;margin-bottom:6px;">↑ AREA INTEL — AI POWERED</div>
+        <div id="areaModalTitle" style="font-size:24px;font-weight:800;color:#e0ecff;letter-spacing:-0.3px;"></div>
+        <div id="areaModalSub" style="font-size:11px;color:#2e4a70;letter-spacing:2px;font-family:monospace;margin-top:4px;"></div>
       </div>
-      <button onclick="closeAreaModal()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#5a9a7a;font-size:16px;border-radius:50%;width:34px;height:34px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
+      <button onclick="closeAreaModal()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#4a6a9a;font-size:16px;border-radius:50%;width:34px;height:34px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">✕</button>
     </div>
     <div id="areaModalBody" style="padding:24px 28px 32px;max-height:80vh;overflow-y:auto;"></div>
   </div>
@@ -504,7 +505,7 @@ async function loadStatus() {
     const nr = document.getElementById('nextRuns');
     nr.innerHTML = (d.pipeline?.next_runs || []).map(r => `
       <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;min-width:140px;">
-        <div style="font-size:12px;font-weight:700;color:var(--green);">${r.time_utc}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--accent);">${r.time_utc}</div>
         <div style="font-size:10px;color:var(--text3);margin-top:4px;">In ${r.runs_in}</div>
       </div>`).join('');
     // Geo status
@@ -901,10 +902,10 @@ function renderCountryHeaderStrip(intel, iso, name) {
       <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
         <div style="font-size:32px;">${FLAGS[iso]||'🌐'}</div>
         <div style="flex:1;">
-          <div style="font-size:16px;font-weight:700;color:#e8fff2;">${name}</div>
-          ${intel.ai_vibe ? `<div style="font-size:12px;color:#7dffb8;font-style:italic;margin-top:4px;">${intel.ai_vibe}</div>` : ''}
+          <div style="font-size:16px;font-weight:700;color:#e0ecff;">${name}</div>
+          ${intel.ai_vibe ? `<div style="font-size:12px;color:#a0c8f8;font-style:italic;margin-top:4px;">${intel.ai_vibe}</div>` : ''}
         </div>
-        ${wx.temp != null ? `<div style="text-align:right;"><div style="font-size:20px;font-weight:700;color:var(--green);">${wx.temp}°C</div><div style="font-size:10px;color:var(--text3);">${wx.condition||''}</div></div>` : ''}
+        ${wx.temp != null ? `<div style="text-align:right;"><div style="font-size:20px;font-weight:700;color:var(--accent);">${wx.temp}°C</div><div style="font-size:10px;color:var(--text3);">${wx.condition||''}</div></div>` : ''}
       </div>
       ${intel.ai_safety_summary ? `<p style="font-size:11px;color:var(--amber);margin-top:10px;padding:8px;background:#1a1000;border-radius:6px;border-left:2px solid var(--amber);">⚠ ${intel.ai_safety_summary}</p>` : ''}
     </div>`;
@@ -940,9 +941,9 @@ function renderStateHeader(intel, stateName, countryName, stateId) {
         <div style="flex:1;">
           <div class="state-name">${intel.state_name || stateName}</div>
           <div class="state-country">${intel.country_name || countryName}</div>
-          ${intel.ai_vibe ? `<p style="font-size:12px;color:#7dffb8;font-style:italic;margin-top:6px;">${intel.ai_vibe}</p>` : ''}
+          ${intel.ai_vibe ? `<p style="font-size:12px;color:#a0c8f8;font-style:italic;margin-top:6px;">${intel.ai_vibe}</p>` : ''}
         </div>
-        ${wx.temp != null ? `<div style="text-align:right;flex-shrink:0;"><div style="font-size:22px;font-weight:800;color:var(--green);">${wx.temp}°C</div><div style="font-size:10px;color:var(--text3);">${wx.condition||''}</div></div>` : ''}
+        ${wx.temp != null ? `<div style="text-align:right;flex-shrink:0;"><div style="font-size:22px;font-weight:800;color:var(--accent);">${wx.temp}°C</div><div style="font-size:10px;color:var(--text3);">${wx.condition||''}</div></div>` : ''}
       </div>
       ${intel.ai_briefing ? `<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px;">${intel.ai_briefing}</p>` : ''}
       ${intel.ai_safety_summary ? `<p style="font-size:11px;color:var(--amber);margin-top:8px;padding:8px;background:#1a1000;border-radius:6px;border-left:2px solid var(--amber);">⚠ ${intel.ai_safety_summary}</p>` : ''}
@@ -1055,9 +1056,9 @@ async function openAreaIntel(areaName, stateName, countryName, countryIso) {
   document.getElementById('areaModalSub').textContent   = [stateName, countryName].filter(Boolean).join(' · ');
   document.getElementById('areaModalBody').innerHTML    = `
     <div style="text-align:center;padding:48px 24px;">
-      <div style="width:36px;height:36px;border:3px solid #1a3a2a;border-top-color:#00ff88;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
-      <p style="color:#3a7a56;font-size:14px;">Generating intel for <strong style="color:#7dffb8;">${areaName}</strong>…</p>
-      <p style="color:#2a5a3a;font-size:12px;margin-top:6px;">First load takes 20–40 seconds</p>
+      <div style="width:36px;height:36px;border:3px solid #1a2030;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+      <p style="color:#3a6a9a;font-size:14px;">Generating intel for <strong style="color:#a0c8f8;">${areaName}</strong>…</p>
+      <p style="color:#2a4a6a;font-size:12px;margin-top:6px;">First load takes 20–40 seconds</p>
     </div>`;
 
   try {
@@ -1070,8 +1071,8 @@ async function openAreaIntel(areaName, stateName, countryName, countryIso) {
     if (data.loading) {
       document.getElementById('areaModalBody').innerHTML = `
         <div style="text-align:center;padding:48px 24px;">
-          <div style="width:36px;height:36px;border:3px solid #1a3a2a;border-top-color:#00ff88;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
-          <p style="color:#3a7a56;">Still generating… retrying in 15 seconds</p>
+          <div style="width:36px;height:36px;border:3px solid #1a2030;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
+          <p style="color:#3a6a9a;">Still generating… retrying in 15 seconds</p>
         </div>`;
       setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 15000);
       return;
@@ -1132,10 +1133,10 @@ function renderAreaModal(areaName, stateName, countryName, data) {
   // ── Weather ───────────────────────────────────
   const wxHtml = wx.temp != null
     ? `<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-         <span style="font-size:26px;font-weight:800;color:#7dffb8;">${wx.temp}°C</span>
-         <span style="font-size:13px;color:#5a9a7a;">${safe(wx.condition)}</span>
-         ${wx.humidity ? `<span style="font-size:11px;color:#3a7a56;">💧 ${wx.humidity}%</span>` : ''}
-         ${wx.wind_speed ? `<span style="font-size:11px;color:#3a7a56;">💨 ${wx.wind_speed}km/h</span>` : ''}
+         <span style="font-size:26px;font-weight:800;color:#74b8ff;">${wx.temp}°C</span>
+         <span style="font-size:13px;color:#4a6a9a;">${safe(wx.condition)}</span>
+         ${wx.humidity ? `<span style="font-size:11px;color:#3a6a9a;">💧 ${wx.humidity}%</span>` : ''}
+         ${wx.wind_speed ? `<span style="font-size:11px;color:#3a6a9a;">💨 ${wx.wind_speed}km/h</span>` : ''}
        </div>` : '<p class="am-muted">No weather data</p>';
 
   // ── Scores ────────────────────────────────────
@@ -1164,7 +1165,7 @@ function renderAreaModal(areaName, stateName, countryName, data) {
   ].filter(Boolean).join('');
 
   // ── Safety ───────────────────────────────────
-  const safetyColor = {safe:'#00ff88',moderate:'#ffcc44',caution:'#ff8800',dangerous:'#ff4444'}[safety.overall_rating]||'#888';
+  const safetyColor = {safe:'#4a9eff',moderate:'#ffcc44',caution:'#ff8800',dangerous:'#ff4444'}[safety.overall_rating]||'#888';
   const safetyHtml = [
     safety.overall_rating ? `<p><strong>Rating:</strong> <span style="color:${safetyColor};font-weight:700;">${safety.overall_rating.toUpperCase()}</span></p>` : '',
     safety.crime_index    ? `<p><strong>Crime index:</strong> ${safety.crime_index}</p>` : '',
@@ -1252,13 +1253,13 @@ function renderAreaModal(areaName, stateName, countryName, data) {
 
   // ── Attractions ───────────────────────────────
   const attrList = arr(attr.top_10).slice(0,6).map(a =>
-    a.name ? `<li><strong>${a.name}</strong>${a.type ? ` <em style="color:#3a7a56;">[${a.type}]</em>` : ''}${a.why ? ` — ${a.why.slice(0,80)}` : ''}${a.cost ? ` · ${a.cost}` : ''}</li>` : ''
+    a.name ? `<li><strong>${a.name}</strong>${a.type ? ` <em style="color:#3a6a9a;">[${a.type}]</em>` : ''}${a.why ? ` — ${a.why.slice(0,80)}` : ''}${a.cost ? ` · ${a.cost}` : ''}</li>` : ''
   ).filter(Boolean);
   const gems = arr(attr.hidden_gems).slice(0,2).map(g => `<li style="color:#bb88ff;">💎 ${g}</li>`);
-  const free = arr(attr.free_attractions).slice(0,2).map(f => `<li style="color:#00cc66;">🆓 ${f}</li>`);
+  const free = arr(attr.free_attractions).slice(0,2).map(f => `<li style="color:#4a9eff;">🆓 ${f}</li>`);
   const attrHtml = [...attrList,...gems,...free].length
     ? `<ul style="padding-left:16px;">${[...attrList,...gems,...free].join('')}</ul>
-       ${attr.only_here ? `<p style="color:#7dffb8;margin-top:8px;"><strong>Only here:</strong> ${attr.only_here}</p>` : ''}`
+       ${attr.only_here ? `<p style="color:#a0c8f8;margin-top:8px;"><strong>Only here:</strong> ${attr.only_here}</p>` : ''}`
     : '';
 
   // ── History ───────────────────────────────────
@@ -1324,21 +1325,21 @@ function renderAreaModal(areaName, stateName, countryName, data) {
   // ── Recs ──────────────────────────────────────
   const recs = arr(data.recommendations || d.ai_recommendations);
   const recsHtml = recs.slice(0,8).map(r => `
-    <div style="background:#0a1810;border:1px solid #0e2a1a;border-radius:10px;padding:12px;">
+    <div style="background:#0c0e1c;border:1px solid #181c2c;border-radius:10px;padding:12px;">
       <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;margin-bottom:6px;">
-        <span style="font-size:12px;font-weight:700;color:#c8f0d8;flex:1;">${safe(r.title)}</span>
-        ${r.type ? `<span style="font-size:9px;color:#3a9a5a;border:1px solid #1a4a2a;border-radius:6px;padding:2px 6px;">${r.type}</span>` : ''}
+        <span style="font-size:12px;font-weight:700;color:#c0d4f0;flex:1;">${safe(r.title)}</span>
+        ${r.type ? `<span style="font-size:9px;color:#3a7acc;border:1px solid #1a3060;border-radius:6px;padding:2px 6px;">${r.type}</span>` : ''}
         ${r.rating ? `<span style="font-size:11px;color:#ffcc44;">⭐${r.rating}</span>` : ''}
         ${r.price ? `<span style="font-size:11px;color:#5a8a6a;">${r.price}</span>` : ''}
       </div>
-      ${r.why ? `<p style="font-size:11px;color:#6a9a7a;margin:0;line-height:1.5;">${r.why}</p>` : ''}
-      ${r.best_for || r.duration ? `<p style="font-size:10px;color:#3a6a4a;margin:4px 0 0;">
+      ${r.why ? `<p style="font-size:11px;color:#6a8aaa;margin:0;line-height:1.5;">${r.why}</p>` : ''}
+      ${r.best_for || r.duration ? `<p style="font-size:10px;color:#3a5a7a;margin:4px 0 0;">
         ${r.best_for ? '👥 '+r.best_for : ''}${r.duration ? ' · ⏱ '+r.duration : ''}</p>` : ''}
     </div>`).join('');
 
   // ── Local tips ────────────────────────────────
   const tips = arr(data.local_tips || d.ai_local_tips);
-  const tipsHtml = tips.slice(0,6).map(t => `<li style="margin:6px 0;color:#8ab89a;font-size:12px;line-height:1.5;">${t}</li>`).join('');
+  const tipsHtml = tips.slice(0,6).map(t => `<li style="margin:6px 0;color:#8a9ab8;font-size:12px;line-height:1.5;">${t}</li>`).join('');
 
   // ── Sub-areas ─────────────────────────────────
   const subs = arr(d.ai_sub_areas || data.sub_areas);
@@ -1346,27 +1347,27 @@ function renderAreaModal(areaName, stateName, countryName, data) {
   // ══ ASSEMBLE ══════════════════════════════════
   document.getElementById('areaModalBody').innerHTML = `
     <style>
-      .am-vibe{font-size:13px;color:#7dffb8;font-style:italic;border-left:2px solid #00ff88;padding-left:12px;margin-bottom:14px;line-height:1.6;}
+      .am-vibe{font-size:13px;color:#a0c8f8;font-style:italic;border-left:2px solid #4a9eff;padding-left:12px;margin-bottom:14px;line-height:1.6;}
       .am-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px;}
-      .am-pill{background:#0a1f15;border:1px solid #1a3a25;border-radius:20px;padding:4px 12px;font-size:11px;color:#5aaa7a;}
-      .am-pill.g{border-color:#1a4a2a;color:#00ff88;} .am-pill.a{border-color:#3a2a0a;color:#ffcc44;} .am-pill.p{border-color:#2a1a3a;color:#bb88ff;}
+      .am-pill{background:#0a1020;border:1px solid #1a2a40;border-radius:20px;padding:4px 12px;font-size:11px;color:#5a8ab8;}
+      .am-pill.g{border-color:#1a3a20;color:#3ecf7a;} .am-pill.a{border-color:#3a2a0a;color:#f5a623;} .am-pill.p{border-color:#251a3a;color:#bb88ff;}
       .am-photos{display:flex;gap:8px;overflow-x:auto;margin-bottom:18px;padding-bottom:4px;}
       .am-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
       @media(max-width:600px){.am-grid{grid-template-columns:1fr;}}
-      .am-card{background:#0a1a10;border:1px solid #0e2a1a;border-radius:12px;padding:16px;margin-bottom:12px;}
-      .am-card-title{color:#00cc66;font-size:10px;letter-spacing:2px;margin-bottom:10px;font-family:monospace;}
-      .am-card p{font-size:12px;color:#8ab89a;margin:4px 0;line-height:1.5;}
-      .am-card strong{color:#aadaaa;}
-      .am-card ul{padding-left:16px;} .am-card li{font-size:12px;color:#8ab89a;margin:3px 0;line-height:1.5;}
+      .am-card{background:#0c0e1a;border:1px solid #181c2e;border-radius:12px;padding:16px;margin-bottom:12px;}
+      .am-card-title{color:#4a9eff;font-size:10px;letter-spacing:2px;margin-bottom:10px;font-family:monospace;}
+      .am-card p{font-size:12px;color:#8a9ab8;margin:4px 0;line-height:1.5;}
+      .am-card strong{color:#aabeda;}
+      .am-card ul{padding-left:16px;} .am-card li{font-size:12px;color:#8a9ab8;margin:3px 0;line-height:1.5;}
       .am-score-row{display:flex;align-items:center;gap:8px;margin:4px 0;}
-      .am-score-label{font-size:11px;color:#5a8a6a;width:110px;flex-shrink:0;}
-      .am-score-bar{flex:1;height:5px;background:#0a2015;border-radius:3px;overflow:hidden;}
-      .am-score-fill{height:100%;background:linear-gradient(90deg,#00aa55,#00ff88);border-radius:3px;}
-      .am-score-val{font-size:11px;color:#3a6a4a;width:30px;text-align:right;}
+      .am-score-label{font-size:11px;color:#4a6a8a;width:110px;flex-shrink:0;}
+      .am-score-bar{flex:1;height:5px;background:#0a1020;border-radius:3px;overflow:hidden;}
+      .am-score-fill{height:100%;background:linear-gradient(90deg,#2a6acc,#4a9eff);border-radius:3px;}
+      .am-score-val{font-size:11px;color:#3a5a7a;width:30px;text-align:right;}
       .am-recs{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
       @media(max-width:500px){.am-recs{grid-template-columns:1fr;}}
-      .am-muted{color:#3a5a4a;font-style:italic;font-size:12px;}
-      .am-meta{font-size:10px;color:#2a4a3a;text-align:center;margin-top:20px;font-family:monospace;}
+      .am-muted{color:#3a4a5a;font-style:italic;font-size:12px;}
+      .am-meta{font-size:10px;color:#2a3a50;text-align:center;margin-top:20px;font-family:monospace;}
     </style>
 
     ${d.ai_vibe ? `<div class="am-vibe">${d.ai_vibe}</div>` : ''}
@@ -1407,13 +1408,13 @@ function renderAreaModal(areaName, stateName, countryName, data) {
 
     ${tipsHtml ? `<div class="am-card"><div class="am-card-title">💡 LOCAL TIPS</div><ul style="padding-left:16px;">${tipsHtml}</ul></div>` : ''}
 
-    ${d.ai_day_itinerary ? `<div class="am-card"><div class="am-card-title">🗓 SUGGESTED DAY</div><p style="font-size:12px;color:#8ab89a;line-height:1.7;white-space:pre-line;">${d.ai_day_itinerary}</p></div>` : ''}
+    ${d.ai_day_itinerary ? `<div class="am-card"><div class="am-card-title">🗓 SUGGESTED DAY</div><p style="font-size:12px;color:#8a9ab8;line-height:1.7;white-space:pre-line;">${d.ai_day_itinerary}</p></div>` : ''}
 
-    ${d.ai_sensory_description ? `<div class="am-card"><div class="am-card-title">👁 SENSORY DESCRIPTION</div><p style="font-size:12px;color:#8ab89a;line-height:1.7;font-style:italic;">${d.ai_sensory_description}</p></div>` : ''}
+    ${d.ai_sensory_description ? `<div class="am-card"><div class="am-card-title">👁 SENSORY DESCRIPTION</div><p style="font-size:12px;color:#8a9ab8;line-height:1.7;font-style:italic;">${d.ai_sensory_description}</p></div>` : ''}
 
     ${subs.length ? `<div class="am-card"><div class="am-card-title">📍 SUB-AREAS & NEIGHBOURHOODS</div><div class="am-pills">${subs.map(s=>`<span class="am-pill">${s}</span>`).join('')}</div></div>` : ''}
 
-    ${d.ai_comparison ? `<div class="am-card"><div class="am-card-title">🔄 AI COMPARISON</div><p style="font-size:12px;color:#8ab89a;line-height:1.5;">${d.ai_comparison}</p></div>` : ''}
+    ${d.ai_comparison ? `<div class="am-card"><div class="am-card-title">🔄 AI COMPARISON</div><p style="font-size:12px;color:#8a9ab8;line-height:1.5;">${d.ai_comparison}</p></div>` : ''}
 
     <div class="am-meta">
       Last updated: ${d.last_updated ? new Date(d.last_updated).toLocaleString() : 'Unknown'}
