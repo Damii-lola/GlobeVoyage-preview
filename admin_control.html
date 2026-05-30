@@ -240,9 +240,8 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
   </div>
   <div class="nav-tabs">
     <div class="nav-tab" onclick="switchTab('system')">SYSTEM</div>
-    <div class="nav-tab" onclick="switchTab('intelligence')">INTELLIGENCE</div>
+    <div class="nav-tab active" onclick="switchTab('intel')">INTEL</div>
     <div class="nav-tab" onclick="switchTab('pipeline')">PIPELINE</div>
-    <div class="nav-tab active" onclick="switchTab('report')">INTEL REPORT</div>
   </div>
   <div class="nav-right">
     <div class="backend-indicator" id="backendIndicator">
@@ -282,23 +281,6 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
     <div class="full-section">
       <div class="full-section-title">▸ GEO PIPELINE</div>
       <div id="geoStatus" class="loading-msg">Loading…</div>
-    </div>
-  </div>
-
-  <!-- ══ INTELLIGENCE TAB ════════════════════════════════════════ -->
-  <div class="tab-content" id="tab-intelligence">
-    <div class="intel-report-layout">
-      <div class="intel-sidebar">
-        <div class="intel-sidebar-title">▸ COUNTRIES</div>
-        <input class="country-search" placeholder="Search countries…" id="countrySearch" oninput="filterCountries()">
-        <div class="country-list" id="countryList"><div class="loading-msg"><div class="spinner"></div></div></div>
-      </div>
-      <div class="intel-panel" id="intelPanel">
-        <div class="loading-msg" style="padding:80px 0;">
-          <div class="empty-icon">🌍</div>
-          <p>Select a country to view intel</p>
-        </div>
-      </div>
     </div>
   </div>
 
@@ -343,20 +325,23 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
     </div>
   </div>
 
-  <!-- ══ INTEL REPORT TAB ════════════════════════════════════════ -->
-  <div class="tab-content active" id="tab-report">
-    <div id="reportView">
-      <!-- Step 1: Country selector -->
+  <!-- ══ UNIFIED INTEL TAB ═══════════════════════════════════════ -->
+  <div class="tab-content" id="tab-intel">
+    <div id="intelView">
+      <!-- Step 1: Country grid -->
       <div id="reportCountryStep">
-        <div class="page-header">
-          <div class="page-title">Intel Report</div>
-          <div class="page-sub">SELECT COUNTRY → STATE → AREA INTEL</div>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div class="page-title">Intelligence</div>
+            <div class="page-sub">SELECT COUNTRY → STATE → AREA INTEL</div>
+          </div>
+          <div id="intelTopCountry" style="font-size:11px;color:var(--text3);display:none;"></div>
         </div>
-        <input class="country-search" placeholder="Search countries…" id="reportCountrySearch" oninput="filterReportCountries()">
+        <input class="country-search" placeholder="Search 195 countries…" id="reportCountrySearch" oninput="filterReportCountries()">
         <div class="cards-grid" id="reportCountryGrid"><div class="loading-msg"><div class="spinner"></div>Loading countries…</div></div>
       </div>
 
-      <!-- Step 2: State selector (hidden initially) -->
+      <!-- Step 2+: Drill-down (hidden initially) -->
       <div id="reportStateStep" style="display:none;">
         <div class="breadcrumb" id="reportBreadcrumb"></div>
         <div id="reportStateContent"><div class="loading-msg"><div class="spinner"></div></div></div>
@@ -387,7 +372,7 @@ let adminToken = '';
 let allCountries = [];
 let selectedCountryIso = null;
 let selectedStateId = null;
-let currentTab = 'report';
+let currentTab = 'intel';
 
 // ══════════════════════════════════════════════════
 // AUTH
@@ -459,7 +444,7 @@ async function apiFetch(path, opts = {}) {
 // ══════════════════════════════════════════════════
 function initDashboard() {
   loadCountries().then(() => {
-    switchTab(currentTab);
+    switchTab('intel');
   });
 }
 
@@ -479,13 +464,16 @@ function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
   const tabEl = document.getElementById('tab-' + tab);
   if (tabEl) tabEl.classList.add('active');
+  // Highlight the matching nav tab
   document.querySelectorAll('.nav-tab').forEach(el => {
-    if (el.textContent.toLowerCase().includes(tab === 'report' ? 'intel' : tab)) el.classList.add('active');
+    const txt = el.textContent.toLowerCase();
+    if (tab === 'intel' && txt.includes('intel')) el.classList.add('active');
+    else if (tab === 'system' && txt === 'system') el.classList.add('active');
+    else if (tab === 'pipeline' && txt === 'pipeline') el.classList.add('active');
   });
-  if (tab === 'system')       loadSystemTab();
-  if (tab === 'intelligence') loadIntelTab();
-  if (tab === 'pipeline')     loadPipelineTab();
-  if (tab === 'report')       loadReportTab();
+  if (tab === 'system')   loadSystemTab();
+  if (tab === 'intel')    loadReportTab();
+  if (tab === 'pipeline') loadPipelineTab();
 }
 
 // ══════════════════════════════════════════════════
@@ -559,122 +547,14 @@ async function loadHealth() {
 // ══════════════════════════════════════════════════
 const FLAGS = {USA:"🇺🇸",GBR:"🇬🇧",FRA:"🇫🇷",DEU:"🇩🇪",CHN:"🇨🇳",IND:"🇮🇳",BRA:"🇧🇷",RUS:"🇷🇺",AUS:"🇦🇺",CAN:"🇨🇦",JPN:"🇯🇵",NGA:"🇳🇬",ZAF:"🇿🇦",EGY:"🇪🇬",MEX:"🇲🇽",ARG:"🇦🇷",SAU:"🇸🇦",IDN:"🇮🇩",TUR:"🇹🇷",KEN:"🇰🇪",ESP:"🇪🇸",ITA:"🇮🇹",PAK:"🇵🇰",UKR:"🇺🇦",GHA:"🇬🇭",ETH:"🇪🇹",MAR:"🇲🇦",PER:"🇵🇪",COL:"🇨🇴",NZL:"🇳🇿",SGP:"🇸🇬",THA:"🇹🇭",VNM:"🇻🇳",KOR:"🇰🇷",PRT:"🇵🇹",NLD:"🇳🇱",GRC:"🇬🇷",NOR:"🇳🇴",SWE:"🇸🇪",DNK:"🇩🇰",FIN:"🇫🇮",CHE:"🇨🇭",BEL:"🇧🇪",AUT:"🇦🇹",POL:"🇵🇱",CZE:"🇨🇿",HUN:"🇭🇺",ROU:"🇷🇴",BGR:"🇧🇬",HRV:"🇭🇷",SRB:"🇷🇸",SVK:"🇸🇰",SVN:"🇸🇮",LVA:"🇱🇻",LTU:"🇱🇹",EST:"🇪🇪",ISL:"🇮🇸",IRL:"🇮🇪",MLT:"🇲🇹",CYP:"🇨🇾",LUX:"🇱🇺",ISR:"🇮🇱",IRN:"🇮🇷",IRQ:"🇮🇶",JOR:"🇯🇴",KWT:"🇰🇼",LBN:"🇱🇧",SYR:"🇸🇾",YEM:"🇾🇪",AFG:"🇦🇫",KAZ:"🇰🇿",UZB:"🇺🇿",TKM:"🇹🇲",KGZ:"🇰🇬",TJK:"🇹🇯",AZE:"🇦🇿",ARM:"🇦🇲",GEO:"🇬🇪",MMR:"🇲🇲",KHM:"🇰🇭",LAO:"🇱🇦",BGD:"🇧🇩",LKA:"🇱🇰",NPL:"🇳🇵",BTN:"🇧🇹",MDV:"🇲🇻",MNG:"🇲🇳",TWN:"🇹🇼",PRK:"🇰🇵",PHL:"🇵🇭",MYS:"🇲🇾",BRN:"🇧🇳",TLS:"🇹🇱",PNG:"🇵🇬",FJI:"🇫🇯",SLB:"🇸🇧",VUT:"🇻🇺",WSM:"🇼🇸",TON:"🇹🇴",KIR:"🇰🇮",MHL:"🇲🇭",FSM:"🇫🇲",PLW:"🇵🇼",NRU:"🇳🇷",TUV:"🇹🇻",CHL:"🇨🇱",BOL:"🇧🇴",PRY:"🇵🇾",URY:"🇺🇾",ECU:"🇪🇨",GUY:"🇬🇾",SUR:"🇸🇷",VEN:"🇻🇪",PAN:"🇵🇦",CRI:"🇨🇷",GTM:"🇬🇹",BLZ:"🇧🇿",HND:"🇭🇳",SLV:"🇸🇻",NIC:"🇳🇮",CUB:"🇨🇺",JAM:"🇯🇲",HTI:"🇭🇹",DOM:"🇩🇴",TTO:"🇹🇹",BRB:"🇧🇧",ATG:"🇦🇬",DMA:"🇩🇲",GRD:"🇬🇩",KNA:"🇰🇳",LCA:"🇱🇨",VCT:"🇻🇨",BHS:"🇧🇸",CMR:"🇨🇲",CIV:"🇨🇮",SEN:"🇸🇳",GIN:"🇬🇳",MLI:"🇲🇱",BFA:"🇧🇫",NER:"🇳🇪",TGO:"🇹🇬",BEN:"🇧🇯",SLE:"🇸🇱",LBR:"🇱🇷",GMB:"🇬🇲",GNB:"🇬🇼",CPV:"🇨🇻",MRT:"🇲🇷",TCD:"🇹🇩",SDN:"🇸🇩",SSD:"🇸🇸",ERI:"🇪🇷",SOM:"🇸🇴",DJI:"🇩🇯",COM:"🇰🇲",STP:"🇸🇹",GAB:"🇬🇦",GNQ:"🇬🇶",COG:"🇨🇬",COD:"🇨🇩",AGO:"🇦🇴",ZMB:"🇿🇲",MWI:"🇲🇼",MOZ:"🇲🇿",ZWE:"🇿🇼",BWA:"🇧🇼",NAM:"🇳🇦",LSO:"🇱🇸",SWZ:"🇸🇿",MDG:"🇲🇬",MUS:"🇲🇺",RWA:"🇷🇼",BDI:"🇧🇮",UGA:"🇺🇬",TZA:"🇹🇿",CAF:"🇨🇫",LBY:"🇱🇾",TUN:"🇹🇳",ALB:"🇦🇱",MKD:"🇲🇰",BIH:"🇧🇦",MDA:"🇲🇩",BLR:"🇧🇾",MCO:"🇲🇨",AND:"🇦🇩",LIE:"🇱🇮",SMR:"🇸🇲",XKX:"🇽🇰",MNE:"🇲🇪",QAT:"🇶🇦",ARE:"🇦🇪",OMN:"🇴🇲",BHR:"🇧🇭"};
 
-async function loadIntelTab() {
-  const list = document.getElementById('countryList');
-  list.innerHTML = '<div class="loading-msg"><div class="spinner"></div></div>';
-  try {
-    const d = await apiFetch('/api/intel');
-    const countries = d.countries || [];
-    renderCountryList(countries, list);
-    if (selectedCountryIso) showCountryIntel(selectedCountryIso);
-  } catch(e) {
-    list.innerHTML = `<div class="loading-msg">Error: ${e.message}</div>`;
-  }
-}
+// (intelligence tab merged into intel tab)
 
-function renderCountryList(countries, container) {
-  if (!countries.length) { container.innerHTML = '<div class="loading-msg">No data yet</div>'; return; }
-  container.innerHTML = countries.map(c => `
-    <div class="country-list-item ${c.iso === selectedCountryIso ? 'active' : ''}" onclick="showCountryIntel('${c.iso}')">
-      <span class="country-flag">${FLAGS[c.iso]||'🌐'}</span>
-      <div class="country-info-col">
-        <div class="country-list-name">${c.country_name}</div>
-        <div class="country-list-cont">${c.continent||''}</div>
-      </div>
-    </div>`).join('');
-}
-
-function filterCountries() {
-  const q = document.getElementById('countrySearch').value.toLowerCase();
-  document.querySelectorAll('#countryList .country-list-item').forEach(el => {
-    el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-
-async function showCountryIntel(iso) {
-  selectedCountryIso = iso;
-  const panel = document.getElementById('intelPanel');
-  panel.innerHTML = '<div class="loading-msg"><div class="spinner"></div>Loading intel…</div>';
-  document.querySelectorAll('.country-list-item').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.country-list-item').forEach(el => { if(el.onclick?.toString().includes(iso)) el.classList.add('active'); });
-  try {
-    const d = await apiFetch(`/api/intel/${iso}`);
-    const flag = FLAGS[iso] || '🌐';
-    const wx = d.weather_now || {};
-    const ai = d;
-    const recs = (d.ai_recommendations || []).slice(0, 6);
-    const cal  = (d.ai_calendar || []).slice(0, 14);
-    const news = (d.news_headlines || d.national_news?.articles || []).slice(0, 6);
-
-    panel.innerHTML = `
-      <div class="intel-panel-header">
-        <div class="intel-panel-top">
-          <div class="intel-country-flag">${flag}</div>
-          <div style="flex:1;min-width:0;">
-            <div class="intel-country-name">${d.country_name}</div>
-            <div class="intel-country-meta">${d.continent || ''} · Last updated ${timeAgo(d.last_updated)}</div>
-          </div>
-          <button class="btn small reload" onclick="triggerCountryPipeline('${iso}')">↻ REFRESH</button>
-        </div>
-        ${d.ai_vibe ? `<div class="intel-vibe">${d.ai_vibe}</div>` : ''}
-        ${d.ai_briefing ? `<p style="font-size:12px;color:var(--text2);line-height:1.6;margin-top:12px;">${d.ai_briefing}</p>` : ''}
-        <div class="intel-row">
-          <div class="intel-mini">
-            <div class="intel-mini-label">WEATHER</div>
-            ${wx.temp != null ? `<div class="wx-big"><div class="wx-big-temp">${wx.temp}°C</div><div class="wx-big-info"><div class="wx-big-cond">${wx.condition||''}</div><div class="wx-big-meta">${wx.humidity ? '💧 '+wx.humidity+'%' : ''} ${wx.wind_speed ? '💨 '+wx.wind_speed+'km/h' : ''}</div></div></div>` : '<div class="intel-mini-val muted">No data</div>'}
-          </div>
-          <div class="intel-mini">
-            <div class="intel-mini-label">SAFETY</div>
-            <div class="intel-mini-val" style="font-size:12px;color:var(--text2);line-height:1.5;">${d.ai_safety_summary || '—'}</div>
-          </div>
-          <div class="intel-mini">
-            <div class="intel-mini-label">BEST MONTHS</div>
-            <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;">${(d.ai_best_months||[]).map(m=>`<span class="badge green">${m}</span>`).join('')}</div>
-          </div>
-        </div>
-      </div>
-      ${cal.length ? `
-      <div class="full-section">
-        <div class="full-section-title">▸ TRAVEL CALENDAR</div>
-        <div class="calendar-strip">${cal.map(c=>`<div class="cal-day ${c.color||''}"><div class="cal-date">${(c.date||'').slice(5)}</div><div class="cal-label">${c.label||''}</div><div class="cal-reason">${c.reason||''}</div></div>`).join('')}</div>
-      </div>` : ''}
-      ${recs.length ? `
-      <div class="full-section">
-        <div class="full-section-title">▸ AI RECOMMENDATIONS</div>
-        <div class="recs-list">${recs.map(r=>`
-          <div class="rec-item">
-            <div class="rec-item-head">
-              <div class="rec-item-title">${r.title||''}</div>
-              <span class="badge ${r.risk==='high'?'red':r.risk==='medium'?'amber':'green'}">${r.type||''}</span>
-            </div>
-            <div class="rec-item-why">${r.why||''}</div>
-            <div class="rec-item-meta"><span class="rec-stars">${'⭐'.repeat(Math.round(r.rating||0))}</span>${r.when?` · ${r.when}`:''}</div>
-          </div>`).join('')}
-        </div>
-      </div>` : ''}
-      ${news.length ? `
-      <div class="full-section">
-        <div class="full-section-title">▸ LATEST NEWS</div>
-        <div class="news-scroll">${news.map(n=>`
-          <div class="news-card">
-            <div class="news-source">${n.source||''}</div>
-            <div class="news-title">${n.title||''}</div>
-            ${n.url ? `<a class="news-link" href="${n.url}" target="_blank">READ LINK ↗</a>` : ''}
-          </div>`).join('')}
-        </div>
-      </div>` : ''}
-      ${d.ai_hidden_gem ? `<div class="full-section"><div class="full-section-title">▸ HIDDEN GEM</div><p style="font-size:13px;color:#bb88ff;font-style:italic;">💎 ${d.ai_hidden_gem}</p></div>` : ''}
-    `;
-  } catch(e) {
-    panel.innerHTML = `<div class="loading-msg">No intel yet for ${iso}. <button class="btn small primary" onclick="triggerCountryPipeline('${iso}')">▶ Generate Now</button></div>`;
-  }
-}
 
 async function triggerCountryPipeline(iso) {
   try {
     await apiFetch(`/api/pipeline/run/${iso}`, { method: 'POST' });
-    setTimeout(() => showCountryIntel(iso), 35000);
-  } catch(e) {}
+    alert(`Pipeline started for ${iso} — data updates in ~35s`);
+  } catch(e) { console.error(e); }
 }
 // ══════════════════════════════════════════════════
 // PIPELINE TAB
