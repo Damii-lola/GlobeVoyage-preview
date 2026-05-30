@@ -413,7 +413,7 @@ async function verifyAndInit() {
 
   // Now verify auth
   try {
-    const r = await apiFetch('/api/auth/verify');
+    const r = await apiFetch('/api/auth/verify', { method: 'POST' });
     if (r.ok) {
       storeToken(adminToken);
       document.getElementById('logoutBtn').textContent = (r.user || 'ADMIN').toUpperCase() + ' × LOGOUT';
@@ -1000,19 +1000,25 @@ async function openAreaIntel(areaName, stateName, countryName, countryIso) {
       return;
     }
 
-    // If source is db_no_ai, show a notice that full AI is regenerating
+    // Always try to render whatever we have
     const fi = data.full_intel || data;
     const hasAi = !!(fi.ai_briefing || fi.ai_vibe || (fi.ai_recommendations && fi.ai_recommendations.length > 0));
-    if (!hasAi && data.source === 'db_no_ai') {
-      document.getElementById('areaModalBody').innerHTML = `
-        <div style="background:#0a1020;border:1px solid #1a2840;border-radius:12px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+
+    if (!hasAi) {
+      // Show a notice + whatever partial data exists, + regenerate button
+      const notice = `<div style="background:#0a1020;border:1px solid #1a2840;border-radius:12px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
           <div style="width:18px;height:18px;border:2px solid #1a2840;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
-          <div>
-            <p style="color:#4a9eff;font-size:13px;font-weight:600;">AI intel regenerating…</p>
-            <p style="color:#3a5a7a;font-size:11px;margin-top:2px;">Previous generation failed. Full intel loading — auto-refresh in 30s.</p>
-          </div>
-        </div>` + renderAreaPartialData(fi);
-      setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 30000);
+          <p style="color:#4a9eff;font-size:13px;font-weight:600;margin:0;">AI intel generating — auto-refreshes in 35s</p>
+        </div>
+        <p style="color:#3a5a7a;font-size:11px;margin:0 0 10px;">Mistral AI is building the full intel package. This happens once per area.</p>
+        <button onclick="openAreaIntel('${areaName.replace(/'/g,"\'")}','${(stateName||'').replace(/'/g,"\'")}','${countryName.replace(/'/g,"\'")}','${countryIso||''}' )" 
+          style="background:#0a1428;border:1px solid #1a2a48;color:#4a9eff;padding:6px 14px;border-radius:8px;font-size:11px;cursor:pointer;letter-spacing:1px;">
+          ↻ RETRY NOW
+        </button>
+      </div>`;
+      document.getElementById('areaModalBody').innerHTML = notice + renderAreaPartialData(fi);
+      setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 35000);
       return;
     }
 
@@ -1033,16 +1039,19 @@ document.getElementById('areaIntelModal').addEventListener('click', e => {
 
 // Show what data we have even when AI fields are null
 function renderAreaPartialData(d) {
-  const wx = (d && d.weather_now) ? d.weather_now : {};
-  const photos = Array.isArray(d && d.photos) ? d.photos : [];
-  const news   = Array.isArray(d && d.news)   ? d.news   : [];
-  let html = '';
+  if (!d) return '<p class="am-muted" style="text-align:center;padding:20px;">Waiting for data…</p>';
+  const wx     = d.weather_now || {};
+  const photos = Array.isArray(d.photos) ? d.photos : [];
+  const news   = Array.isArray(d.news)   ? d.news   : [];
+  const places = Array.isArray(d.top_places) ? d.top_places : [];
+  let html = '<style>.am-card{background:#0c0e1a;border:1px solid #181c2e;border-radius:12px;padding:16px;margin-bottom:12px;}.am-card-title{color:#4a9eff;font-size:10px;letter-spacing:2px;margin-bottom:10px;font-family:monospace;}.am-card p{font-size:12px;color:#8a9ab8;margin:4px 0;line-height:1.5;}</style>';
   if (wx.temp != null) html += `
     <div class="am-card"><div class="am-card-title">🌤 WEATHER</div>
-      <div style="display:flex;align-items:center;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <span style="font-size:26px;font-weight:800;color:#74b8ff;">${wx.temp}°C</span>
         <span style="font-size:13px;color:#5a8ab8;">${wx.condition||''}</span>
         ${wx.humidity ? '<span style="font-size:11px;color:#3a6a9a;">💧 ' + wx.humidity + '%</span>' : ''}
+        ${wx.wind_speed ? '<span style="font-size:11px;color:#3a6a9a;">💨 ' + wx.wind_speed + 'km/h</span>' : ''}
       </div>
     </div>`;
   if (photos.length) {
@@ -1050,14 +1059,19 @@ function renderAreaPartialData(d) {
       const url = p.regular||p.small||p.urls?.regular||p.urls?.small||p.url||''
       return url ? `<img style="height:90px;border-radius:8px;object-fit:cover;flex-shrink:0;" src="${url}" onerror="this.style.display='none'">` : ''
     }).filter(Boolean).join('')
-    if (photoHtml) html += `<div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;">${photoHtml}</div>`
+    if (photoHtml) html += `<div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;padding-bottom:4px;">${photoHtml}</div>`
+  }
+  if (places.length) {
+    html += `<div class="am-card"><div class="am-card-title">📍 NEARBY PLACES</div>` +
+      places.slice(0,4).map(p => `<p>📌 ${p.name||p.label||''}</p>`).join('') +
+      '</div>'
   }
   if (news.length) {
     html += `<div class="am-card"><div class="am-card-title">📰 LATEST NEWS</div>` +
-      news.slice(0,3).map(n => `<p style="margin:6px 0;"><a href="${n.url||'#'}" target="_blank" style="color:#4a9eff;text-decoration:none;font-size:12px;">${n.title||''}</a></p>`).join('') +
+      news.slice(0,4).map(n => `<p><a href="${n.url||'#'}" target="_blank" style="color:#4a9eff;text-decoration:none;">${n.title||''}</a></p>`).join('') +
       '</div>'
   }
-  return html || '<p class="am-muted" style="text-align:center;padding:20px;">Waiting for AI intel…</p>';
+  return html || '<p style="color:#3a5a7a;text-align:center;padding:20px;font-size:12px;">No cached data yet</p>';
 }
 
 function renderAreaModal(areaName, stateName, countryName, data) {
