@@ -399,6 +399,19 @@ async function verifyAndInit() {
     if (!u || !p) { setBackend(false, 'NO CREDENTIALS'); return; }
     adminToken = btoa(`${u}:${p}`);
   }
+
+  // First check if backend is reachable at all (no auth needed)
+  try {
+    await fetch(BACKEND_URL + '/', { signal: AbortSignal.timeout(8000) });
+    setBackend(true, 'BACKEND LIVE');
+  } catch(e) {
+    setBackend(false, 'OFFLINE');
+    // Still try to init — Render may be waking up
+    setTimeout(() => verifyAndInit(), 8000);
+    return;
+  }
+
+  // Now verify auth
   try {
     const r = await apiFetch('/api/auth/verify');
     if (r.ok) {
@@ -410,10 +423,13 @@ async function verifyAndInit() {
       try { localStorage.removeItem('gv_token'); } catch(e) {}
       adminToken = '';
       setBackend(false, 'AUTH FAILED');
-      setTimeout(() => verifyAndInit(), 1000);
+      setTimeout(() => verifyAndInit(), 1500);
     }
   } catch(e) {
-    setBackend(false, 'OFFLINE');
+    // Backend reachable but verify failed — use stored token and proceed
+    console.warn('Auth verify error:', e.message);
+    if (adminToken) { setBackend(true, 'BACKEND LIVE'); initDashboard(); }
+    else setBackend(false, 'AUTH FAILED');
   }
 }
 
@@ -597,21 +613,29 @@ async function loadPipelineStatus() {
 }
 
 async function loadGeoPipelineStatus() {
+  const el = document.getElementById('geoPipelineDetail');
+  if (el) el.innerHTML = '<div class="loading-msg" style="padding:12px;">Loading geo status…</div>';
   try {
     const d = await apiFetch('/api/geo/pipeline/status');
-    const el = document.getElementById('geoPipelineDetail');
+    if (!el) return;
+    const statusColor = d.running ? 'var(--amber)' : 'var(--accent)';
+    const statusText  = d.running ? '⚡ RUNNING' : 'IDLE';
     el.innerHTML = `
       <div class="stats-row" style="margin-bottom:12px;">
-        <div class="stat-card"><div class="stat-val" style="color:${d.running?'var(--amber)':'var(--green)'};">${d.running?'⚡ RUNNING':'IDLE'}</div><div class="stat-label">STATUS</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:${statusColor};">${statusText}</div><div class="stat-label">STATUS</div></div>
         <div class="stat-card"><div class="stat-val">${d.countries_done||0}/${d.countries_total||195}</div><div class="stat-label">COUNTRIES</div></div>
-        <div class="stat-card"><div class="stat-val">${d.total_states||0}</div><div class="stat-label">STATES</div></div>
-        <div class="stat-card"><div class="stat-val">${d.total_areas||0}</div><div class="stat-label">AREAS</div></div>
+        <div class="stat-card"><div class="stat-val">${d.total_states||'—'}</div><div class="stat-label">STATES</div></div>
+        <div class="stat-card"><div class="stat-val">${d.total_areas||'—'}</div><div class="stat-label">AREAS</div></div>
       </div>
       <div class="progress-wrap"><div class="progress-fill" style="width:${d.progress_pct||0}%"></div></div>
-      <p style="font-size:10px;color:var(--text3);margin-top:4px;">Progress: ${d.progress_pct||0}% · Sources: Hardcoded ${d.sources_available?.hardcoded?'✓':'✗'} · Mistral AI ${d.sources_available?.mistral_ai?'✓':'✗'}</p>
-      ${d.current_country?`<p style="font-size:11px;color:var(--amber);margin-top:6px;">Current: ${d.current_country}</p>`:''}
-      ${d.last_error?`<p style="font-size:10px;color:var(--red);margin-top:4px;">Last error: ${d.last_error}</p>`:''}`;
-  } catch(e) {}
+      <p style="font-size:10px;color:var(--text3);margin-top:6px;">${d.progress_pct||0}% complete · Hardcoded ${d.sources_available?.hardcoded ? '✓' : '✗'} · Mistral AI ${d.sources_available?.mistral_ai ? '✓' : '✗'}</p>
+      ${d.current_country ? '<p style="font-size:11px;color:var(--amber);margin-top:6px;">Currently: ' + d.current_country + '</p>' : ''}
+      ${d.last_error ? '<p style="font-size:10px;color:var(--red);margin-top:4px;">Error: ' + d.last_error + '</p>' : ''}
+      ${d.completed_at ? '<p style="font-size:10px;color:var(--text3);margin-top:4px;">Last completed: ' + timeAgo(d.completed_at) + '</p>' : ''}
+    `;
+  } catch(e) {
+    if (el) el.innerHTML = '<div class="loading-msg">Error: ' + e.message + '</div>';
+  }
 }
 
 async function triggerFullPipeline() {
@@ -806,11 +830,28 @@ function renderNewsStrip(news) {
 
 function renderStateHeader(intel, stateName, countryName, stateId) {
   if (!intel) {
+    // Auto-trigger was already called server-side; poll for result every 20s
+    setTimeout(() => {
+      apiFetch('/api/intel/state/' + stateId)
+        .then(data => {
+          if (!data.loading) {
+            const sc = document.getElementById('reportStateContent');
+            if (sc) {
+              const sh = sc.querySelector('.state-header');
+              if (sh) sh.outerHTML = renderStateHeader(data, stateName, countryName, stateId);
+            }
+          }
+        }).catch(() => {});
+    }, 20000);
     return `<div class="state-header">
-      <div class="state-name">${stateName}</div>
-      <div class="state-country">${countryName}</div>
-      <p style="font-size:11px;color:var(--text3);margin-top:8px;">Intel generating in background…</p>
-      <button class="btn small primary" style="margin-top:10px;" onclick="forceStateIntel(${stateId},'${stateName.replace(/'/g,"\\'")}','${countryName.replace(/'/g,"\\'")}')">▶ Generate Intel</button>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div style="width:20px;height:20px;border:2px solid #1a2840;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div class="state-name">${stateName}</div>
+          <div class="state-country">${countryName}</div>
+          <p style="font-size:11px;color:var(--text3);margin-top:4px;">AI intel generating — auto-updates in ~20s…</p>
+        </div>
+      </div>
     </div>`;
   }
   const wx = intel.weather_now || {};
@@ -952,11 +993,29 @@ async function openAreaIntel(areaName, stateName, countryName, countryIso) {
       document.getElementById('areaModalBody').innerHTML = `
         <div style="text-align:center;padding:48px 24px;">
           <div style="width:36px;height:36px;border:3px solid #1a2030;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;"></div>
-          <p style="color:#3a6a9a;">Still generating… retrying in 15 seconds</p>
+          <p style="color:#3a6a9a;font-size:14px;">Generating full AI intel…</p>
+          <p style="color:#2a4a6a;font-size:12px;margin-top:6px;">First time takes 30–60 seconds</p>
         </div>`;
-      setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 15000);
+      setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 20000);
       return;
     }
+
+    // If source is db_no_ai, show a notice that full AI is regenerating
+    const fi = data.full_intel || data;
+    const hasAi = !!(fi.ai_briefing || fi.ai_vibe || (fi.ai_recommendations && fi.ai_recommendations.length > 0));
+    if (!hasAi && data.source === 'db_no_ai') {
+      document.getElementById('areaModalBody').innerHTML = `
+        <div style="background:#0a1020;border:1px solid #1a2840;border-radius:12px;padding:20px;margin-bottom:16px;display:flex;align-items:center;gap:12px;">
+          <div style="width:18px;height:18px;border:2px solid #1a2840;border-top-color:#4a9eff;border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
+          <div>
+            <p style="color:#4a9eff;font-size:13px;font-weight:600;">AI intel regenerating…</p>
+            <p style="color:#3a5a7a;font-size:11px;margin-top:2px;">Previous generation failed. Full intel loading — auto-refresh in 30s.</p>
+          </div>
+        </div>` + renderAreaPartialData(fi);
+      setTimeout(() => openAreaIntel(areaName, stateName, countryName, countryIso), 30000);
+      return;
+    }
+
     renderAreaModal(areaName, stateName, countryName, data);
   } catch(e) {
     document.getElementById('areaModalBody').innerHTML =
@@ -970,6 +1029,36 @@ function closeAreaModal() {
 document.getElementById('areaIntelModal').addEventListener('click', e => {
   if (e.target === document.getElementById('areaIntelModal')) closeAreaModal();
 });
+
+
+// Show what data we have even when AI fields are null
+function renderAreaPartialData(d) {
+  const wx = (d && d.weather_now) ? d.weather_now : {};
+  const photos = Array.isArray(d && d.photos) ? d.photos : [];
+  const news   = Array.isArray(d && d.news)   ? d.news   : [];
+  let html = '';
+  if (wx.temp != null) html += `
+    <div class="am-card"><div class="am-card-title">🌤 WEATHER</div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span style="font-size:26px;font-weight:800;color:#74b8ff;">${wx.temp}°C</span>
+        <span style="font-size:13px;color:#5a8ab8;">${wx.condition||''}</span>
+        ${wx.humidity ? '<span style="font-size:11px;color:#3a6a9a;">💧 ' + wx.humidity + '%</span>' : ''}
+      </div>
+    </div>`;
+  if (photos.length) {
+    const photoHtml = photos.slice(0,4).map(p => {
+      const url = p.regular||p.small||p.urls?.regular||p.urls?.small||p.url||''
+      return url ? `<img style="height:90px;border-radius:8px;object-fit:cover;flex-shrink:0;" src="${url}" onerror="this.style.display='none'">` : ''
+    }).filter(Boolean).join('')
+    if (photoHtml) html += `<div style="display:flex;gap:8px;overflow-x:auto;margin-bottom:12px;">${photoHtml}</div>`
+  }
+  if (news.length) {
+    html += `<div class="am-card"><div class="am-card-title">📰 LATEST NEWS</div>` +
+      news.slice(0,3).map(n => `<p style="margin:6px 0;"><a href="${n.url||'#'}" target="_blank" style="color:#4a9eff;text-decoration:none;font-size:12px;">${n.title||''}</a></p>`).join('') +
+      '</div>'
+  }
+  return html || '<p class="am-muted" style="text-align:center;padding:20px;">Waiting for AI intel…</p>';
+}
 
 function renderAreaModal(areaName, stateName, countryName, data) {
   const d   = data.full_intel || data;
