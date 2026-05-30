@@ -320,6 +320,7 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
       <div class="full-section-title">
         <span>▸ GEO HIERARCHY PIPELINE</span>
         <button class="btn small reload" onclick="triggerGeoPipeline()">▶ START GEO</button>
+        <button class="btn small reload" onclick="triggerStatePreGen()" style="margin-left:6px;">🧠 PRE-GEN ALL STATE INTEL</button>
       </div>
       <div id="geoPipelineDetail" class="loading-msg">Loading…</div>
     </div>
@@ -668,6 +669,13 @@ async function triggerGeoPipeline() {
   } catch(e) {}
 }
 
+async function triggerStatePreGen() {
+  try {
+    const r = await apiFetch('/api/pipeline/pregen-states', { method:'POST' });
+    alert(r.message || 'State intel pre-generation started — runs in background');
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
 // ══════════════════════════════════════════════════
 // INTEL REPORT TAB
 // ══════════════════════════════════════════════════
@@ -771,9 +779,15 @@ function filterStatesList() {
   });
 }
 
+// Track active polling so we can cancel it when user navigates away
+let _stateIntelPollTimer = null;
+
 async function selectState(stateId, stateName, countryIso, countryName) {
-  const content = document.getElementById('reportStateContent');
-  content.innerHTML = '<div class="loading-msg"><div class="spinner"></div>Loading state intel & areas…</div>';
+  // Cancel any existing poll
+  if (_stateIntelPollTimer) { clearTimeout(_stateIntelPollTimer); _stateIntelPollTimer = null; }
+
+  const panel = document.getElementById('reportStateContent');
+  panel.innerHTML = '<div class="loading-msg"><div class="spinner"></div>Loading…</div>';
 
   setBreadcrumb([
     { label: '← All Countries', action: () => backToCountries() },
@@ -783,20 +797,53 @@ async function selectState(stateId, stateName, countryIso, countryName) {
 
   selectedStateId = stateId;
 
-  // Fetch areas + state intel in parallel
-  const [areasRes, stateIntelRes] = await Promise.allSettled([
-    apiFetch(`/api/geo/states/${stateId}/areas`),
-    apiFetch(`/api/intel/state/${stateId}`),
-  ]);
+  // Fetch areas immediately (always fast)
+  const areasRes = await apiFetch(`/api/geo/states/${stateId}/areas`).catch(() => ({ areas: [] }));
+  const areas = areasRes.areas || [];
 
-  const areas = areasRes.status === 'fulfilled' ? (areasRes.value.areas || []) : [];
-  const stateIntel = stateIntelRes.status === 'fulfilled' && !stateIntelRes.value.loading
-    ? stateIntelRes.value : null;
+  // Try to get state intel from DB
+  let stateIntel = null;
+  try {
+    const r = await apiFetch(`/api/intel/state/${stateId}`);
+    if (!r.loading) stateIntel = r;
+  } catch(e) {}
 
-  content.innerHTML = `
+  // Render immediately with whatever we have
+  panel.innerHTML = `
     ${renderStateHeader(stateIntel, stateName, countryName, stateId)}
     ${renderAreasSection(areas, stateName, countryIso, countryName, stateId)}
   `;
+
+  // If no intel yet, start polling every 8 seconds until it arrives
+  if (!stateIntel) {
+    _pollStateIntel(stateId, stateName, countryName, countryIso);
+  }
+}
+
+function _pollStateIntel(stateId, stateName, countryName, countryIso, attempt) {
+  attempt = attempt || 1;
+  if (selectedStateId !== stateId) return; // User navigated away
+  if (attempt > 15) return; // Give up after 2 mins
+
+  _stateIntelPollTimer = setTimeout(async () => {
+    if (selectedStateId !== stateId) return;
+    try {
+      const r = await apiFetch(`/api/intel/state/${stateId}`);
+      if (!r.loading && r.ai_briefing) {
+        // Intel arrived! Update header without re-fetching areas
+        const panel = document.getElementById('reportStateContent');
+        if (panel) {
+          const existing = panel.querySelector('.state-header');
+          if (existing) {
+            existing.outerHTML = renderStateHeader(r, stateName, countryName, stateId);
+          }
+        }
+        return; // Stop polling
+      }
+    } catch(e) {}
+    // Still loading — poll again
+    _pollStateIntel(stateId, stateName, countryName, countryIso, attempt + 1);
+  }, 8000);
 }
 
 function renderCountryHeaderStrip(intel, iso, name) {
@@ -830,26 +877,14 @@ function renderNewsStrip(news) {
 
 function renderStateHeader(intel, stateName, countryName, stateId) {
   if (!intel) {
-    // Auto-trigger was already called server-side; poll for result every 20s
-    setTimeout(() => {
-      apiFetch('/api/intel/state/' + stateId)
-        .then(data => {
-          if (!data.loading) {
-            const sc = document.getElementById('reportStateContent');
-            if (sc) {
-              const sh = sc.querySelector('.state-header');
-              if (sh) sh.outerHTML = renderStateHeader(data, stateName, countryName, stateId);
-            }
-          }
-        }).catch(() => {});
-    }, 20000);
+    // Polling is handled by _pollStateIntel in selectState — just show spinner
     return `<div class="state-header">
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <div style="width:20px;height:20px;border:2px solid #1a2840;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0;"></div>
         <div style="flex:1;">
           <div class="state-name">${stateName}</div>
           <div class="state-country">${countryName}</div>
-          <p style="font-size:11px;color:var(--text3);margin-top:4px;">AI intel generating — auto-updates in ~20s…</p>
+          <p style="font-size:11px;color:var(--text3);margin-top:4px;">AI intel generating — updating automatically…</p>
         </div>
       </div>
     </div>`;
@@ -943,6 +978,7 @@ async function forceStateIntel(stateId, stateName, countryName) {
 }
 
 function backToCountries() {
+  if (_stateIntelPollTimer) { clearTimeout(_stateIntelPollTimer); _stateIntelPollTimer = null; }
   document.getElementById('reportCountryStep').style.display = '';
   document.getElementById('reportStateStep').style.display   = 'none';
   selectedCountryIso = null;
