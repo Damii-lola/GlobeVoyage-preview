@@ -311,10 +311,12 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
       <!-- Buttons -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
         <button class="btn primary" id="sgStartBtn" onclick="startStateIntelGen(false)">▶ GENERATE MISSING</button>
-        <button class="btn reload"  id="sgForceBtn" onclick="startStateIntelGen(true)">↺ FORCE REGENERATE ALL</button>
+        <button class="btn reload"  id="sgForceBtn" onclick="startStateIntelGen(true)">↺ FORCE ALL</button>
         <button class="btn danger"  id="sgStopBtn"  onclick="stopStateIntelGen()" style="display:none;">■ STOP</button>
+        <button class="btn danger"  id="sgResetBtn" onclick="resetStateIntel()">🗑 RESET INTEL</button>
+        <button class="btn danger"  id="sgResetAllBtn" onclick="resetAllIntel()" style="border-color:#5a1a1a;">🗑 RESET ALL</button>
         <button class="btn small"   onclick="loadIntelCoverage()">↻ REFRESH STATS</button>
-        <button class="btn small"   onclick="toggleSgLog()">📋 TOGGLE LOG</button>
+        <button class="btn small"   onclick="toggleSgLog()">📋 LOG</button>
       </div>
     </div>
 
@@ -737,6 +739,7 @@ async function startStateIntelGen(force) {
   document.getElementById('sgLog').style.display = 'block';
   document.getElementById('sgCurrentState').textContent = '⚡ Starting…';
   appendSgLog('Pipeline started — processing states one by one…');
+  window._sgStatRefreshCount = 0;
 
   try {
     const url = force ? '/api/pipeline/pregen-states?force=true' : '/api/pipeline/pregen-states';
@@ -808,10 +811,15 @@ async function _pollSgProgress() {
 
     if (d.running) {
       _sgPollTimer = setTimeout(_pollSgProgress, 4000);
+      // Also refresh stats every 30 seconds while running
+      if (_sgStatRefreshCount === undefined) _sgStatRefreshCount = 0;
+      _sgStatRefreshCount++;
+      if (_sgStatRefreshCount % 8 === 0) loadIntelCoverage().catch(() => {});
     } else {
       _sgDone();
-      // Final coverage refresh
-      setTimeout(loadIntelCoverage, 2000);
+      // Final coverage refresh — immediate + after 3s to catch DB lag
+      loadIntelCoverage();
+      setTimeout(loadIntelCoverage, 3000);
     }
   } catch(e) {
     if (_sgRunning) {
@@ -826,9 +834,70 @@ function _sgDone() {
   if (_sgPollTimer) { clearTimeout(_sgPollTimer); _sgPollTimer = null; }
   document.getElementById('sgStartBtn').disabled = false;
   document.getElementById('sgForceBtn').disabled = false;
+  document.getElementById('sgResetBtn').disabled = false;
+  document.getElementById('sgResetAllBtn').disabled = false;
   document.getElementById('sgStopBtn').style.display  = 'none';
   document.getElementById('sgStopBtn').disabled = false;
   _lastLogLen = 0;
+  // Auto-refresh stats when generation completes
+  loadIntelCoverage();
+}
+
+async function resetStateIntel() {
+  if (!confirm('Delete ALL state intel from the database?\nThis will clear briefings, scores, and all AI data for every state.\nYou'll need to re-run GENERATE MISSING after this.')) return;
+  
+  _sgDone(); // Stop any running gen
+  setAllSgBtnsDisabled(true);
+  appendSgLog('🗑 Resetting all state intel…');
+  document.getElementById('sgCurrentState').textContent = '🗑 Deleting all state intel…';
+  document.getElementById('sgCurrentState').style.color = 'var(--red)';
+
+  try {
+    const r = await apiFetch('/api/pipeline/reset/state-intel', { method: 'POST' });
+    appendSgLog('✅ ' + (r.message || 'State intel deleted'));
+    document.getElementById('sgCurrentState').textContent = '✅ Reset complete — ready to generate';
+    document.getElementById('sgCurrentState').style.color = '#3ecf7a';
+    // Immediately refresh counters
+    await loadIntelCoverage();
+    // Reset progress bar
+    const fill = document.getElementById('sgProgressFill');
+    if (fill) fill.style.width = '0%';
+  } catch(e) {
+    appendSgLog('❌ Reset failed: ' + e.message);
+    document.getElementById('sgCurrentState').textContent = '❌ Reset failed: ' + e.message;
+  }
+  setAllSgBtnsDisabled(false);
+}
+
+async function resetAllIntel() {
+  if (!confirm('Delete ALL intel (state + area) from the database?\nThis clears everything — state briefings, area intel, scores, all AI data.\nYou'll need to re-run GENERATE MISSING after this.')) return;
+
+  _sgDone();
+  setAllSgBtnsDisabled(true);
+  appendSgLog('🗑 Resetting ALL intel (state + area)…');
+  document.getElementById('sgCurrentState').textContent = '🗑 Deleting all intel…';
+  document.getElementById('sgCurrentState').style.color = 'var(--red)';
+
+  try {
+    const r = await apiFetch('/api/pipeline/reset/all-intel', { method: 'POST' });
+    appendSgLog('✅ ' + (r.message || 'All intel deleted'));
+    document.getElementById('sgCurrentState').textContent = '✅ Full reset complete — ready to generate';
+    document.getElementById('sgCurrentState').style.color = '#3ecf7a';
+    await loadIntelCoverage();
+    const fill = document.getElementById('sgProgressFill');
+    if (fill) fill.style.width = '0%';
+  } catch(e) {
+    appendSgLog('❌ Reset failed: ' + e.message);
+    document.getElementById('sgCurrentState').textContent = '❌ Reset failed: ' + e.message;
+  }
+  setAllSgBtnsDisabled(false);
+}
+
+function setAllSgBtnsDisabled(disabled) {
+  ['sgStartBtn','sgForceBtn','sgResetBtn','sgResetAllBtn','sgStopBtn'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = disabled;
+  });
 }
 
 // ══════════════════════════════════════════════════
