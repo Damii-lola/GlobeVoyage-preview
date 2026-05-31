@@ -945,7 +945,7 @@ function _sgDone() {
 }
 
 async function resetStateIntel() {
-  if (!confirm('Delete ALL state intel from the database?\nThis will clear briefings, scores, and all AI data for every state.\nYou'll need to re-run GENERATE MISSING after this.')) return;
+  if (!confirm("Delete ALL state intel from the database?\nThis clears all state briefings, scores, and AI data.\nYou will need to re-run GENERATE MISSING after this.")) return;
   
   _sgDone(); // Stop any running gen
   setAllSgBtnsDisabled(true);
@@ -971,7 +971,7 @@ async function resetStateIntel() {
 }
 
 async function resetAllIntel() {
-  if (!confirm('Delete ALL intel (state + area) from the database?\nThis clears everything — state briefings, area intel, scores, all AI data.\nYou'll need to re-run GENERATE MISSING after this.')) return;
+  if (!confirm("Delete ALL intel (state + area) from the database?\nThis clears everything: state briefings, area intel, scores, all AI data.\nYou will need to re-run GENERATE MISSING after this.")) return;
 
   _sgDone();
   setAllSgBtnsDisabled(true);
