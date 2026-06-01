@@ -815,13 +815,22 @@ async function triggerGeoPipeline() {
 let _sgPollTimer = null;
 let _sgRunning   = false;
 
+function zeroCounters() {
+  document.getElementById('sgHaveIntel').textContent = '0';
+  document.getElementById('sgMissing').textContent   = document.getElementById('sgTotal').textContent || '—';
+  document.getElementById('sgCoverage').textContent  = '0%';
+  const fill = document.getElementById('sgProgressFill');
+  if (fill) fill.style.width = '0%';
+}
+
 async function loadIntelCoverage() {
   try {
-    const d = await apiFetch('/api/pipeline/intel-coverage');
-    document.getElementById('sgTotal').textContent       = d.total_states    || '—';
-    document.getElementById('sgHaveIntel').textContent   = d.states_with_intel || '0';
-    document.getElementById('sgMissing').textContent     = d.states_missing_intel || '—';
-    document.getElementById('sgCoverage').textContent    = (d.coverage_pct || 0) + '%';
+    // Add cache-buster so browser never serves stale data
+    const d = await apiFetch('/api/pipeline/intel-coverage?t=' + Date.now());
+    document.getElementById('sgTotal').textContent     = d.total_states          != null ? d.total_states          : '—';
+    document.getElementById('sgHaveIntel').textContent = d.states_with_intel      != null ? d.states_with_intel      : '0';
+    document.getElementById('sgMissing').textContent   = d.states_missing_intel   != null ? d.states_missing_intel   : '—';
+    document.getElementById('sgCoverage').textContent  = (d.coverage_pct || 0) + '%';
     const fill = document.getElementById('sgProgressFill');
     if (fill) fill.style.width = (d.coverage_pct || 0) + '%';
   } catch(e) {
@@ -946,26 +955,27 @@ function _sgDone() {
 
 async function resetStateIntel() {
   if (!confirm("Delete ALL state intel from the database?\nThis clears all state briefings, scores, and AI data.\nYou will need to re-run GENERATE MISSING after this.")) return;
-  
-  _sgDone(); // Stop any running gen
+
+  _sgDone(); // Stop poll timer + re-enable buttons (we disable again next line)
   setAllSgBtnsDisabled(true);
   appendSgLog('🗑 Resetting all state intel…');
+
+  // ① IMMEDIATELY zero the counters — don't wait for API
+  zeroCounters();
   document.getElementById('sgCurrentState').textContent = '🗑 Deleting all state intel…';
   document.getElementById('sgCurrentState').style.color = 'var(--red)';
 
   try {
     const r = await apiFetch('/api/pipeline/reset/state-intel', { method: 'POST' });
     appendSgLog('✅ ' + (r.message || 'State intel deleted'));
-    document.getElementById('sgCurrentState').textContent = '✅ Reset complete — ready to generate';
+    document.getElementById('sgCurrentState').textContent = '✅ Reset complete — click GENERATE MISSING to start';
     document.getElementById('sgCurrentState').style.color = '#3ecf7a';
-    // Immediately refresh counters
-    await loadIntelCoverage();
-    // Reset progress bar
-    const fill = document.getElementById('sgProgressFill');
-    if (fill) fill.style.width = '0%';
+    // ② Confirm from DB after short delay (let Supabase propagate)
+    setTimeout(() => loadIntelCoverage().catch(() => {}), 1500);
   } catch(e) {
     appendSgLog('❌ Reset failed: ' + e.message);
     document.getElementById('sgCurrentState').textContent = '❌ Reset failed: ' + e.message;
+    loadIntelCoverage().catch(() => {}); // restore real counts on failure
   }
   setAllSgBtnsDisabled(false);
 }
@@ -976,20 +986,23 @@ async function resetAllIntel() {
   _sgDone();
   setAllSgBtnsDisabled(true);
   appendSgLog('🗑 Resetting ALL intel (state + area)…');
+
+  // ① IMMEDIATELY zero the counters — don't wait for API
+  zeroCounters();
   document.getElementById('sgCurrentState').textContent = '🗑 Deleting all intel…';
   document.getElementById('sgCurrentState').style.color = 'var(--red)';
 
   try {
     const r = await apiFetch('/api/pipeline/reset/all-intel', { method: 'POST' });
     appendSgLog('✅ ' + (r.message || 'All intel deleted'));
-    document.getElementById('sgCurrentState').textContent = '✅ Full reset complete — ready to generate';
+    document.getElementById('sgCurrentState').textContent = '✅ Full reset complete — click GENERATE MISSING to start';
     document.getElementById('sgCurrentState').style.color = '#3ecf7a';
-    await loadIntelCoverage();
-    const fill = document.getElementById('sgProgressFill');
-    if (fill) fill.style.width = '0%';
+    // ② Confirm from DB after short delay
+    setTimeout(() => loadIntelCoverage().catch(() => {}), 1500);
   } catch(e) {
     appendSgLog('❌ Reset failed: ' + e.message);
     document.getElementById('sgCurrentState').textContent = '❌ Reset failed: ' + e.message;
+    loadIntelCoverage().catch(() => {}); // restore real counts on failure
   }
   setAllSgBtnsDisabled(false);
 }
