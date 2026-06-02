@@ -320,6 +320,32 @@ html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);fon
       </div>
     </div>
 
+    <!-- ── Area Intel Generator ── -->
+    <div class="full-section" style="border:1px solid #1a2848;background:#090b18;margin-top:16px;">
+      <div class="full-section-title" style="color:#74b8ff;font-size:11px;margin-bottom:16px;">
+        🗺 AREA INTEL GENERATOR
+      </div>
+      <div class="stats-row" style="margin-bottom:16px;">
+        <div class="stat-card"><div class="stat-val" id="agTotal">—</div><div class="stat-label">TOTAL AREAS</div></div>
+        <div class="stat-card"><div class="stat-val" id="agHaveIntel" style="color:#3ecf7a;">—</div><div class="stat-label">HAVE INTEL</div></div>
+        <div class="stat-card"><div class="stat-val" id="agMissing" style="color:var(--amber);">—</div><div class="stat-label">MISSING INTEL</div></div>
+        <div class="stat-card"><div class="stat-val" id="agCoverage">—</div><div class="stat-label">COVERAGE</div></div>
+      </div>
+      <div class="progress-wrap" style="margin-bottom:12px;height:8px;">
+        <div class="progress-fill" id="agProgressFill" style="width:0%;background:linear-gradient(90deg,#2a6acc,#74b8ff);"></div>
+      </div>
+      <div id="agCurrentArea" style="font-size:12px;color:#74b8ff;margin-bottom:8px;min-height:18px;"></div>
+      <div id="agLog" style="background:#06080f;border:1px solid #10141e;border-radius:8px;padding:12px;font-family:monospace;font-size:10px;color:#4a6a8a;max-height:180px;overflow-y:auto;display:none;"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+        <button class="btn primary" id="agStartBtn" onclick="startAreaIntelGen(false)" style="background:#2e78e0;">▶ GENERATE MISSING</button>
+        <button class="btn reload"  id="agForceBtn" onclick="startAreaIntelGen(true)">↺ FORCE ALL</button>
+        <button class="btn danger"  id="agStopBtn"  onclick="stopAreaIntelGen()" style="display:none;">■ STOP</button>
+        <button class="btn small"   onclick="loadAreaCoverage()">↻ REFRESH STATS</button>
+        <button class="btn small"   onclick="toggleAgLog()">📋 LOG</button>
+      </div>
+      <p style="font-size:10px;color:#2a3a50;margin-top:10px;">Each area: API sources → Mistral AI → Verification (3 sources) → Store. Sequential with 6s gaps.</p>
+    </div>
+
     <!-- ── Country Pipeline ── -->
     <div class="full-section">
       <div class="full-section-title" style="display:flex;justify-content:space-between;">
@@ -707,6 +733,19 @@ async function loadPipelineTab() {
   loadPipelineStatus();
   loadGeoPipelineStatus();
   loadIntelCoverage();
+  loadAreaCoverage();
+  // Resume area gen poll if running
+  apiFetch('/api/pipeline/pregen-areas/status').then(d => {
+    if (d.running) {
+      _agRunning = true;
+      document.getElementById('agStartBtn').disabled = true;
+      document.getElementById('agForceBtn').disabled = true;
+      document.getElementById('agStopBtn').style.display = '';
+      document.getElementById('agLog').style.display = 'block';
+      appendAgLog('Pipeline already running — resuming live view');
+      _pollAgProgress();
+    }
+  }).catch(() => {});
   // If a gen was already running when we switched tabs, resume polling
   apiFetch('/api/pipeline/pregen-status').then(d => {
     if (d.running) {
@@ -1780,6 +1819,76 @@ function renderAreaModal(areaName, stateName, countryName, data) {
   `;
 }
 // ══════════════════════════════════════════════════
+// AREA INTEL GENERATOR JS
+// ══════════════════════════════════════════════════
+let _agRunning = false, _agPollTimer = null, _agStatCount = 0, _lastAgLogLen = 0;
+
+async function loadAreaCoverage() {
+  try {
+    const d = await apiFetch('/api/pipeline/area-coverage?t=' + Date.now());
+    document.getElementById('agTotal').textContent     = d.total_areas          != null ? d.total_areas          : '—';
+    document.getElementById('agHaveIntel').textContent = d.areas_with_intel     != null ? d.areas_with_intel     : '0';
+    document.getElementById('agMissing').textContent   = d.areas_missing_intel  != null ? d.areas_missing_intel  : '—';
+    document.getElementById('agCoverage').textContent  = (d.coverage_pct || 0) + '%';
+    const fill = document.getElementById('agProgressFill');
+    if (fill) fill.style.width = (d.coverage_pct || 0) + '%';
+  } catch(e) { document.getElementById('agTotal').textContent = 'ERR'; }
+}
+
+function appendAgLog(msg) {
+  const log = document.getElementById('agLog'); if (!log) return;
+  const line = document.createElement('div');
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  line.style.cssText = 'margin-bottom:2px;color:' + (msg.includes('✅') ? '#3ecf7a' : msg.includes('❌') ? '#f05252' : msg.includes('⚠') ? '#f5a623' : '#4a6a8a');
+  log.insertBefore(line, log.firstChild);
+}
+
+function toggleAgLog() { const l = document.getElementById('agLog'); l.style.display = l.style.display === 'none' ? 'block' : 'none'; }
+
+async function startAreaIntelGen(force) {
+  if (_agRunning) { alert('Already running'); return; }
+  if (force && !confirm('Force-regenerate ALL area intel? This takes a very long time.')) return;
+  _agRunning = true; _agStatCount = 0;
+  ['agStartBtn','agForceBtn'].forEach(id => { const el = document.getElementById(id); if(el) el.disabled = true; });
+  const stopBtn = document.getElementById('agStopBtn'); if(stopBtn) stopBtn.style.display = '';
+  const logEl = document.getElementById('agLog'); if(logEl) logEl.style.display = 'block';
+  const cur = document.getElementById('agCurrentArea'); if(cur) { cur.textContent = '⚡ Starting…'; cur.style.color = '#74b8ff'; }
+  appendAgLog('Area intel pipeline started — Sources → Mistral → Verify → Store');
+  try {
+    await apiFetch('/api/pipeline/pregen-areas' + (force ? '?force=true' : ''), { method: 'POST' });
+    _pollAgProgress();
+  } catch(e) { appendAgLog('Error: ' + e.message); _agDone(); }
+}
+
+async function stopAreaIntelGen() {
+  try { await apiFetch('/api/pipeline/pregen-areas/stop', { method: 'POST' }); appendAgLog('⏹ Stop signal sent'); const s = document.getElementById('agStopBtn'); if(s) s.disabled = true; } catch(e) {}
+}
+
+async function _pollAgProgress() {
+  try {
+    const d = await apiFetch('/api/pipeline/pregen-areas/status');
+    if (d.total > 0) { const pct = Math.round(d.done / d.total * 100); const fill = document.getElementById('agProgressFill'); if(fill) fill.style.width = pct + '%'; }
+    const cur = document.getElementById('agCurrentArea');
+    if (cur) {
+      if (d.running && d.current) { cur.textContent = '⚡ ' + d.current; cur.style.color = '#74b8ff'; }
+      else if (!d.running && d.completedAt) { cur.textContent = '✅ Complete — ' + d.done + ' done, ' + d.failed + ' failed'; cur.style.color = '#3ecf7a'; }
+    }
+    const log = d.log || []; const newLines = log.slice(0, log.length - _lastAgLogLen);
+    newLines.reverse().forEach(line => appendAgLog(line.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, '')));
+    _lastAgLogLen = log.length;
+    if (++_agStatCount % 8 === 0) loadAreaCoverage().catch(() => {});
+    if (d.running) { _agPollTimer = setTimeout(_pollAgProgress, 4000); }
+    else { _agDone(); loadAreaCoverage(); setTimeout(loadAreaCoverage, 3000); }
+  } catch(e) { if (_agRunning) _agPollTimer = setTimeout(_pollAgProgress, 8000); }
+}
+
+function _agDone() {
+  _agRunning = false; if (_agPollTimer) { clearTimeout(_agPollTimer); _agPollTimer = null; }
+  ['agStartBtn','agForceBtn'].forEach(id => { const el = document.getElementById(id); if(el) el.disabled = false; });
+  const s = document.getElementById('agStopBtn'); if(s) { s.style.display = 'none'; s.disabled = false; }
+  _lastAgLogLen = 0;
+}
+
 // UTILITIES
 // ══════════════════════════════════════════════════
 function timeAgo(ts) {
